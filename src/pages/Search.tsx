@@ -17,6 +17,11 @@ import { useTeaSearch, useTeaSearchDebounce } from '../hooks/useTeaSearch';
 import { FilterPanel } from '../components/search/FilterPanel';
 import { SearchResults } from '../components/search/SearchResults';
 import { ExploreSection } from '../components/search/ExploreSection';
+import { ForYouFeed } from '../components/feeds/ForYouFeed';
+import { FollowingFeed } from '../components/feeds/FollowingFeed';
+import { TagsFeed } from '../components/feeds/TagsFeed';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
+import { PopularTagItem } from '../types';
 
 type SearchCategory = 'tea' | 'note' | 'cellar' | 'seller' | 'tag';
 
@@ -61,7 +66,7 @@ export function Search() {
   } = useTeaSearch();
 
   const [cellarSort, setCellarSort] = useState<'name' | 'quantity' | 'recent'>('recent');
-  const [activeTab, setActiveTab] = useState<'search' | 'explore'>('search');
+  const [activeTab, setActiveTab] = useState<'search' | 'explore' | 'feed'>('search');
   const [trendingTeas, setTrendingTeas] = useState<Tea[]>([]);
   const [trendingCreators, setTrendingCreators] = useState<Array<{ id: number; name: string; profileImageUrl?: string | null; followerCount: number }>>([]);
   const [searchCategory, setSearchCategory] = useState<SearchCategory>('tea');
@@ -73,6 +78,14 @@ export function Search() {
   const [cellarResults, setCellarResults] = useState<CellarItem[]>([]);
   const [allCellar, setAllCellar] = useState<CellarItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [feedTab, setFeedTab] = useState<'forYou' | 'following' | 'tags'>('forYou');
+  const [feedNotes, setFeedNotes] = useState<Note[]>([]);
+  const [followingNotes, setFollowingNotes] = useState<Note[]>([]);
+  const [tagFeedNotes, setTagFeedNotes] = useState<Note[]>([]);
+  const [followedTags, setFollowedTags] = useState<PopularTagItem[]>([]);
+  const [isFeedLoading, setIsFeedLoading] = useState(false);
+  const [isFollowingLoading, setIsFollowingLoading] = useState(false);
+  const [isTagsLoading, setIsTagsLoading] = useState(false);
 
   const filterCallbacks = useMemo(
     () => ({ setTeas, setIsLoading, setHasSearched }),
@@ -210,6 +223,36 @@ export function Search() {
     }
   }, [activeTab]);
 
+  // Feed tab data fetching
+  useEffect(() => {
+    if (activeTab !== 'feed') return;
+    if (feedTab === 'forYou') {
+      setIsFeedLoading(true);
+      notesApi.getAll(undefined, true)
+        .then((data) => setFeedNotes(Array.isArray(data) ? data as Note[] : []))
+        .catch(() => setFeedNotes([]))
+        .finally(() => setIsFeedLoading(false));
+    } else if (feedTab === 'following' && user) {
+      setIsFollowingLoading(true);
+      notesApi.getAll(undefined, undefined, undefined, undefined, 'following')
+        .then((data) => setFollowingNotes(Array.isArray(data) ? data as Note[] : []))
+        .catch(() => setFollowingNotes([]))
+        .finally(() => setIsFollowingLoading(false));
+    } else if (feedTab === 'tags' && user) {
+      setIsTagsLoading(true);
+      Promise.all([
+        notesApi.getAll(undefined, undefined, undefined, undefined, 'tags'),
+        tagsApi.getFollowedTags(),
+      ])
+        .then(([notes, tags]) => {
+          setTagFeedNotes(Array.isArray(notes) ? notes as Note[] : []);
+          setFollowedTags(Array.isArray(tags) ? tags : []);
+        })
+        .catch(() => { setTagFeedNotes([]); setFollowedTags([]); })
+        .finally(() => setIsTagsLoading(false));
+    }
+  }, [activeTab, feedTab, user]);
+
   const handleApplyFilters = useCallback(() => {
     if (searchCategory === 'tea') {
       applyFilters('tea', searchQuery, filterCallbacks);
@@ -280,19 +323,23 @@ export function Search() {
         </div>
 
         <div className="flex gap-1 p-1 bg-muted rounded-lg">
-          {(['search', 'explore'] as const).map((tab) => (
+          {([
+            { key: 'search' as const, label: '검색' },
+            { key: 'explore' as const, label: '탐색' },
+            { key: 'feed' as const, label: '피드' },
+          ]).map(({ key, label }) => (
             <button
-              key={tab}
+              key={key}
               type="button"
-              onClick={() => setActiveTab(tab)}
+              onClick={() => setActiveTab(key)}
               className={cn(
                 'flex-1 py-1.5 text-sm font-medium rounded-md transition-colors',
-                activeTab === tab
+                activeTab === key
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              {tab === 'search' ? '검색' : '탐색'}
+              {label}
             </button>
           ))}
         </div>
@@ -392,6 +439,38 @@ export function Search() {
             hasFilterParams={hasFilterParams}
             onGoBack={goBackToExplore}
           />
+        )}
+
+        {activeTab === 'feed' && (
+          <section aria-label="차록 피드" className="space-y-4">
+            <Tabs value={feedTab} onValueChange={(v) => setFeedTab(v as typeof feedTab)}>
+              <TabsList className="w-full mb-4">
+                <TabsTrigger value="forYou" className="flex-1 text-sm font-medium">맞춤</TabsTrigger>
+                <TabsTrigger value="following" className="flex-1 text-sm font-medium">구독</TabsTrigger>
+                <TabsTrigger value="tags" className="flex-1 text-sm font-medium">향미</TabsTrigger>
+              </TabsList>
+              <TabsContent value="forYou">
+                <ForYouFeed notes={feedNotes} />
+              </TabsContent>
+              <TabsContent value="following">
+                <FollowingFeed
+                  notes={followingNotes}
+                  isLoading={isFollowingLoading}
+                  isLoggedIn={!!user}
+                  authLoading={false}
+                />
+              </TabsContent>
+              <TabsContent value="tags">
+                <TagsFeed
+                  notes={tagFeedNotes}
+                  followedTags={followedTags}
+                  isLoading={isTagsLoading}
+                  isLoggedIn={!!user}
+                  authLoading={false}
+                />
+              </TabsContent>
+            </Tabs>
+          </section>
         )}
 
         {activeTab === 'explore' && (
