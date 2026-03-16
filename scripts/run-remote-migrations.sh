@@ -65,7 +65,21 @@ echo -e "${GREEN}✅ SSH 연결 성공${NC}"
 echo ""
 
 # 마이그레이션 상태 확인
-echo -e "${BLUE}[2/3] 현재 마이그레이션 상태 확인 중...${NC}"
+echo -e "${BLUE}[2/4] 최신 코드 배포 중...${NC}"
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o LogLevel=QUIET ubuntu@"$LIGHTSAIL_IP" 'bash -s' << 'ENDSSH'
+set -e
+cd /home/ubuntu/chalog-backend
+echo "--- git pull ---"
+git pull origin main
+echo "--- npm install ---"
+npm ci --omit=dev 2>&1 | tail -3
+echo "--- build ---"
+npm run build 2>&1 | tail -3
+ENDSSH
+echo -e "${GREEN}✅ 배포 완료${NC}"
+echo ""
+
+echo -e "${BLUE}[3/4] 현재 마이그레이션 상태 확인 중...${NC}"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o LogLevel=QUIET ubuntu@"$LIGHTSAIL_IP" 'bash -s' << 'ENDSSH'
 set -e
 cd /home/ubuntu/chalog-backend
@@ -95,7 +109,7 @@ ENDSSH
 echo ""
 
 # 마이그레이션 실행
-echo -e "${BLUE}[3/3] 마이그레이션 실행 중...${NC}"
+echo -e "${BLUE}[4/4] 마이그레이션 실행 중...${NC}"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o LogLevel=QUIET ubuntu@"$LIGHTSAIL_IP" 'bash -s' << 'ENDSSH'
 set -e
 cd /home/ubuntu/chalog-backend
