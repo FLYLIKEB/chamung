@@ -149,7 +149,8 @@ export class NotesService {
       .createQueryBuilder('note')
       .leftJoinAndSelect('note.user', 'user')
       .leftJoinAndSelect('note.tea', 'tea')
-      .leftJoinAndSelect('tea.seller', 'seller');
+      .leftJoin('tea.seller', 'seller')
+      .addSelect(['seller.name']);
   }
 
   private async findFollowingFeed(currentUserId?: number): Promise<any[]> {

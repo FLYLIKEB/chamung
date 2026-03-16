@@ -261,12 +261,19 @@ function normalizeNote(note: BackendNote): NormalizedNote {
     tags = note.tags;
   }
 
+  // tea.seller 객체를 문자열로 정리 (React에서 객체 렌더링 방지)
+  const cleanedTea = note.tea ? {
+    ...note.tea,
+    seller: note.tea.seller?.name || note.tea.seller || undefined,
+  } : undefined;
+
   return {
     ...note,
+    tea: cleanedTea,
     teaName: note.tea?.name || '',
     teaType: note.tea?.type || undefined,
     teaYear: note.tea?.year || undefined,
-    teaSeller: note.tea?.seller?.name || undefined,
+    teaSeller: typeof note.tea?.seller === 'object' ? note.tea?.seller?.name : note.tea?.seller || undefined,
     userName: note.user?.name || '',
     // memo는 null을 유지 (이제 nullable)
     memo: note.memo,

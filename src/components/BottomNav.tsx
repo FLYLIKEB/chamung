@@ -1,8 +1,8 @@
-import { HTMLAttributes, useState } from 'react';
+import { HTMLAttributes } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, FileText, MessageSquare, Package, MoreHorizontal } from 'lucide-react';
+import { Home, MessageSquare, Package } from 'lucide-react';
 import { cn } from './ui/utils';
-import { MoreMenu } from './MoreMenu';
+import { useAuth } from '../contexts/AuthContext';
 
 type BottomNavItem = {
   label: string;
@@ -22,13 +22,6 @@ const NAV_ITEMS: BottomNavItem[] = [
     isActive: (pathname) => pathname === '/chadam' || pathname.startsWith('/chadam/'),
   },
   {
-    label: '내 차록',
-    path: '/my-notes',
-    icon: FileText,
-    activeStyle: 'bold',
-    isActive: (pathname) => pathname === '/my-notes' || pathname.startsWith('/user/'),
-  },
-  {
     label: '찻장',
     path: '/cellar',
     icon: Package,
@@ -37,18 +30,12 @@ const NAV_ITEMS: BottomNavItem[] = [
   },
 ];
 
-const MORE_PATHS = ['/saved', '/sessions', '/settings', '/calendar', '/notifications', '/sasaek'];
-const isMoreActive = (pathname: string) =>
-  MORE_PATHS.includes(pathname) ||
-  pathname.startsWith('/session/') ||
-  pathname.startsWith('/blind/');
-
 type BottomNavProps = HTMLAttributes<HTMLElement>;
 
 export function BottomNav({ className, ...rest }: BottomNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [moreOpen, setMoreOpen] = useState(false);
+  const { user } = useAuth();
 
   const handleNavigate = (path: string) => {
     if (location.pathname !== path) {
@@ -56,76 +43,85 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
     }
   };
 
+  const isProfileActive = location.pathname === '/my-notes' || location.pathname.startsWith('/user/');
+
   return (
-    <>
-      <nav
-        className={cn(
-          'fixed bottom-0 left-0 right-0 z-60 bg-card/95 backdrop-blur-md border-t border-black/5 rounded-t-2xl card-shadow-top px-2 py-3',
-          'pb-[calc(0.75rem+env(safe-area-inset-bottom))]',
-          'flex items-center justify-around',
-          'md:hidden',
-          className,
-        )}
-        {...rest}
-      >
-        {NAV_ITEMS.map((item) => {
-          const isActive = item.isActive
-            ? item.isActive(location.pathname)
-            : location.pathname === item.path;
-          const Icon = item.icon;
-          const isBoldActive = isActive && item.activeStyle === 'bold';
-          const isFillActive = isActive && item.activeStyle === 'fill';
-          const strokeWidth = isBoldActive ? 2.75 : 2;
-          const fill = isFillActive ? 'currentColor' : 'none';
-          return (
-            <button
-              key={item.path}
-              onClick={() => handleNavigate(item.path)}
+    <nav
+      className={cn(
+        'fixed bottom-0 left-0 right-0 z-60 bg-card/95 backdrop-blur-md border-t border-black/5 rounded-t-2xl card-shadow-top px-2 py-3',
+        'pb-[calc(0.75rem+env(safe-area-inset-bottom))]',
+        'flex items-center justify-around',
+        'md:hidden',
+        className,
+      )}
+      {...rest}
+    >
+      {NAV_ITEMS.map((item) => {
+        const isActive = item.isActive
+          ? item.isActive(location.pathname)
+          : location.pathname === item.path;
+        const Icon = item.icon;
+        const isBoldActive = isActive && item.activeStyle === 'bold';
+        const isFillActive = isActive && item.activeStyle === 'fill';
+        const strokeWidth = isBoldActive ? 2.75 : 2;
+        const fill = isFillActive ? 'currentColor' : 'none';
+        return (
+          <button
+            key={item.path}
+            onClick={() => handleNavigate(item.path)}
+            className={cn(
+              'min-h-[44px] min-w-[44px] flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-95',
+              isActive ? 'text-primary' : 'text-muted-foreground',
+            )}
+            aria-label={item.label}
+          >
+            <div
               className={cn(
-                'min-h-[44px] min-w-[44px] flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-95',
-                isActive ? 'text-primary' : 'text-muted-foreground',
+                'w-6 h-6 flex items-center justify-center',
+                isActive && 'rounded-full',
               )}
-              aria-label={item.label}
             >
-              <div
-                className={cn(
-                  'w-6 h-6 flex items-center justify-center',
-                  isActive && 'rounded-full',
-                )}
-              >
-                <Icon
-                  className={cn('w-5 h-5 transition-all duration-200', isActive && 'text-primary')}
-                  fill={fill}
-                  stroke="currentColor"
-                  strokeWidth={strokeWidth}
-                />
-              </div>
-              <span className="text-xs font-medium">{item.label}</span>
-            </button>
-          );
-        })}
-        <button
-          onClick={(e) => { (e.currentTarget as HTMLButtonElement).blur(); setMoreOpen(true); }}
-          className={cn(
-            'min-h-[44px] min-w-[44px] flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-95',
-            isMoreActive(location.pathname) ? 'text-primary' : 'text-muted-foreground',
-          )}
-          aria-label="더보기"
-        >
-          <div className="w-6 h-6 flex items-center justify-center">
-            <MoreHorizontal
-              className={cn(
-                'w-5 h-5 transition-all duration-200',
-                isMoreActive(location.pathname) && 'text-primary',
-              )}
-              stroke="currentColor"
-              strokeWidth={isMoreActive(location.pathname) ? 2.75 : 2}
+              <Icon
+                className={cn('w-5 h-5 transition-all duration-200', isActive && 'text-primary')}
+                fill={fill}
+                stroke="currentColor"
+                strokeWidth={strokeWidth}
+              />
+            </div>
+            <span className="text-xs font-medium">{item.label}</span>
+          </button>
+        );
+      })}
+
+      {/* Profile tab (rightmost) */}
+      <button
+        onClick={() => handleNavigate('/my-notes')}
+        className={cn(
+          'min-h-[44px] min-w-[44px] flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-95',
+          isProfileActive ? 'text-primary' : 'text-muted-foreground',
+        )}
+        aria-label="내 차록"
+      >
+        <div className={cn(
+          'w-6 h-6 rounded-full overflow-hidden',
+          isProfileActive && 'ring-2 ring-primary',
+        )}>
+          {user?.profileImageUrl ? (
+            <img
+              src={user.profileImageUrl}
+              alt={user.name}
+              className="w-6 h-6 rounded-full object-cover"
             />
-          </div>
-          <span className="text-xs font-medium">더보기</span>
-        </button>
-      </nav>
-      <MoreMenu open={moreOpen} onOpenChange={setMoreOpen} />
-    </>
+          ) : (
+            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+              <span className="text-[10px] font-semibold text-primary">
+                {(user?.name?.charAt(0) || '?').toUpperCase()}
+              </span>
+            </div>
+          )}
+        </div>
+        <span className="text-xs font-medium">내 차록</span>
+      </button>
+    </nav>
   );
 }
