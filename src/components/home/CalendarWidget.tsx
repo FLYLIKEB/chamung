@@ -1,31 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CalendarDays, Flame, Trophy, ChevronLeft, ChevronRight, Plus, Loader2 } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
-import { NoteCard } from '@/components/NoteCard';
+import { StreakCards } from '@/components/calendar/StreakCards';
+import { DateNotesDrawer } from '@/components/calendar/DateNotesDrawer';
 import { notesApi } from '@/lib/api';
 import type { CalendarData } from '@/lib/api/notes.api';
 import type { Note } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-
-const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
-
-function formatDateKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
-
-function formatDateLabel(date: Date): string {
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-  const day = DAY_NAMES[date.getDay()];
-  return `${m}월 ${d}일(${day})`;
-}
+import { formatDateKey } from '@/utils/dateUtils';
 
 export function CalendarWidget() {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -107,125 +93,74 @@ export function CalendarWidget() {
   return (
     <section aria-label="차록 캘린더" className="space-y-4">
       {/* Streak cards */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border bg-card p-3 flex items-center gap-3">
-          <Flame className="w-5 h-5 text-orange-500 shrink-0" />
-          <div>
-            <span className="text-xl font-bold">{calendarData?.streak.current ?? 0}</span>
-            <span className="text-xs text-muted-foreground ml-1">연속</span>
+      <StreakCards
+        current={calendarData?.streak.current ?? 0}
+        longest={calendarData?.streak.longest ?? 0}
+      />
+
+      {/* Month calendar card */}
+      <div className="rounded-2xl border border-border/30 bg-card p-4 md:p-5 space-y-4">
+        {/* Month navigation */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={goToPrevMonth}
+            className="p-1.5 rounded-full hover:bg-muted/50 transition-colors"
+            aria-label="이전 달"
+          >
+            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-primary" />
+            <span className="font-semibold text-sm text-foreground">
+              {year}년 {month}월
+            </span>
           </div>
+          <button
+            onClick={goToNextMonth}
+            className="p-1.5 rounded-full hover:bg-muted/50 transition-colors"
+            aria-label="다음 달"
+          >
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
         </div>
-        <div className="rounded-xl border bg-card p-3 flex items-center gap-3">
-          <Trophy className="w-5 h-5 text-yellow-500 shrink-0" />
-          <div>
-            <span className="text-xl font-bold">{calendarData?.streak.longest ?? 0}</span>
-            <span className="text-xs text-muted-foreground ml-1">최장</span>
+
+        {/* Calendar */}
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
           </div>
-        </div>
+        ) : (
+          <div className="flex justify-center">
+            <Calendar
+              month={new Date(year, month - 1, 1)}
+              onMonthChange={(d) => {
+                setYear(d.getFullYear());
+                setMonth(d.getMonth() + 1);
+              }}
+              onDayClick={handleDayClick}
+              modifiers={modifiers}
+              modifiersClassNames={modifiersClassNames}
+              showOutsideDays={false}
+            />
+          </div>
+        )}
+
+        {/* Note count */}
+        {!isLoading && calendarData && (
+          <p className="text-center text-xs text-muted-foreground pt-1">
+            이번 달 차록 <span className="font-semibold text-foreground">{calendarData.dates.length}개</span>
+          </p>
+        )}
       </div>
-
-      {/* Month navigation */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={goToPrevMonth}
-          className="p-1.5 rounded-full hover:bg-accent transition-colors"
-          aria-label="이전 달"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <div className="flex items-center gap-1.5">
-          <CalendarDays className="w-4 h-4 text-primary" />
-          <span className="font-semibold text-sm">
-            {year}년 {month}월
-          </span>
-        </div>
-        <button
-          onClick={goToNextMonth}
-          className="p-1.5 rounded-full hover:bg-accent transition-colors"
-          aria-label="다음 달"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Calendar */}
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="w-6 h-6 text-primary animate-spin" />
-        </div>
-      ) : (
-        <div className="rounded-xl border bg-card p-2 flex justify-center">
-          <Calendar
-            month={new Date(year, month - 1, 1)}
-            onMonthChange={(d) => {
-              setYear(d.getFullYear());
-              setMonth(d.getMonth() + 1);
-            }}
-            onDayClick={handleDayClick}
-            modifiers={modifiers}
-            modifiersClassNames={modifiersClassNames}
-            showOutsideDays={false}
-          />
-        </div>
-      )}
-
-      {/* Note count */}
-      {!isLoading && calendarData && (
-        <p className="text-center text-xs text-muted-foreground">
-          이번 달 차록: <span className="font-semibold text-foreground">{calendarData.dates.length}개</span>
-        </p>
-      )}
 
       {/* Date Notes Drawer */}
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerContent className="max-h-[80vh]">
-          <DrawerHeader className="flex items-center justify-between px-4 py-3 border-b">
-            <div>
-              <DrawerTitle className="text-lg font-semibold">
-                {selectedDate ? formatDateLabel(selectedDate) : ''}
-              </DrawerTitle>
-              <DrawerDescription className="sr-only">
-                선택한 날짜의 차록 목록
-              </DrawerDescription>
-            </div>
-            <button
-              onClick={() => {
-                setDrawerOpen(false);
-                navigate('/note/new');
-              }}
-              className="text-primary font-medium text-sm flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              기록 추가
-            </button>
-          </DrawerHeader>
-
-          <div className="overflow-y-auto px-4 py-3 pb-24 space-y-3">
-            {isLoadingNotes ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="w-6 h-6 text-primary animate-spin" />
-              </div>
-            ) : dateNotes.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p className="text-sm">이 날의 차록이 없습니다.</p>
-                <button
-                  onClick={() => {
-                    setDrawerOpen(false);
-                    navigate('/note/new');
-                  }}
-                  className="mt-3 text-primary font-medium text-sm"
-                >
-                  차록 작성하기
-                </button>
-              </div>
-            ) : (
-              dateNotes.map((note) => (
-                <NoteCard key={note.id} note={note} showTeaName />
-              ))
-            )}
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <DateNotesDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        selectedDate={selectedDate}
+        notes={dateNotes}
+        isLoading={isLoadingNotes}
+      />
     </section>
   );
 }

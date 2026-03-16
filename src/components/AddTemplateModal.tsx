@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -16,13 +16,26 @@ import { RatingSchema } from '../types';
 import { toast } from 'sonner';
 import { logger } from '../lib/logger';
 
+interface AxisInput {
+  nameKo: string;
+  nameEn: string;
+  descriptionKo: string;
+}
+
 interface AddTemplateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: (schema: RatingSchema) => void;
+  /** 수정 모드: 기존 스키마 데이터 */
+  editSchema?: {
+    id: number;
+    nameKo: string;
+    descriptionKo?: string;
+    axes?: Array<{ nameKo: string; nameEn: string; descriptionKo?: string | null }>;
+  } | null;
 }
 
-const DEFAULT_AXES = [
+const DEFAULT_AXES: AxisInput[] = [
   { nameKo: '향', nameEn: 'Aroma', descriptionKo: '' },
   { nameKo: '맛', nameEn: 'Taste', descriptionKo: '' },
   { nameKo: '여운', nameEn: 'Finish', descriptionKo: '' },
@@ -32,13 +45,25 @@ export function AddTemplateModal({
   open,
   onOpenChange,
   onSuccess,
+  editSchema,
 }: AddTemplateModalProps) {
+  const isEditMode = !!editSchema;
   const [nameKo, setNameKo] = useState('');
   const [descriptionKo, setDescriptionKo] = useState('');
-  const [axes, setAxes] = useState<Array<{ nameKo: string; nameEn: string; descriptionKo: string }>>([
-    ...DEFAULT_AXES,
-  ]);
+  const [axes, setAxes] = useState<AxisInput[]>([...DEFAULT_AXES]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open && editSchema) {
+      setNameKo(editSchema.nameKo);
+      setDescriptionKo(editSchema.descriptionKo ?? '');
+      setAxes(
+        editSchema.axes && editSchema.axes.length > 0
+          ? editSchema.axes.map((a) => ({ nameKo: a.nameKo, nameEn: a.nameEn, descriptionKo: a.descriptionKo ?? '' }))
+          : [...DEFAULT_AXES],
+      );
+    }
+  }, [open, editSchema]);
 
   const addAxis = () => {
     setAxes(prev => [...prev, { nameKo: '', nameEn: '', descriptionKo: '' }]);
@@ -49,7 +74,7 @@ export function AddTemplateModal({
     setAxes(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateAxis = (index: number, field: 'nameKo' | 'nameEn' | 'descriptionKo', value: string) => {
+  const updateAxis = (index: number, field: keyof AxisInput, value: string) => {
     setAxes(prev =>
       prev.map((a, i) => (i === index ? { ...a, [field]: value } : a))
     );
@@ -78,14 +103,21 @@ export function AddTemplateModal({
           displayOrder: i,
         })),
       };
-      const schema = await notesApi.createSchema(data);
-      toast.success('템플릿이 추가되었습니다.');
+
+      let schema: RatingSchema;
+      if (isEditMode && editSchema) {
+        schema = await notesApi.updateSchema(editSchema.id, data);
+        toast.success('템플릿이 수정되었습니다.');
+      } else {
+        schema = await notesApi.createSchema(data);
+        toast.success('템플릿이 추가되었습니다.');
+      }
       onSuccess(schema);
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      logger.error('Failed to create schema:', error);
-      toast.error(error instanceof Error ? error.message : '템플릿 추가에 실패했습니다.');
+      logger.error(`Failed to ${isEditMode ? 'update' : 'create'} schema:`, error);
+      toast.error(error instanceof Error ? error.message : `템플릿 ${isEditMode ? '수정' : '추가'}에 실패했습니다.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -106,9 +138,9 @@ export function AddTemplateModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>새 템플릿 추가</DialogTitle>
+          <DialogTitle>{isEditMode ? '템플릿 수정' : '새 템플릿 추가'}</DialogTitle>
           <DialogDescription>
-            평가 항목을 직접 설정한 테이스팅 템플릿을 만들 수 있어요.
+            평가 항목을 직접 설정한 테이스팅 템플릿을 {isEditMode ? '수정' : '만들'} 수 있어요.
           </DialogDescription>
         </DialogHeader>
 
@@ -199,10 +231,10 @@ export function AddTemplateModal({
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                추가 중...
+                {isEditMode ? '수정 중...' : '추가 중...'}
               </>
             ) : (
-              '추가'
+              isEditMode ? '수정' : '추가'
             )}
           </Button>
         </DialogFooter>

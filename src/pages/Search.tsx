@@ -61,7 +61,8 @@ export function Search() {
   } = useTeaSearch();
 
   const [cellarSort, setCellarSort] = useState<'name' | 'quantity' | 'recent'>('recent');
-  const [activeTab, setActiveTab] = useState<'search' | 'explore'>('search');
+  const initialTab = searchParams.get('tab') === 'explore' ? 'explore' : 'search';
+  const [activeTab, setActiveTab] = useState<'search' | 'explore'>(initialTab);
   const [trendingTeas, setTrendingTeas] = useState<Tea[]>([]);
   const [trendingCreators, setTrendingCreators] = useState<Array<{ id: number; name: string; profileImageUrl?: string | null; followerCount: number }>>([]);
   const [searchCategory, setSearchCategory] = useState<SearchCategory>('tea');
@@ -210,6 +211,7 @@ export function Search() {
     }
   }, [activeTab]);
 
+
   const handleApplyFilters = useCallback(() => {
     if (searchCategory === 'tea') {
       applyFilters('tea', searchQuery, filterCallbacks);
@@ -280,19 +282,22 @@ export function Search() {
         </div>
 
         <div className="flex gap-1 p-1 bg-muted rounded-lg">
-          {(['search', 'explore'] as const).map((tab) => (
+          {([
+            { key: 'search' as const, label: '검색' },
+            { key: 'explore' as const, label: '탐색' },
+          ]).map(({ key, label }) => (
             <button
-              key={tab}
+              key={key}
               type="button"
-              onClick={() => setActiveTab(tab)}
+              onClick={() => setActiveTab(key)}
               className={cn(
                 'flex-1 py-1.5 text-sm font-medium rounded-md transition-colors',
-                activeTab === tab
+                activeTab === key
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              {tab === 'search' ? '검색' : '탐색'}
+              {label}
             </button>
           ))}
         </div>

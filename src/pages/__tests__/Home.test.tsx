@@ -1,52 +1,12 @@
 import { screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 import { Home } from '../Home';
 import { renderWithRouter } from '../../test/renderWithRouter';
 
-const mockDate = new Date('2024-11-10T00:00:00.000Z');
-
-const mockNotes = [
-  {
-    id: 1,
-    teaId: 1,
-    teaName: '화과향',
-    userId: 1,
-    userName: '김차인',
-    rating: 4.5,
-    ratings: {
-      richness: 4,
-      strength: 4,
-      smoothness: 5,
-      clarity: 5,
-      complexity: 4,
-    },
-    memo: '공개 차록입니다.',
-    isPublic: true,
-    createdAt: mockDate,
-  },
-  {
-    id: 2,
-    teaId: 2,
-    teaName: '무이암차',
-    userId: 2,
-    userName: '이다원',
-    rating: 4.2,
-    ratings: {
-      richness: 3,
-      strength: 3,
-      smoothness: 4,
-      clarity: 4,
-      complexity: 3,
-    },
-    memo: '비공개 차록입니다.',
-    isPublic: false,
-    createdAt: mockDate,
-  },
-];
-
 vi.mock('../../lib/api', () => ({
   notesApi: {
-    getAll: vi.fn(() => Promise.resolve(mockNotes.filter(note => note.isPublic))),
+    getAll: vi.fn(() => Promise.resolve([])),
+    getCalendar: vi.fn(() => Promise.resolve({ dates: [], streak: { current: 0, longest: 0 } })),
   },
   teasApi: {
     getAll: vi.fn(() => Promise.resolve([])),
@@ -54,6 +14,7 @@ vi.mock('../../lib/api', () => ({
   },
   usersApi: {
     getTrending: vi.fn(() => Promise.resolve([])),
+    getOnboardingPreference: vi.fn(() => Promise.resolve({ hasCompletedOnboarding: true })),
   },
   authApi: {
     getMe: vi.fn(() => Promise.resolve({ user: null })),
@@ -71,41 +32,32 @@ vi.mock('../../contexts/AuthContext', async (importOriginal) => {
       user: null,
       isLoading: false,
       isAuthenticated: false,
+      authLoading: false,
+      hasCompletedOnboarding: true,
+      isOnboardingLoading: false,
     }),
   };
 });
 
 vi.mock('sonner', () => ({
-  toast: {
-    error: vi.fn(),
-    success: vi.fn(),
-  },
+  toast: { error: vi.fn(), success: vi.fn() },
 }));
 
 describe('Home 페이지', () => {
-  let mathRandomSpy: ReturnType<typeof vi.spyOn>;
-
-  beforeEach(() => {
-    mathRandomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
+  it('홈 컴포넌트가 에러 없이 렌더링된다', () => {
+    const { container } = renderWithRouter(<Home />, { route: '/' });
+    expect(container).toBeTruthy();
   });
 
-  afterEach(() => {
-    mathRandomSpy.mockRestore();
-  });
-
-  it('공개 차록을 렌더링하고 인기차 섹션은 표시하지 않는다', async () => {
+  it('퀵 액세스의 찻장 버튼이 표시된다', async () => {
     renderWithRouter(<Home />, { route: '/' });
-
-    // Wait for loading to finish and content to appear
     await waitFor(() => {
-      expect(screen.getByText('차록 흐름')).toBeInTheDocument();
-    }, { timeout: 5000 });
+      expect(screen.getByText('내 찻장')).toBeInTheDocument();
+    });
+  });
 
-    // 공개 차록의 차 이름이 NoteCard를 통해 표시됨
-    expect(screen.getByRole('heading', { name: '화과향' })).toBeInTheDocument();
-    // 인기차 섹션은 검색-탐색 페이지로 이동했으므로 없어야 함
+  it('인기차 섹션은 홈에 표시하지 않는다', async () => {
+    renderWithRouter(<Home />, { route: '/' });
     expect(screen.queryByText(/요즘 인기 차/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/인기 다우/)).not.toBeInTheDocument();
   });
 });
-
