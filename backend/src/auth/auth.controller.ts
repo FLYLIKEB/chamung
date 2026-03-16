@@ -209,6 +209,7 @@ export class AuthController {
     return this.authService.requestEmailChange(userId, dto.newEmail);
   }
 
+  @Throttle({ default: { limit: 5, ttl: 600000 } })
   @UseGuards(AuthGuard('jwt'))
   @Post('change-email/confirm')
   async confirmEmailChange(

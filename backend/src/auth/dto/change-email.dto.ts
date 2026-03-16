@@ -1,4 +1,4 @@
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class ChangeEmailRequestDto {
   @IsEmail()
@@ -6,6 +6,7 @@ export class ChangeEmailRequestDto {
 }
 
 export class ChangeEmailConfirmDto {
+  @IsNotEmpty()
   @IsString()
   token: string;
 }

@@ -126,8 +126,10 @@ export class AuthService {
     if (record.usedAt) throw new BadRequestException('이미 사용된 인증 링크입니다.');
     if (record.expiresAt < new Date()) throw new BadRequestException('만료된 인증 링크입니다.');
 
-    await this.usersService.updateEmailVerifiedAt(record.userId, new Date());
-    await this.emailVerificationTokenRepository.update({ id: record.id }, { usedAt: new Date() });
+    await this.dataSource.transaction(async (manager) => {
+      await manager.update(User, { id: record.userId }, { emailVerifiedAt: new Date() });
+      await manager.update(EmailVerificationToken, { id: record.id }, { usedAt: new Date() });
+    });
 
     return { message: '이메일이 인증되었습니다.' };
   }
@@ -175,24 +177,29 @@ export class AuthService {
       throw new ConflictException('이미 사용 중인 이메일입니다.');
     }
 
-    await this.emailChangeTokenRepository.update(
-      { userId, usedAt: IsNull() },
-      { usedAt: new Date() },
-    );
+    let rawToken: string;
 
-    const rawToken = randomBytes(32).toString('hex');
-    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30분
+    await this.dataSource.transaction(async (manager) => {
+      await manager.update(
+        EmailChangeToken,
+        { userId, usedAt: IsNull() },
+        { usedAt: new Date() },
+      );
 
-    await this.emailChangeTokenRepository.save({
-      userId,
-      tokenHash,
-      newEmail,
-      expiresAt,
-      usedAt: null,
+      rawToken = randomBytes(32).toString('hex');
+      const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30분
+
+      await manager.save(EmailChangeToken, {
+        userId,
+        tokenHash,
+        newEmail,
+        expiresAt,
+        usedAt: null,
+      });
     });
 
-    await this.mailService.sendEmailChangeEmail(newEmail, rawToken);
+    await this.mailService.sendEmailChangeEmail(newEmail, rawToken!);
     return { message: '인증 메일이 발송되었습니다.' };
   }
 
@@ -206,18 +213,18 @@ export class AuthService {
     if (record.usedAt) throw new BadRequestException('이미 사용된 인증 링크입니다.');
     if (record.expiresAt < new Date()) throw new BadRequestException('만료된 인증 링크입니다.');
 
-    const existing = await this.userAuthRepository.findOne({
-      where: { provider: AuthProvider.EMAIL, providerId: record.newEmail },
-    });
-    if (existing) {
-      throw new ConflictException('이미 사용 중인 이메일입니다.');
-    }
+    await this.dataSource.transaction(async (manager) => {
+      const existing = await manager.findOne(UserAuthentication, {
+        where: { provider: AuthProvider.EMAIL, providerId: record.newEmail },
+      });
+      if (existing) throw new ConflictException('이미 사용 중인 이메일입니다.');
 
-    await this.userAuthRepository.update(
-      { userId, provider: AuthProvider.EMAIL },
-      { providerId: record.newEmail },
-    );
-    await this.emailChangeTokenRepository.update({ id: record.id }, { usedAt: new Date() });
+      await manager.update(UserAuthentication,
+        { userId, provider: AuthProvider.EMAIL },
+        { providerId: record.newEmail },
+      );
+      await manager.update(EmailChangeToken, { id: record.id }, { usedAt: new Date() });
+    });
 
     return { message: '이메일이 변경되었습니다.' };
   }
