@@ -68,7 +68,7 @@ echo ""
 echo -e "${BLUE}[2/4] 최신 코드 배포 중...${NC}"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o LogLevel=QUIET ubuntu@"$LIGHTSAIL_IP" 'bash -s' << 'ENDSSH'
 set -e
-cd /home/ubuntu/chalog-backend
+cd /home/ubuntu/chalog-backend/backend
 echo "--- git stash + pull ---"
 git stash --include-untracked 2>/dev/null || true
 git pull origin main
@@ -84,7 +84,7 @@ echo ""
 echo -e "${BLUE}[3/4] 현재 마이그레이션 상태 확인 중...${NC}"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o LogLevel=QUIET ubuntu@"$LIGHTSAIL_IP" 'bash -s' << 'ENDSSH'
 set -e
-cd /home/ubuntu/chalog-backend
+cd /home/ubuntu/chalog-backend/backend
 
 if [ ! -f ".env" ]; then
     echo "❌ .env 파일이 없습니다: /home/ubuntu/chalog-backend/.env"
@@ -114,7 +114,7 @@ echo ""
 echo -e "${BLUE}[4/4] 마이그레이션 실행 중...${NC}"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o LogLevel=QUIET ubuntu@"$LIGHTSAIL_IP" 'bash -s' << 'ENDSSH'
 set -e
-cd /home/ubuntu/chalog-backend
+cd /home/ubuntu/chalog-backend/backend
 
 set -o allexport
 source .env
