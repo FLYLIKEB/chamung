@@ -208,30 +208,40 @@ export function NoteDetail() {
       <Header showBack title="차록 상세" showProfile />
       
       <div className="p-4 space-y-6">
-        {/* 날씨 카드 */}
-        {weather && (
-          <section className="rounded-lg bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/30 border border-blue-100 dark:border-blue-900/50 p-4">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-2xl">{weather.emoji}</span>
-              <span className="text-xs text-muted-foreground">
+        {/* 그날의 기록 */}
+        <section className="rounded-lg bg-gradient-to-br from-amber-50/80 to-orange-50/60 dark:from-amber-950/20 dark:to-orange-950/15 border border-amber-100/60 dark:border-amber-900/30 px-4 py-3">
+          <div className="flex items-start gap-3">
+            {weather && <span className="text-xl mt-0.5 shrink-0">{weather.emoji}</span>}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-foreground/80">
                 {(() => {
                   const displayDate = note.drinkDate
                     ? new Date(note.drinkDate + 'T00:00:00')
                     : note.createdAt instanceof Date
                       ? note.createdAt
                       : new Date(note.createdAt);
-                  return displayDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+                  return displayDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
                 })()}
-              </span>
+              </p>
+              {weather && (
+                <>
+                  <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                    <span>{weather.label}</span>
+                    {weather.temperatureMin != null && weather.temperatureMax != null && (
+                      <span>· {weather.temperatureMin}°~{weather.temperatureMax}°</span>
+                    )}
+                    {weather.humidity != null && (
+                      <span>· 습도 {weather.humidity}%</span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs text-amber-800/70 dark:text-amber-200/60 leading-relaxed">
+                    {weather.teaComment}
+                  </p>
+                </>
+              )}
             </div>
-            <p className="text-sm font-medium mb-1">
-              {weather.label}
-              {weather.temperatureMin != null && weather.temperatureMax != null && ` ${weather.temperatureMin}°~${weather.temperatureMax}°`}
-              {weather.humidity != null && ` · 습도 ${weather.humidity}%`}
-            </p>
-            <p className="text-xs text-muted-foreground italic">{weather.teaComment}</p>
-          </section>
-        )}
+          </div>
+        </section>
 
         {/* 차 정보 요약 */}
         {tea && (
