@@ -531,7 +531,12 @@ export function Settings() {
 
       <BottomNav />
 
-      <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
+      <Dialog open={isChangePasswordOpen} onOpenChange={(open) => {
+        setIsChangePasswordOpen(open);
+        if (!open) {
+          setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>비밀번호 변경</DialogTitle>

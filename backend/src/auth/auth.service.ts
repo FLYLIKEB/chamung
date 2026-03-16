@@ -282,6 +282,10 @@ export class AuthService {
       throw new UnauthorizedException('현재 비밀번호가 올바르지 않습니다.');
     }
 
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException('새 비밀번호는 현재 비밀번호와 달라야 합니다.');
+    }
+
     auth.credential = await bcrypt.hash(dto.newPassword, 10);
     await this.userAuthRepository.save(auth);
     await this.revokeAllRefreshTokens(userId);
