@@ -5,6 +5,7 @@ import { renderWithRouter } from '../../../test/renderWithRouter';
 
 vi.mock('../../../lib/api', () => ({
   authApi: { getMe: vi.fn(() => Promise.resolve({ user: { id: 1, name: '테스트' } })) },
+  usersApi: { getOnboardingPreference: vi.fn(() => Promise.resolve({ hasCompletedOnboarding: true })) },
 }));
 
 vi.mock('../../../contexts/AuthContext', async (importOriginal) => {
@@ -24,7 +25,7 @@ describe('QuickAccess', () => {
     renderWithRouter(<QuickAccess />);
     expect(screen.getByText('내 차록')).toBeInTheDocument();
     expect(screen.getByText('탐색')).toBeInTheDocument();
-    expect(screen.getByText('캘린더')).toBeInTheDocument();
+    expect(screen.getByText('내 찻장')).toBeInTheDocument();
   });
 
   it('각 버튼이 클릭 가능하다', () => {

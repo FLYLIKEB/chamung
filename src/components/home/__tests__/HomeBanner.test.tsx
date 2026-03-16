@@ -6,6 +6,7 @@ import { renderWithRouter } from '../../../test/renderWithRouter';
 vi.mock('../../../lib/api', () => ({
   authApi: { getMe: vi.fn(() => Promise.resolve({ user: { id: 1, name: '테스트' } })) },
   notesApi: { getAll: vi.fn(() => Promise.resolve([])) },
+  usersApi: { getOnboardingPreference: vi.fn(() => Promise.resolve({ hasCompletedOnboarding: true })) },
 }));
 
 vi.mock('../../../contexts/AuthContext', async (importOriginal) => {

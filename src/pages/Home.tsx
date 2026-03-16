@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useScrollRestoration } from '../hooks/useScrollRestoration';
 import { Header } from '../components/Header';
 import { HeroSection } from '../components/HeroSection';
@@ -23,6 +24,7 @@ type FeedTab = 'forYou' | 'following' | 'tags';
 
 export function Home() {
   useScrollRestoration();
+  const navigate = useNavigate();
 
   const { user: currentUser, isLoading: authLoading } = useAuth();
   const [feedTab, setFeedTab] = useState<FeedTab>('forYou');
@@ -30,16 +32,13 @@ export function Home() {
   const [followingNotes, setFollowingNotes] = useState<Note[]>([]);
   const [tagNotes, setTagNotes] = useState<Note[]>([]);
   const [followedTags, setFollowedTags] = useState<PopularTagItem[]>([]);
-  const [isFeedLoading, setIsFeedLoading] = useState(false);
   const [isFollowingLoading, setIsFollowingLoading] = useState(false);
   const [isTagsLoading, setIsTagsLoading] = useState(false);
 
   useEffect(() => {
-    setIsFeedLoading(true);
     notesApi.getAll(undefined, true)
       .then((data) => setPublicNotes(Array.isArray(data) ? data as Note[] : []))
-      .catch((e) => { logger.error('Failed to fetch feed:', e); toast.error('데이터를 불러오는데 실패했습니다.'); })
-      .finally(() => setIsFeedLoading(false));
+      .catch((e) => { logger.error('Failed to fetch feed:', e); toast.error('데이터를 불러오는데 실패했습니다.'); });
   }, []);
 
   useEffect(() => {
@@ -83,12 +82,25 @@ export function Home() {
         <HomeBanner />
         <QuickAccess />
         {currentUser && <WeeklyCalendar />}
-        <RecommendedContent />
 
-        {/* 차록 피드 */}
-        <section aria-label="차록 피드">
+        {/* 차록 피드 (통합: 수평 하이라이트 + 탭) */}
+        <section aria-label="차록 피드" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-foreground">차록 흐름</span>
+            <button
+              onClick={() => navigate('/sasaek?tab=explore')}
+              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              더보기
+            </button>
+          </div>
+
+          {/* Horizontal highlight cards (from public notes) */}
+          <RecommendedContent notes={publicNotes} />
+
+          {/* Feed tabs */}
           <Tabs value={feedTab} onValueChange={(v) => setFeedTab(v as FeedTab)}>
-            <TabsList className="w-full mb-4">
+            <TabsList className="w-full">
               <TabsTrigger value="forYou" className="flex-1 text-sm font-medium">맞춤</TabsTrigger>
               <TabsTrigger value="following" className="flex-1 text-sm font-medium">구독</TabsTrigger>
               <TabsTrigger value="tags" className="flex-1 text-sm font-medium">향미</TabsTrigger>

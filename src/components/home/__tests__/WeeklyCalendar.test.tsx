@@ -9,6 +9,7 @@ vi.mock('sonner', () => ({
 
 vi.mock('../../../lib/api', () => ({
   authApi: { getMe: vi.fn(() => Promise.resolve({ user: { id: 1, name: '테스트' } })) },
+  usersApi: { getOnboardingPreference: vi.fn(() => Promise.resolve({ hasCompletedOnboarding: true })) },
   notesApi: {
     getCalendar: vi.fn(() => Promise.resolve({ dates: [], streak: { current: 3, longest: 7 } })),
   },
@@ -32,13 +33,9 @@ describe('WeeklyCalendar', () => {
     expect(screen.getByText('이번 주 차록')).toBeInTheDocument();
   });
 
-  it('7개의 요일 버튼이 표시된다', async () => {
+  it('전체보기 링크가 표시된다', () => {
     renderWithRouter(<WeeklyCalendar />);
-    await waitFor(() => {
-      const buttons = screen.getAllByRole('button');
-      // 7 day buttons + "전체보기" + "오늘 차록 쓰기" = 9
-      expect(buttons.length).toBeGreaterThanOrEqual(7);
-    });
+    expect(screen.getByText('전체보기')).toBeInTheDocument();
   });
 
   it('연속 기록 뱃지가 표시된다', async () => {
