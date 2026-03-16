@@ -24,8 +24,8 @@ export function Header({ title, showBack, onBack, showProfile, showLogo }: Heade
 
   return (
     <>
-      <header className="md:hidden fixed top-0 left-0 right-0 z-100 bg-card/95 backdrop-blur-md border-b border-black/5 rounded-b-2xl py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))]">
-        <div className="max-w-2xl mx-auto flex items-center justify-between px-4 sm:px-6">
+      <header className="fixed top-0 left-0 right-0 md:left-[160px] z-100 bg-card/95 backdrop-blur-md border-b border-black/5 rounded-b-2xl py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))]">
+        <div className="max-w-2xl md:max-w-5xl lg:max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             {showBack && (
               <button
@@ -83,9 +83,9 @@ export function Header({ title, showBack, onBack, showProfile, showLogo }: Heade
         </div>
       </header>
 
-      {/* 고정 헤더 높이만큼 스페이서 - 콘텐츠가 헤더와 겹치지 않도록 (모바일 전용) */}
+      {/* 고정 헤더 높이만큼 스페이서 */}
       <div
-        className="md:hidden shrink-0 w-full"
+        className="shrink-0 w-full"
         style={{ height: headerHeight, minHeight: headerHeight }}
         aria-hidden
       />

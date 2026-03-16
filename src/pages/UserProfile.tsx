@@ -301,7 +301,7 @@ export function UserProfile() {
       {/* Preference tags */}
       {isOwnProfile && onboardingPreference &&
         (onboardingPreference.preferredTeaTypes?.length > 0 || onboardingPreference.preferredFlavorTags?.length > 0) && (
-        <div className="px-4 py-3 border-b border-border/40">
+        <div className="px-4 py-3 md:px-8 border-b border-border/40">
           <div className="flex items-center justify-between mb-2.5">
             <span className="text-xs font-medium text-muted-foreground">취향</span>
             <button

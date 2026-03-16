@@ -22,7 +22,7 @@ export function ProfileStats({ stats, userLevel }: ProfileStatsProps) {
   }
 
   return (
-    <div className="px-4 py-3 border-b border-border/40 space-y-2">
+    <div className="px-4 py-3 md:px-8 md:py-4 border-b border-border/40 space-y-2">
       {/* Compact stats row */}
       <div className="flex items-center justify-around">
         <div className="flex items-center gap-1.5">

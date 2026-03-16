@@ -279,13 +279,13 @@ export function UserNoteList({
           {notes.length > 0 ? (
             <>
               {activeTab === 'grid' ? (
-                <div className="grid grid-cols-3 gap-1.5 px-2">
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5 md:gap-3 px-2 md:px-4">
                   {notes.map((note) => (
                     <NoteGridItem key={note.id} note={note} weatherEmoji={weatherEmojis.get(getNoteDateKey(note) ?? '') ?? undefined} />
                   ))}
                 </div>
               ) : (
-                <div className="px-4 py-3 space-y-3">
+                <div className="px-4 py-3 md:px-6 space-y-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0">
                   {notes.map((note) => (
                     <NoteCard key={note.id} note={note} showTeaName />
                   ))}

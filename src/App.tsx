@@ -12,9 +12,6 @@ import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { AdminRouteGuard } from './components/AdminRouteGuard';
 import { AdminLayout } from './components/AdminLayout';
 import { EmailVerificationBanner } from './components/EmailVerificationBanner';
-import { AppSidebar } from './components/AppSidebar';
-import { DesktopHeader } from './components/DesktopHeader';
-import { SidebarProvider } from './contexts/SidebarContext';
 import { PullToRefreshProvider } from './contexts/PullToRefreshContext';
 
 function CommunityRedirect() {
@@ -149,15 +146,9 @@ function AppContent() {
 
   return (
     <AppModeProvider>
-    <SidebarProvider>
-    <div className={`h-screen flex flex-col md:flex-row overflow-hidden ${PAGE_BG_GRADIENT}`}>
-      {/* 데스크톱 사이드바 (md 이상에서만 표시) */}
-      <AppSidebar />
-
+    <div className={`h-screen flex flex-col overflow-hidden ${PAGE_BG_GRADIENT}`}>
       {/* 메인 콘텐츠 영역 */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* 데스크톱 헤더 (md 이상에서만 표시) */}
-        <DesktopHeader />
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0 md:pl-[160px]">
 
         <EmailVerificationBannerWrapper />
 
@@ -225,7 +216,6 @@ function AppContent() {
       <SpeedDialFAB />
       <PWAInstallBanner />
     </div>
-    </SidebarProvider>
     </AppModeProvider>
   );
 }

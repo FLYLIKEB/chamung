@@ -93,7 +93,7 @@ export function ReportContent() {
   }
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 md:px-8 space-y-6 max-w-2xl mx-auto">
       {/* 월 선택기 */}
       <div className="flex items-center justify-between bg-muted rounded-xl px-4 py-2.5">
         <button
