@@ -70,6 +70,7 @@ export class AuthService {
         email: email || null,
         name: user.name,
         role: user.role,
+        emailVerifiedAt: user.emailVerifiedAt ?? null,
       },
     };
   }
@@ -135,17 +136,23 @@ export class AuthService {
     const email = await this.usersService.getUserEmail(userId);
     if (!email) throw new BadRequestException('이메일 정보가 없습니다.');
 
-    // 기존 미사용 토큰 무효화
-    await this.emailVerificationTokenRepository.update(
-      { userId, usedAt: IsNull() },
-      { usedAt: new Date() },
-    );
+    let rawToken: string;
 
-    const rawToken = randomBytes(32).toString('hex');
-    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    await this.emailVerificationTokenRepository.save({ userId, tokenHash, expiresAt, usedAt: null });
-    await this.mailService.sendVerificationEmail(email, rawToken);
+    await this.dataSource.transaction(async (manager) => {
+      // 기존 미사용 토큰 무효화
+      await manager.update(
+        EmailVerificationToken,
+        { userId, usedAt: IsNull() },
+        { usedAt: new Date() },
+      );
+
+      rawToken = randomBytes(32).toString('hex');
+      const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await manager.save(EmailVerificationToken, { userId, tokenHash, expiresAt, usedAt: null });
+    });
+
+    await this.mailService.sendVerificationEmail(email, rawToken!);
 
     return { message: '인증 메일이 재발송되었습니다.' };
   }

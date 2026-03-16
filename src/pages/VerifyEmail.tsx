@@ -4,12 +4,14 @@ import { Mail, Loader2 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Button } from '../components/ui/button';
 import { authApi } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
 export function VerifyEmail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const { isAuthenticated } = useAuth();
 
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -71,16 +73,22 @@ export function VerifyEmail() {
               <h1 className="text-xl font-bold">인증 실패</h1>
               <p className="text-muted-foreground text-sm">{verifyError}</p>
             </div>
-            <Button onClick={handleResend} className="w-full" disabled={isResending}>
-              {isResending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  발송 중...
-                </>
-              ) : (
-                '인증 메일 재발송'
-              )}
-            </Button>
+            {isAuthenticated ? (
+              <Button onClick={handleResend} className="w-full" disabled={isResending}>
+                {isResending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    발송 중...
+                  </>
+                ) : (
+                  '인증 메일 재발송'
+                )}
+              </Button>
+            ) : (
+              <p className="text-sm text-center text-muted-foreground">
+                <Link to="/login" className="text-emerald-600 hover:underline">로그인</Link> 후 재발송할 수 있습니다.
+              </p>
+            )}
             <div className="text-center text-sm">
               <Link to="/login" className="text-emerald-600 hover:underline">
                 로그인으로 돌아가기
@@ -106,16 +114,22 @@ export function VerifyEmail() {
               이메일을 확인하여 인증을 완료해주세요.
             </p>
           </div>
-          <Button onClick={handleResend} variant="outline" className="w-full" disabled={isResending}>
-            {isResending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                발송 중...
-              </>
-            ) : (
-              '인증 메일 재발송'
-            )}
-          </Button>
+          {isAuthenticated ? (
+            <Button onClick={handleResend} variant="outline" className="w-full" disabled={isResending}>
+              {isResending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  발송 중...
+                </>
+              ) : (
+                '인증 메일 재발송'
+              )}
+            </Button>
+          ) : (
+            <p className="text-sm text-center text-muted-foreground">
+              <Link to="/login" className="text-emerald-600 hover:underline">로그인</Link> 후 재발송할 수 있습니다.
+            </p>
+          )}
           <div className="text-center text-sm">
             <Link to="/" className="text-emerald-600 hover:underline">
               홈으로 돌아가기

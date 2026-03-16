@@ -32,10 +32,10 @@ vi.mock('../../contexts/AuthContext', async (importOriginal) => {
   return {
     ...actual,
     useAuth: () => ({
-      user: null,
-      token: null,
+      user: { id: 1, email: 'test@example.com', name: 'Test', emailVerifiedAt: null },
+      token: 'cookie',
       isLoading: false,
-      isAuthenticated: false,
+      isAuthenticated: true,
       hasCompletedOnboarding: null,
       isOnboardingLoading: false,
     }),
