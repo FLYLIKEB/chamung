@@ -9,6 +9,7 @@ export interface LevelTier {
   threshold: number;
   level: number;
   name: string;
+  description: string;
 }
 
 export const ALL_BADGES: BadgeDefinition[] = [
@@ -21,24 +22,24 @@ export const ALL_BADGES: BadgeDefinition[] = [
 ];
 
 export const NOTE_LEVEL_TIERS: LevelTier[] = [
-  { threshold: 0, level: 1, name: '입문' },
-  { threshold: 5, level: 2, name: '수련' },
-  { threshold: 20, level: 3, name: '숙련' },
-  { threshold: 50, level: 4, name: '마스터' },
+  { threshold: 0, level: 1, name: '입문', description: '차록의 세계에 첫 발을 내딛었어요' },
+  { threshold: 5, level: 2, name: '수련', description: '꾸준히 차를 기록하고 있어요' },
+  { threshold: 20, level: 3, name: '숙련', description: '차에 대한 깊은 안목이 생겼어요' },
+  { threshold: 50, level: 4, name: '마스터', description: '차록의 대가, 진정한 다인이에요' },
 ];
 
 export const POST_LEVEL_TIERS: LevelTier[] = [
-  { threshold: 0, level: 1, name: '새싹' },
-  { threshold: 5, level: 2, name: '이웃' },
-  { threshold: 20, level: 3, name: '단골' },
-  { threshold: 50, level: 4, name: '터줏대감' },
+  { threshold: 0, level: 1, name: '새싹', description: '커뮤니티에 막 합류했어요' },
+  { threshold: 5, level: 2, name: '이웃', description: '활발하게 소통하고 있어요' },
+  { threshold: 20, level: 3, name: '단골', description: '커뮤니티의 핵심 멤버예요' },
+  { threshold: 50, level: 4, name: '터줏대감', description: '커뮤니티를 이끄는 리더예요' },
 ];
 
 export const CELLAR_LEVEL_TIERS: LevelTier[] = [
-  { threshold: 0, level: 1, name: '비어있음' },
-  { threshold: 5, level: 2, name: '소장가' },
-  { threshold: 15, level: 3, name: '수집가' },
-  { threshold: 30, level: 4, name: '다완장' },
+  { threshold: 0, level: 1, name: '비어있음', description: '찻장을 채워보세요' },
+  { threshold: 5, level: 2, name: '소장가', description: '소중한 차 컬렉션이 시작됐어요' },
+  { threshold: 15, level: 3, name: '수집가', description: '다양한 차를 보유하고 있어요' },
+  { threshold: 30, level: 4, name: '다완장', description: '최고의 차 컬렉터예요' },
 ];
 
 export const LEVEL_CATEGORIES = [

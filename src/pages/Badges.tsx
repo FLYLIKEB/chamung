@@ -44,6 +44,8 @@ export function Badges() {
   }
 
   const earnedIds = new Set(userLevel?.badges.map((b) => b.id) ?? []);
+  const earnedBadges = ALL_BADGES.filter((b) => earnedIds.has(b.id));
+  const unearnedBadges = ALL_BADGES.filter((b) => !earnedIds.has(b.id));
 
   return (
     <div className="flex flex-col gap-6 p-4 pb-24">
@@ -66,6 +68,8 @@ export function Badges() {
                 ? Math.round((info.count / info.nextThreshold) * 100)
                 : 100;
 
+            const currentTier = tiers.find((t) => t.level === info.level);
+
             return (
               <div key={key} className="rounded-xl border bg-card p-4 space-y-2">
                 <div className="flex items-center justify-between">
@@ -75,6 +79,9 @@ export function Badges() {
                     <span className="text-xs text-muted-foreground">Lv.{info.level}</span>
                   </div>
                 </div>
+                {currentTier && (
+                  <p className="text-xs text-muted-foreground">{currentTier.description}</p>
+                )}
                 <Progress value={Math.min(progressPercent, 100)} className="h-2" />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>{info.count}개</span>
@@ -84,19 +91,23 @@ export function Badges() {
                     <span>최고 레벨 달성!</span>
                   )}
                 </div>
-                <div className="flex gap-1 mt-1">
+                <div className="flex flex-col gap-1 mt-1">
                   {tiers.map((tier) => (
-                    <span
+                    <div
                       key={tier.level}
                       className={cn(
-                        'text-xs px-1.5 py-0.5 rounded',
+                        'flex items-center gap-2 text-xs px-2 py-1.5 rounded',
                         info.level >= tier.level
                           ? 'bg-primary/10 text-primary font-medium'
                           : 'bg-muted text-muted-foreground',
                       )}
                     >
-                      {tier.name}
-                    </span>
+                      <span className="shrink-0 w-16">Lv.{tier.level} {tier.name}</span>
+                      <span className="shrink-0 text-muted-foreground font-normal">
+                        {tier.threshold > 0 ? `${tier.threshold}개 이상` : '시작'}
+                      </span>
+                      <span className="text-muted-foreground/70 font-normal ml-auto text-right">{tier.description}</span>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -105,45 +116,57 @@ export function Badges() {
         </div>
       </section>
 
-      {/* Badge Section */}
+      {/* Earned Badges */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">
-          뱃지 ({earnedIds.size}/{ALL_BADGES.length})
+          보유 뱃지 ({earnedBadges.length}/{ALL_BADGES.length})
         </h2>
-        <div className="grid grid-cols-2 gap-3">
-          {ALL_BADGES.map((badge) => {
-            const earned = earnedIds.has(badge.id);
-            return (
+        {earnedBadges.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3">
+            {earnedBadges.map((badge) => (
               <div
                 key={badge.id}
-                data-testid={earned ? 'badge-earned' : 'badge-locked'}
-                className={cn(
-                  'rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-colors',
-                  earned ? 'bg-card border-primary/30' : 'bg-muted/30 border-transparent opacity-60',
-                )}
+                data-testid="badge-earned"
+                className="rounded-xl border border-primary/30 bg-card p-4 flex flex-col items-center gap-2 text-center"
               >
-                <div
-                  className={cn(
-                    'w-12 h-12 rounded-full flex items-center justify-center',
-                    earned ? 'bg-primary/10' : 'bg-muted',
-                  )}
-                >
-                  {earned ? (
-                    <Award className="w-6 h-6 text-primary" />
-                  ) : (
-                    <Lock className="w-5 h-5 text-muted-foreground" />
-                  )}
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-primary/10">
+                  <Award className="w-6 h-6 text-primary" />
                 </div>
-                <span className={cn('text-sm font-semibold', earned ? 'text-foreground' : 'text-muted-foreground')}>
-                  {badge.name}
-                </span>
+                <span className="text-sm font-semibold text-foreground">{badge.name}</span>
                 <span className="text-xs text-muted-foreground">{badge.threshold}</span>
                 <span className="text-xs text-muted-foreground/70">{badge.description}</span>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-4">아직 획득한 뱃지가 없어요</p>
+        )}
       </section>
+
+      {/* Unearned Badges */}
+      {unearnedBadges.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground">
+            미보유 뱃지 ({unearnedBadges.length})
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {unearnedBadges.map((badge) => (
+              <div
+                key={badge.id}
+                data-testid="badge-locked"
+                className="rounded-xl border border-transparent bg-muted/30 p-4 flex flex-col items-center gap-2 text-center opacity-60"
+              >
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-muted">
+                  <Lock className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <span className="text-sm font-semibold text-muted-foreground">{badge.name}</span>
+                <span className="text-xs text-muted-foreground">{badge.threshold}</span>
+                <span className="text-xs text-muted-foreground/70">{badge.description}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
