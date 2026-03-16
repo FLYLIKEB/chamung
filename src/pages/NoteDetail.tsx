@@ -208,6 +208,31 @@ export function NoteDetail() {
       <Header showBack title="차록 상세" showProfile />
       
       <div className="p-4 space-y-6">
+        {/* 날씨 카드 */}
+        {weather && (
+          <section className="rounded-lg bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/30 border border-blue-100 dark:border-blue-900/50 p-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-2xl">{weather.emoji}</span>
+              <span className="text-xs text-muted-foreground">
+                {(() => {
+                  const displayDate = note.drinkDate
+                    ? new Date(note.drinkDate + 'T00:00:00')
+                    : note.createdAt instanceof Date
+                      ? note.createdAt
+                      : new Date(note.createdAt);
+                  return displayDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+                })()}
+              </span>
+            </div>
+            <p className="text-sm font-medium mb-1">
+              {weather.label}
+              {weather.temperatureMin != null && weather.temperatureMax != null && ` ${weather.temperatureMin}°~${weather.temperatureMax}°`}
+              {weather.humidity != null && ` · 습도 ${weather.humidity}%`}
+            </p>
+            <p className="text-xs text-muted-foreground italic">{weather.teaComment}</p>
+          </section>
+        )}
+
         {/* 차 정보 요약 */}
         {tea && (
           <section className="bg-card rounded-lg p-4">
@@ -324,14 +349,6 @@ export function NoteDetail() {
 
           </div>
           
-          {note.drinkDate && (
-            <p className="text-sm mb-2">
-              {weather ? `${weather.emoji} ` : ''}
-              {new Date(note.drinkDate + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
-              {weather ? ` ${weather.label}` : ''}
-              {weather?.temperatureMin != null && weather?.temperatureMax != null && ` ${weather.temperatureMin}°~${weather.temperatureMax}°`}
-            </p>
-          )}
           <p className="text-xs text-muted-foreground mb-4">
             {note.createdAt.toLocaleDateString('ko-KR')} ·{' '}
             <button
