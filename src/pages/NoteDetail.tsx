@@ -324,14 +324,19 @@ export function NoteDetail() {
 
           </div>
           
-          {note.drinkDate && (
-            <p className="text-sm mb-2">
-              {weather ? `${weather.emoji} ` : ''}
-              {new Date(note.drinkDate + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
-              {weather ? ` ${weather.label}` : ''}
-              {weather?.temperatureMin != null && weather?.temperatureMax != null && ` ${weather.temperatureMin}°~${weather.temperatureMax}°`}
-            </p>
-          )}
+          <p className="text-sm mb-2">
+            {weather ? `${weather.emoji} ` : ''}
+            {(() => {
+              const displayDate = note.drinkDate
+                ? new Date(note.drinkDate + 'T00:00:00')
+                : note.createdAt instanceof Date
+                  ? note.createdAt
+                  : new Date(note.createdAt);
+              return displayDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+            })()}
+            {weather ? ` ${weather.label}` : ''}
+            {weather?.temperatureMin != null && weather?.temperatureMax != null && ` ${weather.temperatureMin}°~${weather.temperatureMax}°`}
+          </p>
           <p className="text-xs text-muted-foreground mb-4">
             {note.createdAt.toLocaleDateString('ko-KR')} ·{' '}
             <button
