@@ -208,7 +208,7 @@ export function NoteDetail() {
       <Header showBack title="차록 상세" showProfile />
       
       <div className="p-4 space-y-6">
-        {/* 그날의 일기 */}
+        {/* 그날의 일기 + 차 정보 */}
         {(() => {
           const displayDate = note.drinkDate
             ? new Date(note.drinkDate + 'T00:00:00')
@@ -220,77 +220,82 @@ export function NoteDetail() {
           const day = displayDate.getDate();
           const weekday = ['일', '월', '화', '수', '목', '금', '토'][displayDate.getDay()];
           return (
-            <section className="rounded-lg bg-card border p-4">
-              <div className="flex items-baseline gap-2 mb-3 pb-3 border-b border-dashed border-amber-200/60 dark:border-amber-800/30">
+            <section className="rounded-lg bg-card border overflow-hidden">
+              {/* 날짜 헤더 */}
+              <div className="flex items-baseline gap-2 px-4 pt-4 pb-3 border-b border-dashed border-amber-200/60 dark:border-amber-800/30">
                 <span className="text-2xl font-bold tracking-tight">{month}/{day}</span>
                 <span className="text-sm text-muted-foreground">{weekday}요일</span>
                 <span className="text-xs text-muted-foreground/60 ml-auto">{year}</span>
               </div>
-              {weather ? (
-                <div className="grid grid-cols-3 gap-3 text-center mb-3">
-                  <div>
-                    <span className="text-xl block">{weather.emoji}</span>
-                    <span className="text-xs text-muted-foreground mt-1 block">{weather.label}</span>
-                  </div>
-                  {weather.temperatureMin != null && weather.temperatureMax != null && (
-                    <div>
-                      <span className="text-lg font-medium block">{weather.temperatureMin}°<span className="text-muted-foreground/50">~</span>{weather.temperatureMax}°</span>
-                      <span className="text-xs text-muted-foreground mt-1 block">기온</span>
-                    </div>
-                  )}
-                  {weather.humidity != null && (
-                    <div>
-                      <span className="text-lg font-medium block">{weather.humidity}<span className="text-sm">%</span></span>
-                      <span className="text-xs text-muted-foreground mt-1 block">습도</span>
-                    </div>
-                  )}
-                </div>
-              ) : null}
+
+              {/* 날씨 정보 */}
               {weather && (
-                <p className="text-xs text-amber-900/50 dark:text-amber-200/40 italic pt-2 border-t border-dashed border-amber-200/40 dark:border-amber-800/20">
+                <div className="px-4 py-3 border-b border-dashed border-amber-200/40 dark:border-amber-800/20">
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div>
+                      <span className="text-xl block">{weather.emoji}</span>
+                      <span className="text-xs text-muted-foreground mt-1 block">{weather.label}</span>
+                    </div>
+                    {weather.temperatureMin != null && weather.temperatureMax != null && (
+                      <div>
+                        <span className="text-lg font-medium block">{weather.temperatureMin}°<span className="text-muted-foreground/50">~</span>{weather.temperatureMax}°</span>
+                        <span className="text-xs text-muted-foreground mt-1 block">기온</span>
+                      </div>
+                    )}
+                    {weather.humidity != null && (
+                      <div>
+                        <span className="text-lg font-medium block">{weather.humidity}<span className="text-sm">%</span></span>
+                        <span className="text-xs text-muted-foreground mt-1 block">습도</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 차 정보 */}
+              {tea && (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/tea/${tea.id}`)}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/tea/${tea.id}`)}
+                  className="text-left w-full cursor-pointer px-4 py-3 border-b border-dashed border-amber-200/40 dark:border-amber-800/20"
+                >
+                  <h2 className="mb-1 text-primary text-base">{tea.name}</h2>
+                  <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                    {tea.type && <TeaTypeBadge type={tea.type} />}
+                    {tea.year && <span>· {tea.year}년</span>}
+                    {tea.seller && (
+                      <span>
+                        ·{' '}
+                        <Link
+                          to={`/teahouse/${encodeURIComponent(tea.seller)}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-primary hover:underline"
+                        >
+                          {tea.seller}
+                        </Link>
+                      </span>
+                    )}
+                    {tea.price != null && tea.price > 0 && (
+                      <span>· {tea.price.toLocaleString()}원{tea.weight != null && tea.weight > 0 ? ` · ${tea.weight}g` : ''}</span>
+                    )}
+                    {tea.weight != null && tea.weight > 0 && (tea.price == null || tea.price <= 0) && (
+                      <span>· {tea.weight}g</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 일기 멘트 */}
+              {weather && (
+                <p className="px-4 py-2.5 text-xs text-amber-900/50 dark:text-amber-200/40 italic bg-amber-50/30 dark:bg-amber-950/10">
                   &ldquo;{weather.teaComment}&rdquo;
                 </p>
               )}
             </section>
           );
         })()}
-
-        {/* 차 정보 요약 */}
-        {tea && (
-          <section className="bg-card rounded-lg p-4">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate(`/tea/${tea.id}`)}
-              onKeyDown={(e) => e.key === 'Enter' && navigate(`/tea/${tea.id}`)}
-              className="text-left w-full cursor-pointer"
-            >
-              <h2 className="mb-2 text-primary">{tea.name}</h2>
-              <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                {tea.type && <TeaTypeBadge type={tea.type} />}
-                {tea.year && <span>· {tea.year}년</span>}
-                {tea.seller && (
-                  <span>
-                    ·{' '}
-                    <Link
-                      to={`/teahouse/${encodeURIComponent(tea.seller)}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-primary hover:underline"
-                    >
-                      {tea.seller}
-                    </Link>
-                  </span>
-                )}
-                {tea.price != null && tea.price > 0 && (
-                  <span>· {tea.price.toLocaleString()}원{tea.weight != null && tea.weight > 0 ? ` · ${tea.weight}g` : ''}</span>
-                )}
-                {tea.weight != null && tea.weight > 0 && (tea.price == null || tea.price <= 0) && (
-                  <span>· {tea.weight}g</span>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* 평균 평점 */}
         <section className="bg-card rounded-lg p-4">
