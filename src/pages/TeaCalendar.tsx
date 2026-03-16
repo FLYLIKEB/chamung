@@ -214,7 +214,7 @@ export function TeaCalendar() {
             </button>
           </DrawerHeader>
 
-          <div className="overflow-y-auto px-4 py-3 space-y-3">
+          <div className="overflow-y-auto px-4 py-3 pb-24 space-y-3">
             {isLoadingNotes ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="w-6 h-6 text-primary animate-spin" />
