@@ -84,27 +84,25 @@ echo ""
 echo -e "${BLUE}[3/4] 현재 마이그레이션 상태 확인 중...${NC}"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o LogLevel=QUIET ubuntu@"$LIGHTSAIL_IP" 'bash -s' << 'ENDSSH'
 set -e
-cd /home/ubuntu/chalog-backend/backend
+REPO_ROOT=/home/ubuntu/chalog-backend
+cd "$REPO_ROOT/backend"
 
-if [ ! -f ".env" ]; then
-    echo "❌ .env 파일이 없습니다: /home/ubuntu/chalog-backend/.env"
+if [ ! -f "$REPO_ROOT/.env" ]; then
+    echo "❌ .env 파일이 없습니다: $REPO_ROOT/.env"
     exit 1
 fi
 
-# data-source.js 필요 (data-source.ts는 ESM에서 __dirname 오류 발생)
 if [ ! -f "dist/src/database/data-source.js" ]; then
-    echo "❌ data-source.js 파일이 없습니다: /home/ubuntu/chalog-backend/dist/src/database/data-source.js"
+    echo "❌ data-source.js 파일이 없습니다: $REPO_ROOT/backend/dist/src/database/data-source.js"
     exit 1
 fi
 
-# .env 로드 (NODE_ENV를 production으로 강제해 DATABASE_URL 사용)
 set -o allexport
-source .env
+source "$REPO_ROOT/.env"
 set +o allexport
 export NODE_ENV=production
 
 echo "--- 마이그레이션 상태 ---"
-# typeorm-ts-node-commonjs: .ts 마이그레이션 로드 가능, data-source.js: __dirname 정상 동작
 npx typeorm-ts-node-commonjs migration:show -d dist/src/database/data-source.js
 ENDSSH
 
@@ -114,15 +112,15 @@ echo ""
 echo -e "${BLUE}[4/4] 마이그레이션 실행 중...${NC}"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o LogLevel=QUIET ubuntu@"$LIGHTSAIL_IP" 'bash -s' << 'ENDSSH'
 set -e
-cd /home/ubuntu/chalog-backend/backend
+REPO_ROOT=/home/ubuntu/chalog-backend
+cd "$REPO_ROOT/backend"
 
 set -o allexport
-source .env
+source "$REPO_ROOT/.env"
 set +o allexport
 export NODE_ENV=production
 
 echo "--- 마이그레이션 실행 ---"
-# typeorm-ts-node-commonjs: .ts 마이그레이션 로드 가능, data-source.js: __dirname 정상 동작
 npx typeorm-ts-node-commonjs migration:run -d dist/src/database/data-source.js
 
 echo ""
