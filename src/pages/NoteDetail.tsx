@@ -208,36 +208,42 @@ export function NoteDetail() {
       <Header showBack title="차록 상세" showProfile />
       
       <div className="p-4 space-y-6">
-        {/* 그날의 일기 */}
-        <section className="border-l-2 border-amber-200/80 dark:border-amber-800/40 pl-4 py-1">
-          {(() => {
-            const displayDate = note.drinkDate
-              ? new Date(note.drinkDate + 'T00:00:00')
-              : note.createdAt instanceof Date
-                ? note.createdAt
-                : new Date(note.createdAt);
-            const month = displayDate.getMonth() + 1;
-            const day = displayDate.getDate();
-            const weekday = ['일', '월', '화', '수', '목', '금', '토'][displayDate.getDay()];
-            const year = displayDate.getFullYear();
-            return (
-              <p className="text-lg font-semibold tracking-tight text-foreground/90">
-                {month}월 {day}일 <span className="text-sm font-normal text-muted-foreground">{weekday}요일, {year}</span>
-              </p>
-            );
-          })()}
-          {weather && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              {weather.emoji} {weather.label}
-              {weather.temperatureMin != null && weather.temperatureMax != null && `, ${weather.temperatureMin}°~${weather.temperatureMax}°`}
-              {weather.humidity != null && `, 습도 ${weather.humidity}%`}
-            </p>
-          )}
-          {weather && (
-            <p className="mt-2 text-sm text-amber-900/60 dark:text-amber-200/50 italic leading-relaxed">
-              &ldquo;{weather.teaComment}&rdquo;
-            </p>
-          )}
+        {/* 그날의 기록 */}
+        <section className="bg-card rounded-lg border overflow-hidden">
+          <div className="grid grid-cols-[auto_1fr] text-sm">
+            <div className="px-3 py-2 text-muted-foreground bg-muted/30 border-b">날짜</div>
+            <div className="px-3 py-2 border-b font-medium">
+              {(() => {
+                const displayDate = note.drinkDate
+                  ? new Date(note.drinkDate + 'T00:00:00')
+                  : note.createdAt instanceof Date
+                    ? note.createdAt
+                    : new Date(note.createdAt);
+                return displayDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+              })()}
+            </div>
+            {weather && (
+              <>
+                <div className="px-3 py-2 text-muted-foreground bg-muted/30 border-b">날씨</div>
+                <div className="px-3 py-2 border-b">{weather.emoji} {weather.label}</div>
+                {weather.temperatureMin != null && weather.temperatureMax != null && (
+                  <>
+                    <div className="px-3 py-2 text-muted-foreground bg-muted/30 border-b">기온</div>
+                    <div className="px-3 py-2 border-b">{weather.temperatureMin}° ~ {weather.temperatureMax}°</div>
+                  </>
+                )}
+                {weather.humidity != null && (
+                  <>
+                    <div className="px-3 py-2 text-muted-foreground bg-muted/30 border-b">습도</div>
+                    <div className="px-3 py-2 border-b">{weather.humidity}%</div>
+                  </>
+                )}
+                <div className="col-span-2 px-3 py-2.5 text-xs text-amber-900/60 dark:text-amber-200/50 italic bg-amber-50/40 dark:bg-amber-950/10">
+                  &ldquo;{weather.teaComment}&rdquo;
+                </div>
+              </>
+            )}
+          </div>
         </section>
 
         {/* 차 정보 요약 */}
