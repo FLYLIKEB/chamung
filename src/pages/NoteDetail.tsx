@@ -208,39 +208,36 @@ export function NoteDetail() {
       <Header showBack title="차록 상세" showProfile />
       
       <div className="p-4 space-y-6">
-        {/* 그날의 기록 */}
-        <section className="rounded-lg bg-gradient-to-br from-amber-50/80 to-orange-50/60 dark:from-amber-950/20 dark:to-orange-950/15 border border-amber-100/60 dark:border-amber-900/30 px-4 py-3">
-          <div className="flex items-start gap-3">
-            {weather && <span className="text-xl mt-0.5 shrink-0">{weather.emoji}</span>}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-foreground/80">
-                {(() => {
-                  const displayDate = note.drinkDate
-                    ? new Date(note.drinkDate + 'T00:00:00')
-                    : note.createdAt instanceof Date
-                      ? note.createdAt
-                      : new Date(note.createdAt);
-                  return displayDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-                })()}
+        {/* 그날의 일기 */}
+        <section className="border-l-2 border-amber-200/80 dark:border-amber-800/40 pl-4 py-1">
+          {(() => {
+            const displayDate = note.drinkDate
+              ? new Date(note.drinkDate + 'T00:00:00')
+              : note.createdAt instanceof Date
+                ? note.createdAt
+                : new Date(note.createdAt);
+            const month = displayDate.getMonth() + 1;
+            const day = displayDate.getDate();
+            const weekday = ['일', '월', '화', '수', '목', '금', '토'][displayDate.getDay()];
+            const year = displayDate.getFullYear();
+            return (
+              <p className="text-lg font-semibold tracking-tight text-foreground/90">
+                {month}월 {day}일 <span className="text-sm font-normal text-muted-foreground">{weekday}요일, {year}</span>
               </p>
-              {weather && (
-                <>
-                  <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                    <span>{weather.label}</span>
-                    {weather.temperatureMin != null && weather.temperatureMax != null && (
-                      <span>· {weather.temperatureMin}°~{weather.temperatureMax}°</span>
-                    )}
-                    {weather.humidity != null && (
-                      <span>· 습도 {weather.humidity}%</span>
-                    )}
-                  </div>
-                  <p className="mt-2 text-xs text-amber-800/70 dark:text-amber-200/60 leading-relaxed">
-                    {weather.teaComment}
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
+            );
+          })()}
+          {weather && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {weather.emoji} {weather.label}
+              {weather.temperatureMin != null && weather.temperatureMax != null && `, ${weather.temperatureMin}°~${weather.temperatureMax}°`}
+              {weather.humidity != null && `, 습도 ${weather.humidity}%`}
+            </p>
+          )}
+          {weather && (
+            <p className="mt-2 text-sm text-amber-900/60 dark:text-amber-200/50 italic leading-relaxed">
+              &ldquo;{weather.teaComment}&rdquo;
+            </p>
+          )}
         </section>
 
         {/* 차 정보 요약 */}
