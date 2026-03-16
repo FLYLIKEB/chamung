@@ -1,22 +1,27 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, IsNull, DataSource } from 'typeorm';
 import { randomBytes, createHash } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
+import { NotesService } from '../notes/notes.service';
 import { User } from '../users/entities/user.entity';
 import { AuthProvider, UserAuthentication } from '../users/entities/user-authentication.entity';
 import { PasswordReset } from '../users/entities/password-reset.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { NoteReport } from '../reports/entities/note-report.entity';
+import { PostReport } from '../reports/entities/post-report.entity';
 import { MailService } from '../mail/mail.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { WithdrawDto } from './dto/withdraw.dto';
 import axios from 'axios';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
+    private notesService: NotesService,
     private jwtService: JwtService,
     @InjectRepository(UserAuthentication)
     private userAuthRepository: Repository<UserAuthentication>,
@@ -24,6 +29,8 @@ export class AuthService {
     private passwordResetRepository: Repository<PasswordReset>,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
+    @InjectDataSource()
+    private dataSource: DataSource,
     private mailService: MailService,
   ) {}
 
@@ -101,7 +108,7 @@ export class AuthService {
     try {
       // 카카오 사용자 정보 조회
       const kakaoUserInfo = await this.getKakaoUserInfo(accessToken);
-      
+
       if (!kakaoUserInfo || !kakaoUserInfo.id) {
         throw new UnauthorizedException('카카오 사용자 정보를 가져올 수 없습니다.');
       }
@@ -164,9 +171,10 @@ export class AuthService {
         },
       });
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { msg?: string } } };
       const errorMessage =
-        error?.response?.data?.msg || '카카오 사용자 정보 조회에 실패했습니다.';
+        err?.response?.data?.msg || '카카오 사용자 정보 조회에 실패했습니다.';
       throw new UnauthorizedException(errorMessage);
     }
   }
@@ -183,9 +191,10 @@ export class AuthService {
         },
       });
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: { message?: string } } } };
       const errorMessage =
-        error?.response?.data?.error?.message || '구글 사용자 정보 조회에 실패했습니다.';
+        err?.response?.data?.error?.message || '구글 사용자 정보 조회에 실패했습니다.';
       throw new UnauthorizedException(errorMessage);
     }
   }
@@ -306,5 +315,46 @@ export class AuthService {
       { credential: hashed },
     );
     await this.passwordResetRepository.update({ id: reset.id }, { usedAt: new Date() });
+  }
+
+  async withdraw(userId: number, dto: WithdrawDto): Promise<{ message: string }> {
+    const emailAuth = await this.userAuthRepository.findOne({
+      where: { userId, provider: AuthProvider.EMAIL },
+    });
+
+    if (emailAuth) {
+      if (!dto.password) {
+        throw new UnauthorizedException('비밀번호를 입력해주세요.');
+      }
+      if (!emailAuth.credential) {
+        throw new UnauthorizedException('비밀번호가 설정되지 않은 계정입니다.');
+      }
+      const isMatch = await bcrypt.compare(dto.password, emailAuth.credential);
+      if (!isMatch) {
+        throw new UnauthorizedException('비밀번호가 올바르지 않습니다.');
+      }
+    } else {
+      if (dto.confirmText !== '탈퇴합니다') {
+        throw new BadRequestException('"탈퇴합니다"를 정확히 입력해주세요.');
+      }
+    }
+
+    await this.revokeAllRefreshTokens(userId);
+
+    const userNotes = await this.dataSource.query(
+      'SELECT id FROM notes WHERE userId = ?',
+      [userId],
+    );
+    for (const note of userNotes) {
+      await this.notesService.removeByAdmin(note.id);
+    }
+
+    await this.dataSource.transaction(async (manager) => {
+      await manager.delete(NoteReport, { reporterId: userId });
+      await manager.delete(PostReport, { reporterId: userId });
+      await manager.delete(User, { id: userId });
+    });
+
+    return { message: '회원탈퇴가 완료되었습니다.' };
   }
 }

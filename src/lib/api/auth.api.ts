@@ -48,4 +48,6 @@ export const authApi = {
     apiClient.post<{ maskedEmail: string | null; message: string }>('/auth/find-email', { name }),
   changePassword: (data: { currentPassword: string; newPassword: string; confirmPassword: string }) =>
     apiClient.patch<{ message: string }>('/auth/change-password', data),
+  withdraw: (data?: { password?: string; confirmText?: string }) =>
+    apiClient.delete<{ message: string }>('/auth/withdraw', { data }),
 };

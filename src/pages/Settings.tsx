@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { LogOut, Shield, FileText, Bell, ChevronRight, Link2, Loader2, Sun, Moon, Monitor, LayoutDashboard, Lock } from 'lucide-react';
+import { LogOut, Shield, FileText, Bell, ChevronRight, Link2, Loader2, Sun, Moon, Monitor, LayoutDashboard, Lock, UserX } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useTheme } from 'next-themes';
@@ -8,7 +8,7 @@ import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Switch } from '../components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
@@ -72,6 +72,9 @@ export function Settings() {
     confirmPassword: '',
   });
   const [isChangePasswordLoading, setIsChangePasswordLoading] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [withdrawInput, setWithdrawInput] = useState('');
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const fetchLinkedAccounts = useCallback(async () => {
     if (!user) return;
@@ -287,6 +290,26 @@ export function Settings() {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const hasEmailAuth = linkedAccountsLoaded && linkedAccounts.some((a) => a.provider === 'email');
+
+  const handleWithdraw = async () => {
+    if (isWithdrawing) return;
+    setIsWithdrawing(true);
+    try {
+      const payload = hasEmailAuth
+        ? { password: withdrawInput }
+        : { confirmText: withdrawInput };
+      await authApi.withdraw(payload);
+      toast.success('회원탈퇴가 완료되었습니다.');
+      logout();
+      navigate('/login');
+    } catch (e) {
+      toast.error(e && typeof e === 'object' && 'message' in e ? String((e as { message: unknown }).message) : '회원탈퇴에 실패했습니다.');
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   const listItemClass =
@@ -527,7 +550,85 @@ export function Settings() {
           <LogOut className="w-4 h-4 mr-2" />
           로그아웃
         </Button>
+
+        {/* 회원탈퇴 */}
+        <Button
+          variant="ghost"
+          onClick={() => {
+            setWithdrawInput('');
+            setIsWithdrawModalOpen(true);
+          }}
+          className="w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+        >
+          <UserX className="w-4 h-4 mr-2" />
+          회원탈퇴
+        </Button>
       </div>
+
+      {/* 회원탈퇴 확인 모달 */}
+      <Dialog open={isWithdrawModalOpen} onOpenChange={(open) => {
+        if (!isWithdrawing) setIsWithdrawModalOpen(open);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>회원탈퇴</DialogTitle>
+            <DialogDescription>
+              탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {hasEmailAuth ? (
+              <div>
+                <label className="text-sm font-medium text-foreground block mb-1">
+                  비밀번호 확인
+                </label>
+                <input
+                  type="password"
+                  value={withdrawInput}
+                  onChange={(e) => setWithdrawInput(e.target.value)}
+                  placeholder="현재 비밀번호를 입력해주세요"
+                  className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  disabled={isWithdrawing}
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="text-sm font-medium text-foreground block mb-1">
+                  탈퇴 확인
+                </label>
+                <input
+                  type="text"
+                  value={withdrawInput}
+                  onChange={(e) => setWithdrawInput(e.target.value)}
+                  placeholder='탈퇴합니다'
+                  className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  disabled={isWithdrawing}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  확인을 위해 <span className="font-semibold">탈퇴합니다</span>를 입력해주세요.
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsWithdrawModalOpen(false)}
+              disabled={isWithdrawing}
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleWithdraw}
+              disabled={isWithdrawing || !withdrawInput}
+            >
+              {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              탈퇴하기
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
 

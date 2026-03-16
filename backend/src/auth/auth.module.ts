@@ -12,24 +12,26 @@ import { UserAuthentication } from '../users/entities/user-authentication.entity
 import { PasswordReset } from '../users/entities/password-reset.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { MailModule } from '../mail/mail.module';
+import { NotesModule } from '../notes/notes.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     MailModule,
+    NotesModule,
     TypeOrmModule.forFeature([UserAuthentication, PasswordReset, RefreshToken]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService): JwtModuleOptions => {
         const jwtSecret = configService.get<string>('JWT_SECRET');
-        
+
         if (!jwtSecret || jwtSecret.trim().length === 0) {
           throw new Error('JWT_SECRET environment variable is required and must not be empty');
         }
-        
+
         const jwtExpiresIn = configService.get<string>('JWT_EXPIRES_IN') || '1h';
-        
+
         return {
           secret: jwtSecret,
           signOptions: {
