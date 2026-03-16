@@ -19,7 +19,16 @@ export class AddTagCategory1773474193846 implements MigrationInterface {
             [tableName, indexName],
         );
         if (Number(result[0].cnt) > 0) {
-            await queryRunner.query(`DROP INDEX \`${indexName}\` ON \`${tableName}\``);
+            try {
+                await queryRunner.query(`DROP INDEX \`${indexName}\` ON \`${tableName}\``);
+            } catch (err: unknown) {
+                const mysqlErr = err as { errno?: number };
+                if (mysqlErr.errno === 1553) {
+                    // ER_DROP_INDEX_FK: index is backing a FK constraint — skip safely
+                    return;
+                }
+                throw err;
+            }
         }
     }
 
