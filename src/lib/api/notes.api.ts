@@ -55,6 +55,8 @@ export const notesApi = {
   getSchemaAxes: (schemaId: number) => apiClient.get(`/notes/schemas/${schemaId}/axes`),
   createSchema: (data: CreateRatingSchemaRequest) =>
     apiClient.post<RatingSchema>('/notes/schemas', data),
+  updateSchema: (schemaId: number, data: CreateRatingSchemaRequest) =>
+    apiClient.patch<RatingSchema>(`/notes/schemas/${schemaId}`, data),
   toggleSchemaPin: (schemaId: number) =>
     apiClient.post<{ pinned: boolean }>(`/notes/schemas/${schemaId}/pin`),
   getAll: (userId?: number, isPublic?: boolean, teaId?: number, bookmarked?: boolean, feed?: 'following' | 'tags', sort?: 'latest' | 'rating', page?: number, limit?: number) => {

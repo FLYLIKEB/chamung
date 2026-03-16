@@ -6,23 +6,7 @@ import type { CalendarData } from '@/lib/api/notes.api';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/components/ui/utils';
-
-const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
-
-function formatDateKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
-
-function getWeekDays(center: Date): Date[] {
-  const days: Date[] = [];
-  const startOffset = center.getDay();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(center);
-    d.setDate(center.getDate() - startOffset + i);
-    days.push(d);
-  }
-  return days;
-}
+import { DAY_NAMES, formatDateKey, getWeekDays } from '@/utils/dateUtils';
 
 export function WeeklyCalendar() {
   const { user } = useAuth();

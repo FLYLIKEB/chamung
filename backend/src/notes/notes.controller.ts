@@ -218,6 +218,20 @@ export class NotesController {
     return this.notesService.createSchema(userId, dto);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('schemas/:schemaId')
+  async updateSchema(
+    @Param('schemaId') schemaId: string,
+    @ValidatedUserId() userId: number,
+    @Body() dto: CreateRatingSchemaDto,
+  ) {
+    const parsedSchemaId = parseInt(schemaId, 10);
+    if (Number.isNaN(parsedSchemaId)) {
+      throw new BadRequestException('잘못된 요청입니다.');
+    }
+    return this.notesService.updateSchema(parsedSchemaId, userId, dto);
+  }
+
   @Get('schemas/:schemaId/axes')
   async getSchemaAxes(@Param('schemaId') schemaId: string) {
     const parsedSchemaId = parseInt(schemaId, 10);

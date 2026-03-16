@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Plus, Leaf, PenLine, Package, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { Plus, Leaf, PenLine, Package, RefreshCw, Eye, EyeOff, Store, ClipboardList, Tag } from 'lucide-react';
 import { cn } from './ui/utils';
 import { useAppMode } from '../contexts/AppModeContext';
 
@@ -10,6 +10,8 @@ type MenuItem = {
   onClick: () => void;
   isToggle?: boolean;
   isActive?: boolean;
+  isPrimary?: boolean;
+  isNew?: boolean;
 };
 
 function useSpeedDialHide() {
@@ -60,33 +62,59 @@ export function SpeedDialFAB() {
 
   const menuItems: MenuItem[] = [
     {
+      label: '찻장에 추가',
+      icon: <Package className="w-5 h-5" />,
+      onClick: () => navigateTo('/cellar/new'),
+    },
+  ];
+
+  const addGroup: MenuItem[] = [
+    {
+      label: '찻집 추가',
+      icon: <Store className="w-4 h-4" />,
+      onClick: () => navigateTo('/teahouse/new'),
+    },
+    {
+      label: '템플릿 추가',
+      icon: <ClipboardList className="w-4 h-4" />,
+      onClick: () => navigateTo('/templates'),
+      isNew: true,
+    },
+    {
+      label: '태그 추가',
+      icon: <Tag className="w-4 h-4" />,
+      onClick: () => navigateTo('/tags'),
+    },
+    {
       label: '차 추가',
       icon: <Leaf className="w-5 h-5" />,
       onClick: () => navigateTo('/tea/new'),
+      isPrimary: true,
+    },
+  ];
+
+  const writeGroup: MenuItem[] = [
+    {
+      label: '다회 작성',
+      icon: <RefreshCw className="w-4 h-4" />,
+      onClick: toggleSessionMode,
+      isToggle: true,
+      isActive: sessionMode.active,
+      isNew: true,
+    },
+    {
+      label: '블라인드 작성',
+      icon: blindMode.active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />,
+      onClick: toggleBlindMode,
+      isToggle: true,
+      isActive: blindMode.active,
+      isNew: true,
     },
     {
       label: '차록 작성',
       icon: <PenLine className="w-5 h-5" />,
       onClick: () => navigateTo('/note/new'),
-    },
-    {
-      label: '찻장 추가',
-      icon: <Package className="w-5 h-5" />,
-      onClick: () => navigateTo('/cellar/new'),
-    },
-    {
-      label: '다회모드',
-      icon: <RefreshCw className="w-5 h-5" />,
-      onClick: toggleSessionMode,
-      isToggle: true,
-      isActive: sessionMode.active,
-    },
-    {
-      label: '블라인드모드',
-      icon: blindMode.active ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />,
-      onClick: toggleBlindMode,
-      isToggle: true,
-      isActive: blindMode.active,
+      isPrimary: true,
     },
   ];
 
@@ -106,11 +134,10 @@ export function SpeedDialFAB() {
         className={cn('fixed right-6 z-50 flex flex-col items-end md:bottom-6', !isOpen && 'pointer-events-none')}
         style={{ bottom: 'calc(var(--bottom-nav-spacer) + 0.75rem)' }}
       >
-        {/* 메뉴 아이템 (FAB 위쪽으로 펼침) */}
+        {/* 일반 메뉴 아이템 (FAB 위쪽으로 펼침) */}
         <div className={cn('flex flex-col items-end gap-3 mb-3', !isOpen && 'pointer-events-none')}>
           {menuItems.map((item, index) => {
-            // 아래(FAB에서 가까운) 항목일수록 먼저 나타남
-            const delayMs = (menuItems.length - 1 - index) * 50;
+            const delayMs = (menuItems.length + writeGroup.length - 1 - index) * 50;
             return (
               <div
                 key={item.label}
@@ -122,31 +149,107 @@ export function SpeedDialFAB() {
                 )}
                 style={{ transitionDelay: isOpen ? `${delayMs}ms` : '0ms' }}
               >
-                {/* 라벨 */}
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-background/95 shadow-sm border border-border text-foreground whitespace-nowrap">
+                <span className="text-xs font-medium px-2.5 py-1 rounded-full shadow-sm border border-border bg-background/95 text-foreground whitespace-nowrap">
                   {item.label}
-                  {item.isToggle && item.isActive && (
-                    <span className="ml-1 text-primary font-bold">ON</span>
-                  )}
                 </span>
-
-                {/* 미니 FAB 버튼 */}
                 <button
                   type="button"
                   aria-label={item.label}
                   onClick={item.onClick}
-                  className={cn(
-                    'w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-                    item.isToggle && item.isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-background border border-border text-foreground hover:bg-muted',
-                  )}
+                  className="w-11 h-11 rounded-full flex items-center justify-center shadow-md bg-background border border-border text-foreground hover:bg-muted transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   {item.icon}
                 </button>
               </div>
             );
           })}
+
+          {/* 추가 그룹 (가로 배치) */}
+          <div
+            className={cn(
+              'flex items-center gap-2 transition-all duration-200',
+              isOpen
+                ? 'opacity-100 translate-y-0 pointer-events-auto'
+                : 'opacity-0 translate-y-3 pointer-events-none',
+            )}
+            style={{ transitionDelay: isOpen ? '100ms' : '0ms' }}
+          >
+            {addGroup.filter((g) => !g.isPrimary).map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                aria-label={item.label}
+                onClick={item.onClick}
+                className="relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl bg-background/95 border border-border text-foreground hover:bg-muted shadow-sm transition-all active:scale-95"
+              >
+                {item.isNew && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
+                )}
+                {item.icon}
+                <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
+              </button>
+            ))}
+            {addGroup.filter((g) => g.isPrimary).map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                aria-label={item.label}
+                onClick={item.onClick}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-foreground/90 text-background shadow-lg transition-all active:scale-95 font-semibold text-sm"
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {/* 차록 작성 그룹 (가로 배치) */}
+          <div
+            className={cn(
+              'flex items-center gap-2 transition-all duration-200',
+              isOpen
+                ? 'opacity-100 translate-y-0 pointer-events-auto'
+                : 'opacity-0 translate-y-3 pointer-events-none',
+            )}
+            style={{ transitionDelay: isOpen ? '50ms' : '0ms' }}
+          >
+            {writeGroup.filter((g) => !g.isPrimary).map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                aria-label={item.label}
+                onClick={item.onClick}
+                className={cn(
+                  'relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all active:scale-95',
+                  item.isToggle && item.isActive
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-background/95 border border-border text-foreground hover:bg-muted shadow-sm',
+                )}
+              >
+                {item.isNew && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
+                )}
+                {item.icon}
+                <span className="text-[10px] font-medium whitespace-nowrap">
+                  {item.label}
+                  {item.isToggle && item.isActive && <span className="ml-0.5 font-bold">ON</span>}
+                </span>
+              </button>
+            ))}
+            {/* 차록 작성 (primary) */}
+            {writeGroup.filter((g) => g.isPrimary).map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                aria-label={item.label}
+                onClick={item.onClick}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-lg transition-all active:scale-95 font-semibold text-sm"
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 메인 FAB */}

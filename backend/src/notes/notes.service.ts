@@ -834,6 +834,42 @@ export class NotesService {
     return savedSchema;
   }
 
+  async updateSchema(schemaId: number, userId: number, dto: CreateRatingSchemaDto): Promise<RatingSchema> {
+    const schema = await this.ratingSchemaRepository.findOne({ where: { id: schemaId } });
+    if (!schema) {
+      throw new NotFoundException('템플릿을 찾을 수 없습니다.');
+    }
+    if (!schema.code.startsWith(`CUSTOM_${userId}_`)) {
+      throw new BadRequestException('본인이 만든 템플릿만 수정할 수 있습니다.');
+    }
+
+    schema.nameKo = dto.nameKo;
+    schema.nameEn = dto.nameEn ?? dto.nameKo;
+    schema.descriptionKo = dto.descriptionKo ?? null;
+    schema.descriptionEn = dto.descriptionEn ?? null;
+    await this.ratingSchemaRepository.save(schema);
+
+    // 기존 axes 삭제 후 새로 생성
+    await this.ratingAxisRepository.delete({ schemaId });
+    const newAxes = dto.axes.map((axis, index) =>
+      this.ratingAxisRepository.create({
+        schemaId,
+        code: axis.nameKo.replace(/\s/g, '_').toUpperCase().slice(0, 50) || `AXIS_${index + 1}`,
+        nameKo: axis.nameKo,
+        nameEn: axis.nameEn,
+        descriptionKo: axis.descriptionKo?.trim() || null,
+        descriptionEn: axis.descriptionEn?.trim() || null,
+        minValue: axis.minValue ?? 1,
+        maxValue: axis.maxValue ?? 5,
+        stepValue: axis.stepValue ?? 1,
+        displayOrder: axis.displayOrder ?? index,
+        isRequired: false,
+      }),
+    );
+    await this.ratingAxisRepository.save(newAxes);
+    return schema;
+  }
+
   async getActiveSchemas(userId?: number): Promise<{ schemas: RatingSchema[]; pinnedSchemaIds: number[] }> {
     const activeSchemas = await this.ratingSchemaRepository.find({
       where: { isActive: true },

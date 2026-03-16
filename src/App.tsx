@@ -70,6 +70,8 @@ const BlindSessionDetail = lazy(() => import('./pages/BlindSessionDetail').then(
 const BlindNoteWrite = lazy(() => import('./pages/BlindNoteWrite').then((m) => ({ default: m.BlindNoteWrite })));
 const BlindSessionReport = lazy(() => import('./pages/BlindSessionReport').then((m) => ({ default: m.BlindSessionReport })));
 const Badges = lazy(() => import('./pages/Badges').then((m) => ({ default: m.Badges })));
+const TastingTemplates = lazy(() => import('./pages/TastingTemplates').then((m) => ({ default: m.TastingTemplates })));
+const TagManager = lazy(() => import('./pages/TagManager').then((m) => ({ default: m.TagManager })));
 const TeaCalendar = lazy(() => import('./pages/TeaCalendar').then((m) => ({ default: m.TeaCalendar })));
 const LevelInfo = lazy(() => import('./pages/LevelInfo').then((m) => ({ default: m.LevelInfo })));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
@@ -190,6 +192,8 @@ function AppContent() {
                 <Route path="/teahouse/:name/edit" element={<EditShop />} />
                 <Route path="/teahouse/:name" element={<ShopDetail />} />
                 <Route path="/badges" element={<Badges />} />
+                <Route path="/templates" element={<TastingTemplates />} />
+                <Route path="/tags" element={<TagManager />} />
                 <Route path="/calendar" element={<TeaCalendar />} />
                 <Route path="/level-info" element={<LevelInfo />} />
                 <Route path="/notifications" element={<Notifications />} />
