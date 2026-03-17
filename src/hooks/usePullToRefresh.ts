@@ -74,6 +74,9 @@ export function usePullToRefresh(onRefresh: () => Promise<void>, disabled = fals
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshMessage, setRefreshMessage] = useState(pickRandomRefreshMessage);
   const touchStartY = useRef(0);
+  const touchStartX = useRef(0);
+  const isHorizontalSwipe = useRef(false);
+  const swipeDirectionLocked = useRef(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pullDistanceRef = useRef(0);
   const lastRefreshAtRef = useRef(0);
@@ -173,18 +176,34 @@ export function usePullToRefresh(onRefresh: () => Promise<void>, disabled = fals
       if (disabled) return;
       hasTappedRef.current = true;
       touchStartY.current = e.touches[0].clientY;
+      touchStartX.current = e.touches[0].clientX;
+      isHorizontalSwipe.current = false;
+      swipeDirectionLocked.current = false;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (disabled || isRefreshing) return;
-      // 두 손가락 이상(핀치 줌 등)이면 브라우저 기본 동작 허용
       if (e.touches.length > 1) return;
-      // input/textarea 내부 터치 시 preventDefault 하지 않음 → 텍스트 선택(드래그) 허용
+
       const target = e.target as Node;
       if (target && el.contains(target)) {
         const editable = (target as Element).closest?.('input, textarea, [contenteditable="true"]');
         if (editable) return;
       }
+
+      const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
+      const dy = e.touches[0].clientY - touchStartY.current;
+      const absDy = Math.abs(dy);
+
+      // 방향이 아직 결정되지 않았으면 결정
+      if (!swipeDirectionLocked.current && (dx > 10 || absDy > 10)) {
+        swipeDirectionLocked.current = true;
+        isHorizontalSwipe.current = dx > absDy;
+      }
+
+      // 수평 스와이프면 pull-to-refresh 무시
+      if (isHorizontalSwipe.current) return;
+
       if (el.scrollTop > 0) {
         if (pullDistanceRef.current > 0) {
           touchStartY.current = e.touches[0].clientY;
@@ -193,12 +212,17 @@ export function usePullToRefresh(onRefresh: () => Promise<void>, disabled = fals
         }
         return;
       }
-      const deltaY = e.touches[0].clientY - touchStartY.current;
-      if (deltaY > 0 && deltaY > 8) e.preventDefault();
-      applyPull(deltaY);
+      if (dy > 0 && dy > 15) e.preventDefault();
+      applyPull(dy);
     };
 
-    const handleTouchEnd = () => finishPull();
+    const handleTouchEnd = () => {
+      if (isHorizontalSwipe.current) {
+        isHorizontalSwipe.current = false;
+        return;
+      }
+      finishPull();
+    };
 
     // 데스크톱: 마우스 드래그로 당겨서 새로고침 (테스트/접근성)
     // pointer capture는 실제 당김 동작이 감지된 후에만 적용 (헤더/하단바 클릭 방해 방지)

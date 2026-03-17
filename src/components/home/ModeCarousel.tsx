@@ -10,9 +10,10 @@ type ModeCardProps = {
   isActive: boolean;
   onClick: () => void;
   accentClass: string;
+  inactiveClass: string;
 };
 
-function ModeCard({ title, description, icon, isActive, onClick, accentClass }: ModeCardProps) {
+function ModeCard({ title, description, icon, isActive, onClick, accentClass, inactiveClass }: ModeCardProps) {
   return (
     <button
       type="button"
@@ -21,13 +22,13 @@ function ModeCard({ title, description, icon, isActive, onClick, accentClass }: 
         'flex-shrink-0 w-64 rounded-2xl p-4 text-left transition-all active:scale-[0.98] snap-start',
         isActive
           ? `${accentClass} shadow-md`
-          : 'bg-card border border-border/50 hover:border-border',
+          : inactiveClass,
       )}
     >
       <div className="flex items-center justify-between mb-2">
         <div className={cn(
           'w-9 h-9 rounded-xl flex items-center justify-center',
-          isActive ? 'bg-white/20' : 'bg-muted',
+          'bg-white/20',
         )}>
           {icon}
         </div>
@@ -42,13 +43,13 @@ function ModeCard({ title, description, icon, isActive, onClick, accentClass }: 
       </div>
       <p className={cn(
         'text-sm font-semibold',
-        isActive ? 'text-inherit' : 'text-foreground',
+        'text-inherit',
       )}>
         {title}
       </p>
       <p className={cn(
         'text-xs mt-0.5 line-clamp-2',
-        isActive ? 'opacity-80' : 'text-muted-foreground',
+        'opacity-80',
       )}>
         {description}
       </p>
@@ -64,27 +65,27 @@ export function ModeCarousel() {
     {
       title: '다회 모드',
       description: '같은 차를 여러 번 우려내며 회차별 변화를 기록해요.',
-      icon: <RefreshCw className={cn('w-4.5 h-4.5', sessionMode.active ? 'text-white' : 'text-foreground')} />,
+      icon: <RefreshCw className="w-4.5 h-4.5 text-white" />,
       isActive: sessionMode.active,
       onClick: toggleSessionMode,
-      accentClass: 'bg-primary text-primary-foreground',
+      accentClass: 'bg-[#1a8a30] text-white shadow-md',
+      inactiveClass: 'bg-[#1db93c] text-white hover:bg-[#1a8a30]',
     },
     {
       title: '블라인드 테이스팅',
       description: '차 정보 없이 순수한 감각으로 맛과 향을 평가해요.',
-      icon: blindMode.active
-        ? <EyeOff className="w-4.5 h-4.5 text-white" />
-        : <Eye className="w-4.5 h-4.5 text-foreground" />,
+      icon: <EyeOff className="w-4.5 h-4.5 text-white" />,
       isActive: blindMode.active,
       onClick: toggleBlindMode,
-      accentClass: 'bg-violet-600 text-white',
+      accentClass: 'bg-violet-700 text-white shadow-md',
+      inactiveClass: 'bg-violet-600 text-white hover:bg-violet-700',
     },
   ];
 
   return (
     <div
       ref={scrollRef}
-      className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-4 px-4"
+      className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
     >
       {modes.map((mode) => (
         <ModeCard key={mode.title} {...mode} />

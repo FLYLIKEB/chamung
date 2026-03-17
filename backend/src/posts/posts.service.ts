@@ -80,7 +80,7 @@ export class PostsService {
 
       const createdPost = await manager.findOne(Post, {
         where: { id: saved.id },
-        relations: ['user', 'images', 'taggedNotes', 'taggedNotes.tea'],
+        relations: ['user', 'images', 'taggedNotes', 'taggedNotes.tea', 'taggedNotes.tea.seller'],
       });
       if (!createdPost) {
         throw new NotFoundException('게시글을 찾을 수 없습니다.');
@@ -90,11 +90,19 @@ export class PostsService {
     });
   }
 
+  /** 공지(isPinned) 글을 최상단으로, 나머지는 기존 순서 유지 */
+  private sortPinnedFirst<T extends { isPinned: boolean }>(posts: T[]): T[] {
+    return posts.sort((a, b) => {
+      if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+      return 0;
+    });
+  }
+
   async findAll(
     category?: PostCategory | PostCategory[],
     page = 1,
     limit = 20,
-    sort: 'latest' | 'popular' | 'commented' = 'latest',
+    sort: 'latest' | 'popular' | 'commented' | 'likes' = 'latest',
     currentUserId?: number,
     bookmarked?: boolean,
   ): Promise<any[]> {
@@ -169,23 +177,146 @@ export class PostsService {
 
       const orderMap = new Map(popularIds.map((id, i) => [id, i]));
       posts.sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
+      this.sortPinnedFirst(posts);
+
+      return this.enrichPostsWithStats(posts, currentUserId);
+    }
+
+    if (sort === 'likes') {
+      // Step 1: Get all post IDs for this category (no pagination yet)
+      const allPostsQb = this.postsRepository
+        .createQueryBuilder('post')
+        .select('post.id', 'id');
+
+      if (category) {
+        if (Array.isArray(category)) {
+          allPostsQb.where('post.category IN (:...categories)', { categories: category });
+        } else {
+          allPostsQb.where('post.category = :category', { category });
+        }
+      }
+      if (bookmarked && currentUserId) {
+        allPostsQb.innerJoin('post_bookmarks', 'pb', 'pb.postId = post.id AND pb.userId = :bookmarkUserId', {
+          bookmarkUserId: currentUserId,
+        });
+      }
+
+      const allPostRows = await allPostsQb.getRawMany();
+      const allPostIds: number[] = allPostRows.map((r) => Number(r.id));
+
+      if (allPostIds.length === 0) {
+        return this.enrichPostsWithStats([], currentUserId);
+      }
+
+      // Step 2: Get like counts for posts that have likes
+      const likesQb = this.dataSource
+        .createQueryBuilder()
+        .select('pl.postId', 'postId')
+        .addSelect('COUNT(pl.id)', 'likeCount')
+        .from(PostLike, 'pl')
+        .where('pl.postId IN (:...allPostIds)', { allPostIds })
+        .groupBy('pl.postId');
+
+      const likesRows = await likesQb.getRawMany();
+      const likeCountMap = new Map<number, number>(
+        likesRows.map((r) => [Number(r.postId), Number(r.likeCount)]),
+      );
+
+      // Step 3: Sort all IDs by like count DESC, then createdAt DESC (handled after fetch)
+      const sortedIds = [...allPostIds].sort((a, b) => {
+        const diff = (likeCountMap.get(b) ?? 0) - (likeCountMap.get(a) ?? 0);
+        return diff;
+      });
+
+      // Step 4: Apply pagination on sorted ID list
+      const pagedIds = sortedIds.slice(skip, skip + take);
+
+      if (pagedIds.length === 0) {
+        return this.enrichPostsWithStats([], currentUserId);
+      }
+
+      const posts = await this.postsRepository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user')
+        .leftJoinAndSelect('post.images', 'postImages')
+        .where('post.id IN (:...ids)', { ids: pagedIds })
+        .getMany();
+
+      const orderMap = new Map(pagedIds.map((id: number, i: number) => [id, i]));
+      posts.sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
+      this.sortPinnedFirst(posts);
 
       return this.enrichPostsWithStats(posts, currentUserId);
     }
 
     if (sort === 'commented') {
-      qb.leftJoin(
-        (sub) =>
-          sub
-            .select('c.postId', 'postId')
-            .addSelect('COUNT(c.id)', 'commentCount')
-            .from('comments', 'c')
-            .groupBy('c.postId'),
-        'commentCounts',
-        'commentCounts.postId = post.id',
+      // Step 1: Get all post IDs for this category (no pagination yet)
+      const allPostsQb = this.postsRepository
+        .createQueryBuilder('post')
+        .select('post.id', 'id');
+
+      if (category) {
+        if (Array.isArray(category)) {
+          allPostsQb.where('post.category IN (:...categories)', { categories: category });
+        } else {
+          allPostsQb.where('post.category = :category', { category });
+        }
+      }
+      if (bookmarked && currentUserId) {
+        allPostsQb.innerJoin('post_bookmarks', 'pb', 'pb.postId = post.id AND pb.userId = :bookmarkUserId', {
+          bookmarkUserId: currentUserId,
+        });
+      }
+
+      const allPostRows = await allPostsQb.getRawMany();
+      const allPostIds: number[] = allPostRows.map((r) => Number(r.id));
+
+      if (allPostIds.length === 0) {
+        return this.enrichPostsWithStats([], currentUserId);
+      }
+
+      // Step 2: Get comment counts for posts that have comments
+      const commentQb = this.dataSource
+        .createQueryBuilder()
+        .select('c.postId', 'postId')
+        .addSelect('COUNT(c.id)', 'commentCount')
+        .from('comments', 'c')
+        .where('c.postId IN (:...allPostIds)', { allPostIds })
+        .groupBy('c.postId');
+
+      const commentRows = await commentQb.getRawMany();
+      const commentCountMap = new Map<number, number>(
+        commentRows.map((r) => [Number(r.postId), Number(r.commentCount)]),
       );
-      qb.addOrderBy('COALESCE(commentCounts.commentCount, 0)', 'DESC');
+
+      // Step 3: Sort all IDs by comment count DESC
+      const sortedIds = [...allPostIds].sort((a, b) => {
+        const diff = (commentCountMap.get(b) ?? 0) - (commentCountMap.get(a) ?? 0);
+        return diff;
+      });
+
+      // Step 4: Apply pagination on sorted ID list
+      const pagedIds = sortedIds.slice(skip, skip + take);
+
+      if (pagedIds.length === 0) {
+        return this.enrichPostsWithStats([], currentUserId);
+      }
+
+      const posts = await this.postsRepository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user')
+        .leftJoinAndSelect('post.images', 'postImages')
+        .where('post.id IN (:...ids)', { ids: pagedIds })
+        .orderBy('post.isPinned', 'DESC')
+        .getMany();
+
+      const orderMap = new Map(pagedIds.map((id: number, i: number) => [id, i]));
+      posts.sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
+      this.sortPinnedFirst(posts);
+
+      return this.enrichPostsWithStats(posts, currentUserId);
     }
+
     qb.addOrderBy('post.createdAt', 'DESC');
 
     const posts = await qb.getMany();
@@ -195,7 +326,7 @@ export class PostsService {
   async findOne(id: number, currentUserId?: number): Promise<any> {
     const post = await this.postsRepository.findOne({
       where: { id },
-      relations: ['user', 'images', 'taggedNotes', 'taggedNotes.tea'],
+      relations: ['user', 'images', 'taggedNotes', 'taggedNotes.tea', 'taggedNotes.tea.seller'],
     });
     if (!post) {
       throw new NotFoundException('게시글을 찾을 수 없습니다.');
@@ -256,7 +387,7 @@ export class PostsService {
 
       const updatedPost = await manager.findOne(Post, {
         where: { id },
-        relations: ['user', 'images', 'taggedNotes', 'taggedNotes.tea'],
+        relations: ['user', 'images', 'taggedNotes', 'taggedNotes.tea', 'taggedNotes.tea.seller'],
       });
       if (!updatedPost) {
         throw new NotFoundException('게시글을 찾을 수 없습니다.');
@@ -385,10 +516,28 @@ export class PostsService {
       userBookmarkedIds = new Set(bookmarks.map((b) => b.postId));
     }
 
+    // 댓글 수 조회
+    const commentCounts = await this.dataSource
+      .createQueryBuilder()
+      .select('c.postId', 'postId')
+      .addSelect('COUNT(c.id)', 'count')
+      .from('comments', 'c')
+      .where('c.postId IN (:...postIds)', { postIds })
+      .groupBy('c.postId')
+      .getRawMany();
+
+    const commentCountMap = new Map<number, number>();
+    commentCounts.forEach((item) => {
+      const id = Number(item.postId);
+      const count = Number(item.count);
+      if (!isNaN(id) && !isNaN(count)) commentCountMap.set(id, count);
+    });
+
     return posts.map((post) => {
       const result: any = {
         ...post,
         likeCount: likeCountMap.get(post.id) ?? 0,
+        commentCount: commentCountMap.get(post.id) ?? 0,
         isLiked: userLikedIds.has(post.id),
         isBookmarked: userBookmarkedIds.has(post.id),
       };

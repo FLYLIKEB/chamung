@@ -170,7 +170,7 @@ export function Report() {
 
         {/* 차 종류별 비율 */}
         {report.teaTypeDistribution.length > 0 && (
-          <Section title="☕ 차 종류별 비율" spacing="sm">
+          <Section title="차 종류별 비율" spacing="sm">
             <div className="bg-card rounded-xl p-4">
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>

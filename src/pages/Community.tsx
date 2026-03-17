@@ -6,7 +6,7 @@ import { Post, PostCategory, POST_CATEGORY_LABELS } from '../types';
 import { postsApi, type PostSort } from '../lib/api';
 import { PostCard } from '../components/PostCard';
 import { Header } from '../components/Header';
-import { ChadamBanner } from '../components/ChadamBanner';
+
 import { BottomNav } from '../components/BottomNav';
 import { EmptyState } from '../components/EmptyState';
 import { FloatingActionButton } from '../components/FloatingActionButton';
@@ -19,14 +19,15 @@ import { InfiniteScrollSentinel } from '../components/InfiniteScrollSentinel';
 
 const SORT_OPTIONS: Array<{ value: PostSort; label: string }> = [
   { value: 'latest', label: '최신순' },
-  { value: 'popular', label: '인기글' },
-  { value: 'commented', label: '댓글많은순' },
+  { value: 'likes', label: '인기순' },
+  { value: 'commented', label: '댓글순' },
 ];
 
-type GroupKey = 'all' | 'qna' | 'review' | 'announcement' | 'report';
+type GroupKey = 'all' | 'popular' | 'qna' | 'review' | 'announcement' | 'report';
 
 const GROUPS: Array<{ key: GroupKey; label: string; categories: PostCategory[] }> = [
   { key: 'all', label: '전체', categories: [] },
+  { key: 'popular', label: '인기글', categories: [] },
   {
     key: 'qna',
     label: '질문·토론',
@@ -57,20 +58,28 @@ export function Community() {
   const [selectedGroup, setSelectedGroup] = useState<GroupKey>(isMobile ? 'qna' : 'all');
   const [sort, setSort] = useState<PostSort>('latest');
 
-  const fetchPosts = useCallback(async () => {
-    const group = GROUPS.find((g) => g.key === selectedGroup);
+  const getGroupParams = useCallback((groupKey: GroupKey): { categoryParam: PostCategory | PostCategory[] | undefined; effectiveSort: PostSort } => {
+    if (groupKey === 'popular') {
+      return { categoryParam: undefined, effectiveSort: 'popular' };
+    }
+    const group = GROUPS.find((g) => g.key === groupKey);
     const categoryParam =
       !group || group.categories.length === 0
         ? undefined
         : group.categories.length === 1
           ? group.categories[0]
           : group.categories;
+    return { categoryParam, effectiveSort: sort };
+  }, [sort]);
+
+  const fetchPosts = useCallback(async () => {
+    const { categoryParam, effectiveSort } = getGroupParams(selectedGroup);
     setIsLoading(true);
     setPage(1);
     try {
       // 모바일: 선택된 그룹만 fetch / 데스크톱: 전체 fetch
       const [filtered, all] = await Promise.all([
-        postsApi.getAll(categoryParam, 1, PAGE_SIZE, sort),
+        postsApi.getAll(categoryParam, 1, PAGE_SIZE, effectiveSort),
         isMobileRef.current ? Promise.resolve([]) : postsApi.getAll(undefined, 1, 50, sort),
       ]);
       setPosts(filtered);
@@ -81,20 +90,14 @@ export function Community() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedGroup, sort]);
+  }, [selectedGroup, sort, getGroupParams]);
 
   const handleLoadMore = useCallback(async () => {
-    const group = GROUPS.find((g) => g.key === selectedGroup);
-    const categoryParam =
-      !group || group.categories.length === 0
-        ? undefined
-        : group.categories.length === 1
-          ? group.categories[0]
-          : group.categories;
+    const { categoryParam, effectiveSort } = getGroupParams(selectedGroup);
     const nextPage = page + 1;
     setIsLoadingMore(true);
     try {
-      const morePosts = await postsApi.getAll(categoryParam, nextPage, PAGE_SIZE, sort);
+      const morePosts = await postsApi.getAll(categoryParam, nextPage, PAGE_SIZE, effectiveSort);
       setPosts((prev) => [...prev, ...morePosts]);
       setPage(nextPage);
       setHasMore(morePosts.length === PAGE_SIZE);
@@ -103,7 +106,7 @@ export function Community() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [selectedGroup, sort, page]);
+  }, [selectedGroup, sort, page, getGroupParams]);
 
   useEffect(() => {
     fetchPosts();
@@ -115,50 +118,44 @@ export function Community() {
     <div className="min-h-screen pb-20">
       <Header title="차담" showLogo showProfile />
 
-      {/* 배너 */}
-      <div className="px-4 pt-4">
-        <ChadamBanner />
-      </div>
-
-      {/* 카테고리 탭 + 정렬 - 헤더 높이만큼 아래에서 고정 */}
-      <div className="sticky top-[calc(4.25rem+env(safe-area-inset-top))] md:top-0 z-10 bg-background border-b border-border/50">
-        <div className="flex overflow-x-auto scrollbar-hide px-4 gap-1 py-1.5 items-center">
-          {GROUPS.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setSelectedGroup(key)}
-              className={cn(
-                'shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
-                selectedGroup === key
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-          <div className="shrink-0 ml-auto flex items-center gap-1 pl-2 border-l border-border/50">
-            <ArrowDownUp className="w-4 h-4 text-muted-foreground" aria-hidden />
-            {SORT_OPTIONS.map(({ value, label }) => (
+      {/* 카테고리 탭 - 밑줄 스타일 + 정렬 */}
+      <div className="sticky top-[calc(4.25rem+env(safe-area-inset-top))] md:top-0 z-10 bg-background">
+        <div className="flex items-center border-b border-border/40">
+          <div className="flex overflow-x-auto scrollbar-hide px-4 gap-0 flex-1">
+            {GROUPS.map(({ key, label }) => (
               <button
-                key={value}
-                onClick={() => setSort(value)}
+                key={key}
+                onClick={() => setSelectedGroup(key)}
                 className={cn(
-                  'shrink-0 px-2 py-1 rounded text-xs font-medium transition-colors',
-                  sort === value
-                    ? 'bg-primary/15 text-primary'
-                    : 'text-muted-foreground hover:text-foreground',
+                  'shrink-0 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
+                  selectedGroup === key
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground',
                 )}
               >
                 {label}
               </button>
             ))}
           </div>
+          {/* 정렬 드롭다운 */}
+          <div className="shrink-0 pr-4">
+            <button
+              type="button"
+              onClick={() => {
+                const idx = SORT_OPTIONS.findIndex((o) => o.value === sort);
+                setSort(SORT_OPTIONS[(idx + 1) % SORT_OPTIONS.length].value);
+              }}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
+            >
+              <ArrowDownUp className="w-3.5 h-3.5" />
+              <span className="font-medium">{SORT_OPTIONS.find((o) => o.value === sort)?.label}</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* 게시글 목록 */}
-      <div className="px-4">
+      <div>
         {isLoading ? (
           <>
             {/* 모바일: 단일 리스트 스켈레톤 */}
@@ -190,7 +187,7 @@ export function Community() {
                   action={{ label: '✍️ 첫 글 쓰기', onClick: () => navigate('/chadam/new') }}
                 />
               ) : (
-                <div className="space-y-0 divide-y divide-foreground/15 pt-2">
+                <div className="divide-y divide-accent">
                   {posts.map((post, i) => (
                     <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }}>
                       <PostCard post={post} />
@@ -214,7 +211,7 @@ export function Community() {
                       board.categories.includes(p.category as PostCategory)
                     ).slice(0, 5);
                     return (
-                      <section key={board.key} className="rounded-xl border border-border/60 bg-card p-4 space-y-2">
+                      <section key={board.key} className="rounded-xl border border-border/60 bg-card p-4 divide-y divide-accent">
                         <div className="flex items-center justify-between pb-2 border-b border-border/50">
                           <h2 className="font-semibold text-foreground">{board.label}</h2>
                           <button
@@ -228,7 +225,7 @@ export function Community() {
                         {boardPosts.length === 0 ? (
                           <p className="text-sm text-muted-foreground py-4 text-center">아직 게시글이 없어요.</p>
                         ) : (
-                          <div className="divide-y divide-foreground/15">
+                          <div className="divide-y divide-accent">
                             {boardPosts.map((post, i) => (
                               <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${i * 50}ms` }}>
                                 <PostCard post={post} />
@@ -242,7 +239,7 @@ export function Community() {
                 </div>
               ) : (
                 <>
-                  <div className="space-y-0 divide-y divide-foreground/15">
+                  <div className="divide-y divide-accent">
                     {posts.map((post, i) => (
                       <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }}>
                         <PostCard post={post} />

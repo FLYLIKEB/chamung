@@ -43,7 +43,7 @@ export function DateNotesDrawer({ open, onOpenChange, selectedDate, notes, isLoa
 
         <div className="overflow-y-auto px-5 py-4 pb-24">
           {isLoading ? (
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-2">
               {[1, 2, 3].map((i) => (
                 <NoteCardSkeleton key={i} />
               ))}
@@ -63,7 +63,7 @@ export function DateNotesDrawer({ open, onOpenChange, selectedDate, notes, isLoa
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-2">
               {notes.map((note) => (
                 <NoteCard key={note.id} note={note} />
               ))}

@@ -36,7 +36,7 @@ export const CARD_SKELETON_CONTAINER_CLASSES = 'flex gap-3 overflow-x-hidden';
 
 /** 앱 전체 페이지 배경 그라데이션 (라이트: 흰색→배경, 다크: 단색) */
 export const PAGE_BG_GRADIENT =
-  'bg-gradient-to-b from-white to-background dark:from-background dark:to-background';
+  'bg-gradient-to-b from-[#fefbf8] to-background dark:from-background dark:to-background';
 
 // 차록 관련 상수
 export const MIN_REVIEWS_FOR_TAGS = 3;

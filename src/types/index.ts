@@ -228,10 +228,11 @@ export interface Post {
   sponsorNote: string | null;
   viewCount: number;
   likeCount: number;
+  commentCount?: number;
   isLiked: boolean;
   isBookmarked: boolean;
   images?: PostImageItem[];
-  taggedNotes?: Pick<Note, 'id' | 'teaName' | 'overallRating' | 'createdAt'>[];
+  taggedNotes?: Pick<Note, 'id' | 'teaName' | 'teaYear' | 'teaSeller' | 'overallRating' | 'createdAt'>[];
   createdAt: Date;
   updatedAt: Date;
 }

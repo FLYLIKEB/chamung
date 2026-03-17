@@ -1,16 +1,42 @@
 import React, { useState } from 'react';
-import { Loader2, Trash2, Pencil, Check, X } from 'lucide-react';
+import { Loader2, Trash2, Pencil, Check, X, MessageCircle, ThumbsUp, MoreVertical, Send } from 'lucide-react';
 import { Comment } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { commentsApi } from '../lib/api';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
+import { formatRelativeTime } from '../utils/dateUtils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 interface CommentListProps {
   postId: number;
   comments: Comment[];
   onCommentsChange: (comments: Comment[]) => void;
+}
+
+function CommentAvatar({ name, profileImageUrl }: { name?: string; profileImageUrl?: string | null }) {
+  if (profileImageUrl) {
+    return (
+      <img
+        src={profileImageUrl}
+        alt={name ?? ''}
+        className="w-8 h-8 rounded-full object-cover bg-muted shrink-0"
+      />
+    );
+  }
+  return (
+    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+      <span className="text-xs font-semibold text-muted-foreground">
+        {(name?.charAt(0) ?? '?').toUpperCase()}
+      </span>
+    </div>
+  );
 }
 
 export function CommentList({ postId, comments, onCommentsChange }: CommentListProps) {
@@ -67,112 +93,164 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-sm font-semibold text-foreground">
-        댓글 {comments.length}개
-      </h3>
-
-      {/* 댓글 목록 */}
-      <div className="flex flex-col divide-y divide-border/40">
+    <div className="flex flex-col">
+      <div className="space-y-2">
         {comments.length === 0 && (
-          <p className="text-sm text-muted-foreground py-4 text-center">
+          <p className="text-sm text-muted-foreground py-6 text-center">
             첫 번째 댓글을 남겨보세요.
           </p>
         )}
-        {comments.map((comment) => (
-          <div key={comment.id} className="py-3">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex flex-col gap-1 flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">{comment.user?.name}</span>
-                  <span>·</span>
-                  <span>{new Date(comment.createdAt).toLocaleDateString('ko-KR')}</span>
-                </div>
+        {comments.map((comment) => {
+          const isOwner = user?.id === comment.userId;
+          return (
+            <div key={comment.id} className="rounded-xl bg-muted/40 dark:bg-muted/20 px-3.5 py-3">
+              <div className="flex gap-2.5">
+                {/* 프로필 아바타 */}
+                <CommentAvatar
+                  name={comment.user?.name}
+                  profileImageUrl={comment.user?.profileImageUrl}
+                />
 
-                {editingId === comment.id ? (
-                  <div className="flex flex-col gap-2 mt-1">
-                    <Textarea
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      rows={2}
-                      autoFocus
-                      className="min-h-0"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditSave(comment.id)}
-                        className="h-7 px-2 text-xs"
+                {/* 내용 영역 */}
+                <div className="flex-1 min-w-0">
+                  {/* 이름 + 액션 */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-foreground">
+                      {comment.user?.name ?? '알 수 없음'}
+                    </span>
+
+                    {/* 답글/좋아요/더보기 아이콘 (작성자만 더보기) */}
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <button
+                        type="button"
+                        className="p-1.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                        aria-label="답글"
                       >
-                        <Check className="w-3 h-3 mr-1" />
-                        저장
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleEditCancel}
-                        className="h-7 px-2 text-xs"
+                        <MessageCircle className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        className="p-1.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                        aria-label="공감"
                       >
-                        <X className="w-3 h-3 mr-1" />
-                        취소
-                      </Button>
+                        <ThumbsUp className="w-3.5 h-3.5" />
+                      </button>
+                      {isOwner && editingId !== comment.id && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              className="p-1.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                              aria-label="더보기"
+                            >
+                              <MoreVertical className="w-3.5 h-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditStart(comment)}>
+                              <Pencil className="w-3.5 h-3.5 mr-2" />
+                              수정
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(comment.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 mr-2" />
+                              삭제
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
-                ) : (
-                  <p className="text-sm text-foreground leading-relaxed">{comment.content}</p>
-                )}
-              </div>
 
-              {/* 작성자 본인 액션 */}
-              {user?.id === comment.userId && editingId !== comment.id && (
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => handleEditStart(comment)}
-                    className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                    aria-label="댓글 수정"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(comment.id)}
-                    className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    aria-label="댓글 삭제"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {/* 댓글 내용 or 수정 폼 */}
+                  {editingId === comment.id ? (
+                    <div className="flex flex-col gap-2 mt-1.5">
+                      <Textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        rows={2}
+                        autoFocus
+                        className="min-h-0 text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditSave(comment.id)}
+                          className="h-7 px-2 text-xs"
+                        >
+                          <Check className="w-3 h-3 mr-1" />
+                          저장
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleEditCancel}
+                          className="h-7 px-2 text-xs"
+                        >
+                          <X className="w-3 h-3 mr-1" />
+                          취소
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-foreground leading-relaxed mt-0.5">
+                      {comment.content}
+                    </p>
+                  )}
+
+                  {/* 날짜 */}
+                  {editingId !== comment.id && (
+                    <span className="text-[11px] text-muted-foreground/60 mt-1 block">
+                      {formatRelativeTime(comment.createdAt)}
+                    </span>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* 댓글 작성 폼 */}
+      {/* 댓글 입력 - 네비게이션 바 바로 위 고정 */}
       {user ? (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2 mt-1">
-          <Textarea
-            value={newContent}
-            onChange={(e) => setNewContent(e.target.value)}
-            placeholder="댓글을 입력하세요..."
-            rows={3}
-            maxLength={1000}
-          />
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">{newContent.length}/1000</span>
-            <Button
+        <form
+          onSubmit={handleSubmit}
+          className="fixed bottom-[var(--bottom-nav-spacer)] left-0 right-0 bg-surface-strong dark:bg-surface-strong border-t border-border/40 px-4 py-2.5 z-20"
+        >
+          <div className="flex items-center gap-0 bg-card rounded-full overflow-hidden pl-3 pr-1">
+            {/* 닉네임 라벨 */}
+            <span className="text-xs font-semibold text-primary shrink-0 pr-2">
+              {user.name}
+            </span>
+            {/* 입력 필드 */}
+            <input
+              type="text"
+              value={newContent}
+              onChange={(e) => setNewContent(e.target.value)}
+              placeholder="댓글을 입력하세요."
+              maxLength={1000}
+              className="flex-1 h-10 bg-transparent border-0 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none caret-primary"
+            />
+            {/* 전송 버튼 */}
+            <button
               type="submit"
-              size="sm"
               disabled={!newContent.trim() || isSubmitting}
-              className="h-8 px-4 text-xs"
+              className="shrink-0 p-2 text-primary disabled:text-muted-foreground/20 transition-colors"
+              aria-label="댓글 작성"
             >
-              {isSubmitting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
-              댓글 작성
-            </Button>
+              {isSubmitting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </button>
           </div>
         </form>
       ) : (
-        <p className="text-sm text-muted-foreground text-center py-2">
+        <p className="text-sm text-muted-foreground text-center py-3 border-t border-border/40 mt-2">
           댓글을 작성하려면 로그인이 필요합니다.
         </p>
       )}

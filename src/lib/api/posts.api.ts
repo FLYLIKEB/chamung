@@ -22,7 +22,7 @@ export interface CreatePostRequest {
 
 export interface UpdatePostRequest extends Partial<CreatePostRequest> {}
 
-export type PostSort = 'latest' | 'popular' | 'commented';
+export type PostSort = 'latest' | 'popular' | 'commented' | 'likes';
 
 export const postsApi = {
   uploadImage: (file: File) =>

@@ -134,8 +134,8 @@ export class PostsController {
     }
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? Math.min(parseInt(limit, 10), 50) : 20;
-    const sortVal: 'latest' | 'popular' | 'commented' =
-      sort === 'popular' || sort === 'commented' ? sort : 'latest';
+    const sortVal: 'latest' | 'popular' | 'commented' | 'likes' =
+      sort === 'popular' || sort === 'commented' || sort === 'likes' ? sort : 'latest';
     const bookmarkedFilter = bookmarked === 'true';
     const currentUserId = req?.user?.userId ? parseInt(req.user.userId, 10) : undefined;
     return this.postsService.findAll(

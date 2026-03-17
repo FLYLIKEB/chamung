@@ -44,7 +44,7 @@ export function Header({ title, showBack, onBack, showProfile, showLogo }: Heade
               />
             )}
             {title && (
-              <h1 className="text-foreground font-semibold tracking-tight truncate min-w-0">
+              <h1 className="font-['Jua'] font-normal text-2xl text-[#4a4540] dark:text-[#a09888] tracking-tight truncate min-w-0 pt-1">
                 {title}
               </h1>
             )}

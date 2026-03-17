@@ -73,7 +73,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
       type="button"
       onClick={handleClick}
       className={cn(
-        'relative aspect-[3/4] w-full overflow-hidden flex flex-col rounded-2xl bg-card border border-[var(--card-border)] text-left transition-shadow',
+        'relative aspect-[3/4] w-full overflow-hidden flex flex-col rounded-2xl bg-muted text-left transition-shadow',
         canView ? 'hover:shadow-md active:scale-[0.98]' : 'opacity-60 cursor-not-allowed',
       )}
     >
@@ -116,29 +116,30 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
 
       {/* Center: thumbnail + info */}
       <div className="flex-1 flex flex-col items-center justify-center gap-1.5 px-2.5">
-        {thumbnail ? (
-          <div className="w-11 h-11 rounded-2xl overflow-hidden shrink-0">
-            <ImageWithFallback
-              src={thumbnail}
-              alt={note.teaName}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ) : (
-          <div className="w-11 h-11 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center">
-            <img src="/logo.png" alt="" className="w-7 h-7 object-contain opacity-30" />
-          </div>
-        )}
+        {/* Tea type color dot above thumbnail */}
+        <div className="relative">
+          {note.teaType && (
+            <span className={cn('absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full z-10 ring-2 ring-muted', accentClass)} />
+          )}
+          {thumbnail ? (
+            <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 bg-white/60 dark:bg-white/10">
+              <ImageWithFallback
+                src={thumbnail}
+                alt={note.teaName}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center bg-white/60 dark:bg-white/10">
+              <img src="/logo.png" alt="" className="w-8 h-8 object-contain opacity-30" />
+            </div>
+          )}
+        </div>
 
         {showTeaName && (
-          <div className="flex items-center justify-center gap-1 w-full">
-            {note.teaType && (
-              <span className={cn('w-2 h-2 rounded-full shrink-0', accentClass)} />
-            )}
-            <span className="text-xs font-medium text-foreground text-center line-clamp-2 leading-tight">
-              {note.teaName}
-            </span>
-          </div>
+          <span className="text-xs font-medium text-foreground text-center truncate w-full leading-tight">
+            {note.teaName}
+          </span>
         )}
 
         <span className="text-[9px] text-muted-foreground">
@@ -170,7 +171,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
 
       {/* Bottom: author name for other users' notes */}
       <div className="pb-2.5 pt-1 flex items-center justify-end px-2.5">
-        {!isMyNote && note.userName && (
+        {note.userName && (
           <span className="text-[9px] text-muted-foreground/70 truncate max-w-full">
             {note.userName}
           </span>

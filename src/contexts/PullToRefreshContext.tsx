@@ -42,14 +42,14 @@ export function usePullToRefreshForPage(callback: () => Promise<void>, path: str
 export function PullToRefreshProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const refreshCallbackRef = useRef<(() => Promise<void>) | undefined>(undefined);
-  const [registeredCallback, setRegisteredCallback] = useState<(() => Promise<void>) | undefined>(undefined);
+  const [hasCallback, setHasCallback] = useState(false);
 
   const onRefresh = useCallback(async () => {
     await refreshCallbackRef.current?.();
   }, []);
 
   const isPathAllowed = isPullToRefreshAllowed(location.pathname);
-  const isPullDisabled = !isPathAllowed || !registeredCallback;
+  const isPullDisabled = !isPathAllowed || !hasCallback;
 
   const {
     scrollContainerRef,
@@ -61,8 +61,13 @@ export function PullToRefreshProvider({ children }: { children: React.ReactNode 
 
   const registerRefresh = useCallback((callback: (() => Promise<void>) | undefined) => {
     refreshCallbackRef.current = callback;
-    setRegisteredCallback(callback ?? undefined);
+    queueMicrotask(() => setHasCallback(!!callback));
   }, []);
+
+  // 페이지 이동 시 스크롤을 맨 위로 리셋
+  useEffect(() => {
+    scrollContainerRef.current?.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const showIndicator = !isPullDisabled && (pullDistance > 0 || isRefreshing);
 

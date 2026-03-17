@@ -64,7 +64,7 @@ export function ExploreSection({
   return (
     <div className="space-y-8">
       {trendingTeas && trendingTeas.length > 0 && (
-        <Section title="🍵 요즘 인기 차" description="최근 7일간 차록이 많은 인기 차예요." spacing="lg">
+        <Section title="요즘 인기 차" description="최근 7일간 차록이 많은 인기 차예요." spacing="lg">
           <div className={CARD_CONTAINER_CLASSES}>
             {trendingTeas.map((tea) => (
               <div key={tea.id} className={cn(CARD_ITEM_WRAPPER_CLASSES, CARD_WIDTH.DEFAULT)}>
@@ -179,7 +179,7 @@ export function ExploreSection({
         )}
       </Section>
 
-      <Section title="🏪 찻집/다실" description="차를 구매할 수 있는 찻집과 다실을 둘러보세요." spacing="lg">
+      <Section title="찻집/다실" description="차를 구매할 수 있는 찻집과 다실을 둘러보세요." spacing="lg">
         {sellers.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {sellers.map((seller) => (
