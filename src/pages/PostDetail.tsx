@@ -17,7 +17,18 @@ import {
   BookOpen,
   MessageCircle,
 } from 'lucide-react';
-import { Post, Comment, POST_CATEGORY_LABELS } from '../types';
+import { Post, Comment, PostCategory, POST_CATEGORY_LABELS } from '../types';
+
+const CATEGORY_TO_BOARD: Record<PostCategory, string> = {
+  brewing_question: '질문·토론',
+  recommendation: '질문·토론',
+  discussion: '질문·토론',
+  tea_review: '리뷰',
+  tool_review: '리뷰',
+  tea_room_review: '리뷰',
+  announcement: '공지',
+  bug_report: '제보',
+};
 import { postsApi, commentsApi } from '../lib/api';
 import { Header } from '../components/Header';
 import { BottomNav } from '../components/BottomNav';
@@ -131,7 +142,7 @@ export function PostDetail() {
 
   return (
     <div className="min-h-screen pb-32">
-      <Header showBack title={POST_CATEGORY_LABELS[post.category]} showProfile />
+      <Header showBack title={CATEGORY_TO_BOARD[post.category] ?? '차담'} showProfile />
 
       {/* 게시글 영역 */}
       <div className="px-5 pt-4 pb-3">
@@ -174,9 +185,19 @@ export function PostDetail() {
                 </span>
               )}
             </div>
-            <span className="text-xs text-muted-foreground">{formatRelativeTime(post.createdAt)}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">{formatRelativeTime(post.createdAt)}</span>
+              <span className="text-xs text-primary/70 font-medium">#{POST_CATEGORY_LABELS[post.category]}</span>
+              <span className="text-xs text-muted-foreground/50">·</span>
+              <span className="text-xs text-muted-foreground">조회 {post.viewCount ?? 0}</span>
+            </div>
           </div>
         </div>
+
+        {/* 제목 */}
+        {post.title && (
+          <h1 className="text-lg font-bold text-foreground leading-snug mb-3">{post.title}</h1>
+        )}
 
         {/* 본문 */}
         <div className="space-y-3">

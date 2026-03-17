@@ -3,10 +3,20 @@ import { vi, describe, it, expect } from 'vitest';
 import { Home } from '../Home';
 import { renderWithRouter } from '../../test/renderWithRouter';
 
+vi.mock('../../contexts/AppModeContext', () => ({
+  useAppMode: () => ({
+    sessionMode: { active: false },
+    blindMode: { active: false },
+    toggleSessionMode: vi.fn(),
+    toggleBlindMode: vi.fn(),
+  }),
+}));
+
 vi.mock('../../lib/api', () => ({
   notesApi: {
     getAll: vi.fn(() => Promise.resolve([])),
     getCalendar: vi.fn(() => Promise.resolve({ dates: [], streak: { current: 0, longest: 0 } })),
+    getByDate: vi.fn(() => Promise.resolve([])),
   },
   teasApi: {
     getAll: vi.fn(() => Promise.resolve([])),
@@ -59,5 +69,19 @@ describe('Home 페이지', () => {
   it('인기차 섹션은 홈에 표시하지 않는다', async () => {
     renderWithRouter(<Home />, { route: '/' });
     expect(screen.queryByText(/요즘 인기 차/)).not.toBeInTheDocument();
+  });
+
+  it('피드 섹션 "차록 흐름" 텍스트가 존재한다', async () => {
+    renderWithRouter(<Home />, { route: '/' });
+    await waitFor(() => {
+      expect(screen.getByText('차록 흐름')).toBeInTheDocument();
+    });
+  });
+
+  it('"탐색에서 전체 보기" 버튼 텍스트가 존재한다', async () => {
+    renderWithRouter(<Home />, { route: '/' });
+    await waitFor(() => {
+      expect(screen.getByText('탐색에서 전체 보기')).toBeInTheDocument();
+    });
   });
 });

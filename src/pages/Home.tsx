@@ -112,12 +112,12 @@ export function Home() {
         {/* 차록 피드 (통합: 수평 하이라이트 + 탭) */}
         <section aria-label="차록 피드" className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-foreground">차록 흐름</span>
+            <span className="text-base font-bold text-foreground">차록 흐름</span>
             <button
               onClick={() => navigate('/sasaek?tab=explore')}
               className="text-xs text-muted-foreground hover:text-primary transition-colors"
             >
-              더보기
+              탐색에서 전체 보기
             </button>
           </div>
 

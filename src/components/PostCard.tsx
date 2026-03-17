@@ -1,9 +1,12 @@
 import { type FC, memo } from 'react';
-import { Pin, Megaphone, Shield, Heart, MessageCircle, Share2, MoreHorizontal, ChevronRight } from 'lucide-react';
+import { Pin, Megaphone, Shield, Heart, MessageCircle, Eye, MoreHorizontal, ChevronRight, Share2, Flag, Bookmark } from 'lucide-react';
 import { Post, POST_CATEGORY_LABELS } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { cn } from './ui/utils';
 import { formatRelativeTime } from '../utils/dateUtils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { useShare } from '../hooks/useShare';
+import { useAuth } from '../contexts/AuthContext';
 
 interface PostCardProps {
   post: Post;
@@ -13,6 +16,8 @@ interface PostCardProps {
 
 const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { share } = useShare();
 
   const handleClick = () => {
     navigate(`/chadam/${post.id}`);
@@ -95,7 +100,10 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
               </span>
             )}
           </div>
-          <span className="text-xs text-muted-foreground">{formatRelativeTime(post.createdAt)}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">{formatRelativeTime(post.createdAt)}</span>
+            <span className="text-xs text-primary/70 font-medium">#{POST_CATEGORY_LABELS[post.category]}</span>
+          </div>
         </div>
       </div>
 
@@ -143,10 +151,34 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
             {comments > 0 && <span>{comments}</span>}
           </span>
           <span className="inline-flex items-center gap-1 text-xs">
-            <Share2 className="w-[15px] h-[15px]" />
+            <Eye className="w-[15px] h-[15px]" />
+            {post.viewCount > 0 && <span>{post.viewCount}</span>}
           </span>
         </div>
-        <MoreHorizontal className="w-4 h-4 text-muted-foreground/30" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              onClick={(e) => e.stopPropagation()}
+              className="p-1 -m-1 rounded-full hover:bg-muted/50 transition-colors"
+            >
+              <MoreHorizontal className="w-4 h-4 text-muted-foreground/30" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem onClick={() => share(post.title || '게시글', `${window.location.origin}/chadam/${post.id}`)}>
+              <Share2 className="w-4 h-4 mr-2" />공유
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate(`/chadam/${post.id}`)}>
+              <Bookmark className="w-4 h-4 mr-2" />자세히 보기
+            </DropdownMenuItem>
+            {user && user.id !== post.userId && (
+              <DropdownMenuItem onClick={() => navigate(`/chadam/${post.id}`, { state: { openReport: true } })} className="text-destructive focus:text-destructive">
+                <Flag className="w-4 h-4 mr-2" />신고
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ArrowDownUp, ChevronRight } from 'lucide-react';
+import { Plus, ArrowDownUp, ChevronRight, Flame, LayoutList } from 'lucide-react';
 import { PostCardSkeleton } from '../components/PostCardSkeleton';
 import { Post, PostCategory, POST_CATEGORY_LABELS } from '../types';
 import { postsApi, type PostSort } from '../lib/api';
@@ -25,9 +25,7 @@ const SORT_OPTIONS: Array<{ value: PostSort; label: string }> = [
 
 type GroupKey = 'all' | 'popular' | 'qna' | 'review' | 'announcement' | 'report';
 
-const GROUPS: Array<{ key: GroupKey; label: string; categories: PostCategory[] }> = [
-  { key: 'all', label: '전체', categories: [] },
-  { key: 'popular', label: '인기글', categories: [] },
+const CATEGORY_GROUPS: Array<{ key: GroupKey; label: string; categories: PostCategory[] }> = [
   {
     key: 'qna',
     label: '질문·토론',
@@ -38,8 +36,14 @@ const GROUPS: Array<{ key: GroupKey; label: string; categories: PostCategory[] }
   { key: 'report', label: '제보', categories: ['bug_report'] },
 ];
 
-// 데스크톱에서 표시할 게시판 그룹 (전체 제외)
-const DESKTOP_BOARDS = GROUPS.filter((g) => g.key !== 'all');
+const GROUPS: Array<{ key: GroupKey; label: string; categories: PostCategory[] }> = [
+  { key: 'all', label: '전체', categories: [] },
+  { key: 'popular', label: '인기글', categories: [] },
+  ...CATEGORY_GROUPS,
+];
+
+// 데스크톱에서 표시할 게시판 그룹
+const DESKTOP_BOARDS = CATEGORY_GROUPS;
 
 const PAGE_SIZE = 20;
 
@@ -118,16 +122,60 @@ export function Community() {
     <div className="min-h-screen pb-20">
       <Header title="차담" showLogo showProfile />
 
-      {/* 카테고리 탭 - 밑줄 스타일 + 정렬 */}
+      {/* 전체/인기글 + 카테고리 탭 */}
       <div className="sticky top-[calc(4.25rem+env(safe-area-inset-top))] md:top-0 z-10 bg-background">
+        {/* 전체보기 / 인기글 — 항상 노출 */}
+        <div className="flex items-center gap-2 px-4 py-2">
+          <button
+            type="button"
+            onClick={() => setSelectedGroup('all')}
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+              selectedGroup === 'all'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-accent border border-border/60 text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <LayoutList className="w-3.5 h-3.5" />
+            전체
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedGroup('popular')}
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+              selectedGroup === 'popular'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-accent border border-border/60 text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Flame className="w-3.5 h-3.5" />
+            인기글
+          </button>
+          {/* 정렬 */}
+          <div className="ml-auto">
+            <button
+              type="button"
+              onClick={() => {
+                const idx = SORT_OPTIONS.findIndex((o) => o.value === sort);
+                setSort(SORT_OPTIONS[(idx + 1) % SORT_OPTIONS.length].value);
+              }}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+            >
+              <ArrowDownUp className="w-3.5 h-3.5" />
+              <span className="font-medium">{SORT_OPTIONS.find((o) => o.value === sort)?.label}</span>
+            </button>
+          </div>
+        </div>
+        {/* 카테고리 탭 */}
         <div className="flex items-center border-b border-border/40">
           <div className="flex overflow-x-auto scrollbar-hide px-4 gap-0 flex-1">
-            {GROUPS.map(({ key, label }) => (
+            {CATEGORY_GROUPS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setSelectedGroup(key)}
                 className={cn(
-                  'shrink-0 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
+                  'shrink-0 px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
                   selectedGroup === key
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground',
@@ -136,20 +184,6 @@ export function Community() {
                 {label}
               </button>
             ))}
-          </div>
-          {/* 정렬 드롭다운 */}
-          <div className="shrink-0 pr-4">
-            <button
-              type="button"
-              onClick={() => {
-                const idx = SORT_OPTIONS.findIndex((o) => o.value === sort);
-                setSort(SORT_OPTIONS[(idx + 1) % SORT_OPTIONS.length].value);
-              }}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
-            >
-              <ArrowDownUp className="w-3.5 h-3.5" />
-              <span className="font-medium">{SORT_OPTIONS.find((o) => o.value === sort)?.label}</span>
-            </button>
           </div>
         </div>
       </div>
