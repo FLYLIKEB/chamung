@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Bell, Package, Trash2, ChevronUp, ChevronDown, Pencil, CheckCircle2 } from 'lucide-react';
+import { Plus, Bell, Package, Trash2, ChevronUp, ChevronDown, Pencil, CheckCircle2, MoreHorizontal, BookOpen, Coffee } from 'lucide-react';
 import { Header } from '../components/Header';
 import { BottomNav } from '../components/BottomNav';
 import { Button } from '../components/ui/button';
@@ -13,10 +13,10 @@ import { Loader2 } from 'lucide-react';
 import { CellarCardSkeleton } from '../components/CellarCardSkeleton';
 import { logger } from '../lib/logger';
 import { TEA_TYPES, TEA_TYPE_COLORS } from '../constants';
-import { TeaTypeBadge } from '../components/TeaTypeBadge';
 import { cn } from '../components/ui/utils';
 import { InfiniteScrollSentinel } from '../components/InfiniteScrollSentinel';
 import { FilterTabBar } from '../components/FilterTabBar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 
 const UNIT_LABELS: Record<string, string> = {
   g: 'g',
@@ -43,7 +43,7 @@ function formatDate(dateStr: string | null): string {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function CellarCard({
+function CellarRow({
   item,
   onDelete,
   onEdit,
@@ -57,6 +57,9 @@ function CellarCard({
   onSessionClick: (teaId: number) => void;
 }) {
   const [deleting, setDeleting] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
 
   const handleDelete = async () => {
     if (!confirm(`"${item.tea.name}" 찻장 아이템을 삭제하시겠습니까?`)) return;
@@ -73,115 +76,163 @@ function CellarCard({
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) < 30 || Math.abs(dx) < Math.abs(dy)) return;
+    setRevealed(dx < 0);
+  };
+
   const tea = item.tea;
+  const accentClass =
+    tea.type && tea.type in TEA_TYPE_COLORS
+      ? TEA_TYPE_COLORS[tea.type as keyof typeof TEA_TYPE_COLORS]
+      : 'bg-muted-foreground/30';
+
   return (
-    <div className="relative bg-card rounded-2xl p-4 group">
-      {/* 좌측 accent bar */}
+    <div
+      className="relative overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* 스와이프 액션 버튼 (우측에서 슬라이드 인) */}
       <div
         className={cn(
-          'absolute left-0 top-3 bottom-3 w-[3px] rounded-full',
-          tea.type in TEA_TYPE_COLORS
-            ? TEA_TYPE_COLORS[tea.type as keyof typeof TEA_TYPE_COLORS]
-            : 'bg-muted-foreground/30'
+          'absolute right-0 top-0 bottom-0 flex w-44 transition-transform duration-200 ease-out',
+          revealed ? 'translate-x-0' : 'translate-x-full',
         )}
-        aria-hidden
-      />
-
-      <div className="pl-4 pr-10">
-        {/* 상단: 이름 + 잔량 */}
-        <div className="flex items-baseline justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <h3 className="truncate font-medium text-base text-foreground">{tea.name}</h3>
-            {tea.type && <TeaTypeBadge type={tea.type} className="shrink-0" />}
-          </div>
-          <span className="text-lg font-light tabular-nums text-foreground shrink-0">
-            {Number(item.quantity)}<span className="text-xs ml-0.5 text-muted-foreground">{UNIT_LABELS[item.unit] ?? item.unit}</span>
-          </span>
-        </div>
-
-        {/* 메타 정보 */}
-        <p className="text-xs text-muted-foreground mt-1 truncate whitespace-nowrap">
-          <span className={!tea.year ? 'text-muted-foreground/50' : undefined}>
-            {tea.year ? `${tea.year}년` : '연도미상'}
-          </span>
-          {' · '}
-          <span className={!(tea.price != null && tea.price > 0) ? 'text-muted-foreground/50' : undefined}>
-            {tea.price != null && tea.price > 0 ? `${tea.price.toLocaleString()}원` : '가격미상'}
-          </span>
-          {' · '}
-          <span className={!(tea.weight != null && tea.weight > 0) ? 'text-muted-foreground/50' : undefined}>
-            {tea.weight != null && tea.weight > 0 ? `${tea.weight}g` : '용량미상'}
-          </span>
-        </p>
-        {tea.seller && (
-          <p className="text-xs mt-0.5">
-            <Link
-              to={`/teahouse/${encodeURIComponent(tea.seller)}`}
-              onClick={(e) => e.stopPropagation()}
-              className="text-primary hover:underline"
-            >
-              {tea.seller}
-            </Link>
-          </p>
-        )}
-        {!tea.seller && (
-          <p className="text-xs text-muted-foreground/50 mt-0.5">판매처 미상</p>
-        )}
-
-        {item.openedAt && (
-          <p className="text-xs text-muted-foreground mt-1">
-            개봉일: {formatDate(item.openedAt)}
-          </p>
-        )}
-
-        {item.memo && (
-          <p className="text-sm text-foreground/70 mt-2 line-clamp-2">{item.memo}</p>
-        )}
-
-        {/* 액션 — 텍스트 링크 */}
-        <div className="flex items-center gap-4 mt-3">
-          <button
-            type="button"
-            onClick={() => onNoteClick(item.teaId)}
-            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            차록 쓰기
-          </button>
-          <button
-            type="button"
-            onClick={() => onSessionClick(item.teaId)}
-            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            다회 시작
-          </button>
-        </div>
-      </div>
-
-      {/* Edit/Delete — 우측 상단 */}
-      <div className="absolute top-3 right-3 flex gap-1">
+        aria-hidden={!revealed}
+      >
         <button
-          onClick={() => onEdit(item.id)}
-          className="text-muted-foreground hover:text-foreground transition-colors p-1"
-          aria-label="수정"
+          type="button"
+          onClick={() => { onNoteClick(item.teaId); setRevealed(false); }}
+          className="flex-1 bg-primary text-primary-foreground flex flex-col items-center justify-center gap-1 text-[11px] font-medium"
+        >
+          <BookOpen className="w-4 h-4" />
+          차록
+        </button>
+        <button
+          type="button"
+          onClick={() => { onSessionClick(item.teaId); setRevealed(false); }}
+          className="flex-1 bg-muted text-foreground flex flex-col items-center justify-center gap-1 text-[11px] font-medium"
+        >
+          <Coffee className="w-4 h-4" />
+          다회
+        </button>
+        <button
+          type="button"
+          onClick={() => { onEdit(item.id); setRevealed(false); }}
+          className="flex-1 bg-secondary text-secondary-foreground flex flex-col items-center justify-center gap-1 text-[11px] font-medium"
         >
           <Pencil className="w-4 h-4" />
+          수정
         </button>
         <button
+          type="button"
           onClick={handleDelete}
           disabled={deleting}
-          className="text-muted-foreground hover:text-destructive transition-colors p-1"
-          aria-label="삭제"
+          className="flex-1 bg-destructive text-destructive-foreground flex flex-col items-center justify-center gap-1 text-[11px] font-medium"
         >
-          {deleting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Trash2 className="w-4 h-4" />
-          )}
+          {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+          삭제
         </button>
+      </div>
+
+      {/* 행 콘텐츠 */}
+      <div
+        className={cn(
+          'flex items-center gap-3 px-4 py-2.5 bg-background transition-transform duration-200 ease-out',
+          revealed ? '-translate-x-44' : 'translate-x-0 hover:bg-accent/40',
+        )}
+        onClick={() => revealed && setRevealed(false)}
+      >
+        {/* 차 종류 색 dot */}
+        <span className={cn('w-2 h-2 rounded-full shrink-0', accentClass)} aria-hidden />
+
+        {/* 이름 + 메타 */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="text-sm font-medium text-foreground truncate">{tea.name}</span>
+            {tea.type && (
+              <span className="text-[10px] text-muted-foreground shrink-0">{tea.type}</span>
+            )}
+          </div>
+          <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+            {tea.year ? `${tea.year}년` : '연도미상'}
+            {' · '}
+            {tea.seller ? (
+              <Link
+                to={`/teahouse/${encodeURIComponent(tea.seller)}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-primary/80 hover:underline"
+              >
+                {tea.seller}
+              </Link>
+            ) : (
+              <span className="opacity-50">판매처 미상</span>
+            )}
+            {item.openedAt && ` · 개봉 ${formatDate(item.openedAt)}`}
+          </div>
+          {item.memo && (
+            <p className="text-[11px] text-foreground/60 truncate mt-0.5">{item.memo}</p>
+          )}
+        </div>
+
+        {/* 잔량 */}
+        <span className="text-sm tabular-nums text-foreground shrink-0">
+          {Number(item.quantity)}
+          <span className="text-[11px] text-muted-foreground ml-0.5">{UNIT_LABELS[item.unit] ?? item.unit}</span>
+        </span>
+
+        {/* ⋮ 드롭다운 (수정 + 전체 액션, 데스크톱/폴백용) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="p-1 -mr-1 rounded-full hover:bg-muted/60 transition-colors text-muted-foreground/40 hover:text-muted-foreground"
+              aria-label="더보기"
+            >
+              {deleting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <MoreHorizontal className="w-4 h-4" />
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onNoteClick(item.teaId)}>
+              <BookOpen className="w-4 h-4 mr-2" />
+              차록 쓰기
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onSessionClick(item.teaId)}>
+              <Coffee className="w-4 h-4 mr-2" />
+              다회 시작
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onEdit(item.id)}>
+              <Pencil className="w-4 h-4 mr-2" />
+              수정
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              삭제
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
 }
+
 
 
 const CELLAR_PAGE_SIZE = 20;
@@ -414,26 +465,79 @@ export function Cellar() {
           </div>
         )}
 
-        {/* 차 종류 필터 탭 */}
+        {/* 필터 + 정렬 — sticky */}
         {activeItems.length > 0 && (
-          <FilterTabBar
-            activeKey={activeType}
-            onChange={setActiveType}
-            aria-label="차 종류 필터"
-            tabs={[
-              {
-                key: 'all' as const,
-                ariaLabel: `전체 ${activeItems.length}개 ${totalGrams}그램`,
-                label: (
+          <div className="sticky top-[calc(4.25rem+env(safe-area-inset-top))] z-10 bg-background">
+            {/* 전체 pill + 정렬 */}
+            <div className="flex items-center gap-2 px-4 py-2">
+              <button
+                type="button"
+                onClick={() => setActiveType('all')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                  activeType === 'all'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-accent border border-border/60 text-muted-foreground hover:text-foreground',
+                )}
+              >
+                전체 {activeItems.length}
+                {totalGrams > 0 && (
+                  <span className="opacity-70">· {totalGrams.toLocaleString()}g</span>
+                )}
+              </button>
+              {/* 정렬 드롭다운 — 우측 */}
+              <div className="ml-auto relative flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="정렬 기준"
+                  aria-expanded={sortOpen}
+                  onClick={() => setSortOpen((prev) => !prev)}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                >
+                  {SORT_OPTIONS.find((o) => o.key === sortKey)?.label}
+                  {sortDir === 'asc' ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                {sortOpen && (
                   <>
-                    전체 {activeItems.length}
-                    {totalGrams > 0 && (
-                      <span className="ml-1 opacity-70">· {totalGrams.toLocaleString()}g</span>
-                    )}
+                    <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
+                    <ul
+                      role="menu"
+                      aria-label="정렬 옵션"
+                      className="absolute right-0 top-full mt-1 z-20 bg-card border border-border rounded-xl shadow-sm py-1 min-w-28 overflow-hidden"
+                    >
+                      {SORT_OPTIONS.map((opt) => (
+                        <li key={opt.key}>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            aria-checked={sortKey === opt.key}
+                            onClick={() => handleSortChange(opt.key)}
+                            className={[
+                              'w-full text-left px-4 py-2 text-sm transition-colors',
+                              sortKey === opt.key
+                                ? 'text-primary font-medium bg-primary/5'
+                                : 'text-foreground hover:bg-secondary',
+                            ].join(' ')}
+                          >
+                            {opt.label}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   </>
-                ),
-              },
-              ...[...TEA_TYPES]
+                )}
+              </div>
+            </div>
+            {/* 차 종류 탭 */}
+            <FilterTabBar
+              activeKey={activeType}
+              onChange={setActiveType}
+              aria-label="차 종류 필터"
+              tabs={[...TEA_TYPES]
                 .sort((a, b) => (typeCounts[b] ?? 0) - (typeCounts[a] ?? 0))
                 .map((type) => {
                   const count = typeCounts[type] ?? 0;
@@ -455,74 +559,16 @@ export function Cellar() {
                       </span>
                     ),
                   };
-                }),
-            ]}
-          />
-        )}
-
-        {/* 아이템 수 + 정렬 드롭다운 */}
-        {activeItems.length > 0 && (
-          <div className="flex items-center justify-between px-4 sm:px-6 pb-2">
-            <p className="text-sm text-muted-foreground">{displayedItems.length}개</p>
-            <div className="relative flex items-center gap-1">
-              {/* 정렬 기준 버튼 — 클릭 시 커스텀 옵션 목록 표시 */}
-              <button
-                type="button"
-                aria-label="정렬 기준"
-                aria-expanded={sortOpen}
-                onClick={() => setSortOpen((prev) => !prev)}
-                className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors px-1 py-1"
-              >
-                {SORT_OPTIONS.find((o) => o.key === sortKey)?.label}
-                {sortDir === 'asc' ? (
-                  <ChevronUp className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                )}
-              </button>
-              {/* 커스텀 드롭다운 목록 */}
-              {sortOpen && (
-                <>
-                  {/* 외부 클릭 닫기용 오버레이 */}
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setSortOpen(false)}
-                  />
-                  <ul
-                    role="menu"
-                    aria-label="정렬 옵션"
-                    className="absolute right-0 top-full mt-1 z-20 bg-card border border-border rounded-xl shadow-sm py-1 min-w-28 overflow-hidden"
-                  >
-                    {SORT_OPTIONS.map((opt) => (
-                      <li key={opt.key}>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          aria-checked={sortKey === opt.key}
-                          onClick={() => handleSortChange(opt.key)}
-                          className={[
-                            'w-full text-left px-4 py-2 text-sm transition-colors',
-                            sortKey === opt.key
-                              ? 'text-primary font-medium bg-primary/5'
-                              : 'text-foreground hover:bg-secondary',
-                          ].join(' ')}
-                        >
-                          {opt.label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </div>
+                })}
+            />
           </div>
         )}
 
         {/* 찻장 목록 */}
-        <div className="px-4 sm:px-6 pb-4">
+        <div className="pb-4">
           {activeItems.length === 0 && finishedItems.length === 0 ? (
             // 아이템 자체가 없는 전체 빈 상태
-            <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground px-4">
               <Package className="w-12 h-12 opacity-30" />
               <p className="text-sm">아직 찻장에 차가 없습니다.</p>
               <Button
@@ -537,7 +583,7 @@ export function Cellar() {
             </div>
           ) : activeItems.length === 0 ? (
             // 보유 중인 차 없음, 다 마신 차만 있음
-            <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground px-4">
               <Package className="w-10 h-10 opacity-30" />
               <p className="text-sm">보유 중인 차가 없습니다.</p>
               <Button
@@ -552,7 +598,7 @@ export function Cellar() {
             </div>
           ) : displayedItems.length === 0 ? (
             // 필터 결과가 없는 빈 상태 (보유 중인 차는 있지만 해당 종류 없음)
-            <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground px-4">
               <Package className="w-10 h-10 opacity-30" />
               <p className="text-sm">해당 종류의 차가 없습니다.</p>
               <button
@@ -565,14 +611,14 @@ export function Cellar() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="divide-y divide-accent">
                 {displayedItems.slice(0, displayCount).map((item, i) => (
                   <div
                     key={item.id}
                     className="animate-fade-in-up opacity-0"
                     style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }}
                   >
-                    <CellarCard
+                    <CellarRow
                       item={item}
                       onDelete={handleDelete}
                       onEdit={handleEdit}
@@ -593,7 +639,7 @@ export function Cellar() {
 
           {/* 다 마신 차 목록 */}
           {finishedItems.length > 0 && (
-            <div className="mt-8 pt-6 border-t border-border">
+            <div className="mt-8 pt-6 border-t border-border px-4">
               <button
                 type="button"
                 onClick={() => setFinishedOpen((prev) => !prev)}
@@ -608,9 +654,9 @@ export function Cellar() {
                 )}
               </button>
               {finishedOpen && (
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="mt-3 divide-y divide-accent -mx-4">
                   {finishedItems.map((item) => (
-                    <CellarCard
+                    <CellarRow
                       key={item.id}
                       item={item}
                       onDelete={handleDelete}

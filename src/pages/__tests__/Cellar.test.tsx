@@ -156,13 +156,16 @@ describe('Cellar 페이지', () => {
 
     renderCellar();
 
-    // CellarCard 내의 "차록 쓰기" 버튼 찾기
+    // CellarRow 내 더보기 버튼 클릭 → 드롭다운 열기
     await waitFor(() => {
       expect(screen.getByText('테스트 차')).toBeInTheDocument();
     });
-    const noteBtn = screen.getByRole('button', { name: '차록 쓰기' });
-    expect(noteBtn).toBeDefined();
-    await userEvent.click(noteBtn);
+    const moreBtn = screen.getByRole('button', { name: '더보기' });
+    await userEvent.click(moreBtn);
+
+    // 드롭다운 메뉴에서 "차록 쓰기" menuitem 클릭
+    const noteItem = await screen.findByRole('menuitem', { name: /차록 쓰기/ });
+    await userEvent.click(noteItem);
 
     expect(mockNavigate).toHaveBeenCalledWith('/note/new?teaId=5');
   });
@@ -174,12 +177,8 @@ describe('Cellar 페이지', () => {
     renderCellar();
 
     await waitFor(() => {
-      // 카드 내 "개봉일: 2024.03.01" 문자열 확인 (p 태그)
+      // 행 내 "개봉 2024.03.01" 문자열 확인
       expect(screen.getByText(/2024\.03\.01/)).toBeInTheDocument();
-      // 개봉일 레이블이 포함된 p 태그가 존재하는지 확인
-      const allTexts = screen.getAllByText(/개봉일/);
-      const cardLabel = allTexts.find((el) => el.tagName === 'P');
-      expect(cardLabel).toBeInTheDocument();
     });
   });
 
@@ -316,8 +315,8 @@ describe('Cellar 페이지', () => {
 
     await waitFor(() => {
       expect(sortBtn).toHaveTextContent('잔량');
-      const cards = screen.getAllByRole('heading', { level: 3 });
-      expect(cards[0]).toHaveTextContent('많은차');
+      const rows = screen.getAllByText(/많은차|적은차/);
+      expect(rows[0]).toHaveTextContent('많은차');
     });
 
     // 같은 옵션 다시 선택 → 방향 토글 (desc → asc, 적은순)
@@ -326,8 +325,8 @@ describe('Cellar 페이지', () => {
     await userEvent.click(screen.getByRole('menuitem', { name: '잔량' })); // 같은 옵션 → 방향 토글
 
     await waitFor(() => {
-      const cards = screen.getAllByRole('heading', { level: 3 });
-      expect(cards[0]).toHaveTextContent('적은차');
+      const rows = screen.getAllByText(/많은차|적은차/);
+      expect(rows[0]).toHaveTextContent('적은차');
     });
   });
 
