@@ -11,7 +11,7 @@ import { cn } from '../ui/utils';
 import { Tea, Seller, Note, CellarItem } from '../../types';
 import { LucideIcon } from 'lucide-react';
 
-type SearchCategory = 'all' | 'tea' | 'note' | 'cellar' | 'seller' | 'tag';
+export type SearchCategory = 'all' | 'tea' | 'note' | 'cellar' | 'seller' | 'tag';
 
 const CATEGORY_CREATE_CONFIG: Partial<Record<SearchCategory, { label: string; path: string; icon: LucideIcon }>> = {
   tea: { label: '새 차 등록하기', path: '/tea/new', icon: Leaf },

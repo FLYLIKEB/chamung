@@ -17,8 +17,7 @@ import { useTeaSearch, useTeaSearchDebounce } from '../hooks/useTeaSearch';
 import { FilterPanel } from '../components/search/FilterPanel';
 import { SearchResults } from '../components/search/SearchResults';
 import { ExploreSection } from '../components/search/ExploreSection';
-
-type SearchCategory = 'all' | 'tea' | 'note' | 'cellar' | 'seller' | 'tag';
+import type { SearchCategory } from '../components/search/SearchResults';
 
 const SEARCH_CATEGORIES: { key: SearchCategory; label: string }[] = [
   { key: 'all', label: '전체' },
@@ -82,40 +81,6 @@ export function Search() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
-  const navigableItems = useMemo(() => {
-    if (!showResults) return [];
-    if (searchCategory === 'tea') return teas.map((t) => `/tea/${t.id}`);
-    if (searchCategory === 'note') return noteResults.map((n) => `/note/${n.id}`);
-    if (searchCategory === 'cellar') return cellarResults.map((c) => `/cellar/${c.id}`);
-    if (searchCategory === 'seller') return sellerResults.map((s) => `/teahouse/${encodeURIComponent(s.name)}`);
-    if (searchCategory === 'tag') return tagResults.map((t) => `/tag/${encodeURIComponent(t.name)}`);
-    if (searchCategory === 'all') return [
-      ...teas.slice(0, 5).map((t) => `/tea/${t.id}`),
-      ...noteResults.slice(0, 6).map((n) => `/note/${n.id}`),
-      ...sellerResults.slice(0, 6).map((s) => `/teahouse/${encodeURIComponent(s.name)}`),
-      ...tagResults.slice(0, 8).map((t) => `/tag/${encodeURIComponent(t.name)}`),
-    ];
-    return [];
-  }, [searchCategory, teas, noteResults, cellarResults, sellerResults, tagResults, showResults]);
-
-  useEffect(() => { setSelectedIndex(-1); }, [searchQuery, searchCategory]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (navigableItems.length === 0) return;
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex((i) => Math.min(i + 1, navigableItems.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex((i) => Math.max(i - 1, -1));
-    } else if (e.key === 'Enter' && selectedIndex >= 0) {
-      e.preventDefault();
-      navigate(navigableItems[selectedIndex]);
-    } else if (e.key === 'Escape') {
-      setSelectedIndex(-1);
-    }
-  }, [navigableItems, selectedIndex, navigate]);
-
   const filterCallbacks = useMemo(
     () => ({ setTeas, setIsLoading, setHasSearched }),
     [setTeas, setIsLoading, setHasSearched],
@@ -129,8 +94,8 @@ export function Search() {
     setCategoryLoading(true);
     const q = searchQuery.trim().toLowerCase();
     if (searchCategory === 'all') {
-      Promise.all([
-        notesApi.getAll(user?.id, undefined, undefined, undefined, undefined, noteSort, 1, 200)
+      const notesFetch = user?.id
+        ? notesApi.getAll(user.id, undefined, undefined, undefined, undefined, noteSort, 1, 200)
           .then((data: unknown) => {
             const notes: Note[] = Array.isArray(data)
               ? data
@@ -138,7 +103,10 @@ export function Search() {
             setAllNotes(notes);
             setNoteResults(q ? notes.filter((n) => n.teaName?.toLowerCase().includes(q) || n.memo?.toLowerCase().includes(q) || n.teaSeller?.toLowerCase().includes(q)) : notes.slice(0, 6));
           })
-          .catch(() => { setAllNotes([]); setNoteResults([]); }),
+          .catch(() => { setAllNotes([]); setNoteResults([]); })
+        : Promise.resolve();
+      Promise.allSettled([
+        notesFetch,
         tagsApi.getPopularTags(100)
           .then((data) => {
             const tags = Array.isArray(data) ? data : [];
@@ -154,7 +122,8 @@ export function Search() {
           .catch(() => { setAllCellar([]); setCellarResults([]); }),
       ]).finally(() => setCategoryLoading(false));
     } else if (searchCategory === 'note') {
-      notesApi.getAll(user?.id, undefined, undefined, undefined, undefined, noteSort, 1, 200)
+      if (!user?.id) { setCategoryLoading(false); return; }
+      notesApi.getAll(user.id, undefined, undefined, undefined, undefined, noteSort, 1, 200)
         .then((data: unknown) => {
           const notes: Note[] = Array.isArray(data)
             ? data
@@ -238,6 +207,40 @@ export function Search() {
         : searchQuery.trim().length >= 2 ||
           (searchCategory === 'note' && noteHasFilters) ||
           (searchCategory === 'cellar' && cellarHasFilters);
+
+  const navigableItems = useMemo(() => {
+    if (!showResults) return [];
+    if (searchCategory === 'tea') return teas.map((t) => `/tea/${t.id}`);
+    if (searchCategory === 'note') return noteResults.map((n) => `/note/${n.id}`);
+    if (searchCategory === 'cellar') return cellarResults.map((c) => `/cellar/${c.id}`);
+    if (searchCategory === 'seller') return sellerResults.map((s) => `/teahouse/${encodeURIComponent(s.name)}`);
+    if (searchCategory === 'tag') return tagResults.map((t) => `/tag/${encodeURIComponent(t.name)}`);
+    if (searchCategory === 'all') return [
+      ...teas.slice(0, 5).map((t) => `/tea/${t.id}`),
+      ...noteResults.slice(0, 6).map((n) => `/note/${n.id}`),
+      ...sellerResults.slice(0, 6).map((s) => `/teahouse/${encodeURIComponent(s.name)}`),
+      ...tagResults.slice(0, 8).map((t) => `/tag/${encodeURIComponent(t.name)}`),
+    ];
+    return [];
+  }, [searchCategory, teas, noteResults, cellarResults, sellerResults, tagResults, showResults]);
+
+  useEffect(() => { setSelectedIndex(-1); }, [searchQuery, searchCategory]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (navigableItems.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((i) => Math.min(i + 1, navigableItems.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((i) => Math.max(i - 1, -1));
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+      e.preventDefault();
+      navigate(navigableItems[selectedIndex]);
+    } else if (e.key === 'Escape') {
+      setSelectedIndex(-1);
+    }
+  }, [navigableItems, selectedIndex, navigate]);
 
   const handleRefresh = useCallback(async () => {
     if (showResults) {

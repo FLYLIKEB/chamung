@@ -10,8 +10,7 @@ import {
 } from '../ui/sheet';
 import { TEA_TYPES, TEA_TYPE_COLORS } from '../../constants';
 import { cn } from '../ui/utils';
-
-type SearchCategory = 'all' | 'tea' | 'note' | 'cellar' | 'seller' | 'tag';
+import type { SearchCategory } from './SearchResults';
 
 const SORT_OPTIONS = [
   { key: 'popular' as const, label: '인기순' },
