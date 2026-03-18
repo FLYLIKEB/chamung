@@ -145,7 +145,7 @@ function CellarRow({
       {/* 행 콘텐츠 */}
       <div
         className={cn(
-          'flex items-center gap-3 px-4 py-2.5 bg-background transition-transform duration-200 ease-out',
+          'flex items-center gap-3 px-4 py-2.5 transition-transform duration-200 ease-out',
           revealed ? '-translate-x-44' : 'translate-x-0 hover:bg-accent/40',
         )}
         onClick={() => revealed && setRevealed(false)}
@@ -527,7 +527,7 @@ export function Cellar() {
         )}
 
         {/* 찻장 목록 */}
-        <div className="pb-4 bg-muted/30">
+        <div className="pb-4 bg-card">
           {activeItems.length === 0 && finishedItems.length === 0 ? (
             // 아이템 자체가 없는 전체 빈 상태
             <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground px-4">
