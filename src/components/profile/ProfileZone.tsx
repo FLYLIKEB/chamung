@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FollowersDrawer } from './FollowersDrawer';
 import { Camera, ChevronRight, Globe, Instagram, Loader2, Pencil } from 'lucide-react';
 import { User, UserLevel, UserOnboardingPreference } from '@/types';
 import { UserAvatar } from '@/components/ui/UserAvatar';
@@ -41,6 +42,7 @@ export function ProfileZone({
 }: ProfileZoneProps) {
   const navigate = useNavigate();
   const [bioExpanded, setBioExpanded] = useState(false);
+  const [followersOpen, setFollowersOpen] = useState(false);
   const bioIsLong = (user.bio?.length ?? 0) > 80;
 
   const noteLevel = userLevel?.noteLevel;
@@ -175,10 +177,16 @@ export function ProfileZone({
             label="평균 별점"
           />
           <div className="w-px h-7 bg-border/40" />
-          <StatItem
-            value={(user.followerCount ?? 0).toLocaleString('ko-KR')}
-            label="구독자"
-          />
+          <button
+            type="button"
+            onClick={() => setFollowersOpen(true)}
+            className="flex flex-col items-center gap-0.5 hover:opacity-70 transition-opacity"
+          >
+            <span className="text-[26px] font-bold leading-none text-foreground tracking-tight">
+              {(user.followerCount ?? 0).toLocaleString('ko-KR')}
+            </span>
+            <span className="text-[11px] text-muted-foreground mt-0.5">구독자</span>
+          </button>
         </div>
 
         {/* C. Level Progress — Banksalad 스타일 */}
@@ -276,6 +284,13 @@ export function ProfileZone({
           </div>
         )}
       </div>
+
+      <FollowersDrawer
+        open={followersOpen}
+        onOpenChange={setFollowersOpen}
+        userId={user.id}
+        followerCount={user.followerCount ?? 0}
+      />
     </div>
   );
 }
