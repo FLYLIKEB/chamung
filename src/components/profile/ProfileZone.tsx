@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Camera, Globe, Instagram, Loader2, Pencil } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Camera, ChevronRight, Globe, Instagram, Loader2, Pencil } from 'lucide-react';
 import { User, UserLevel, UserOnboardingPreference } from '@/types';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ export function ProfileZone({
   onEditProfile,
   onEditPreference,
 }: ProfileZoneProps) {
+  const navigate = useNavigate();
   const [bioExpanded, setBioExpanded] = useState(false);
   const bioIsLong = (user.bio?.length ?? 0) > 80;
 
@@ -182,18 +184,25 @@ export function ProfileZone({
         {/* C. Level Progress — Banksalad 스타일 */}
         {userLevel && noteLevel && (
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => navigate('/badges')}
+              className="w-full flex items-center justify-between group"
+            >
               <span className="text-xs font-medium text-foreground">
                 🍃 차록 Lv.{noteLevel.level} {noteLevel.name}
               </span>
-              {noteLevel.nextThreshold != null ? (
-                <span className="text-xs text-muted-foreground">
-                  Lv.{noteLevel.level + 1}까지 {remaining}개
-                </span>
-              ) : (
-                <span className="text-xs text-primary font-medium">최고 레벨 달성 🎉</span>
-              )}
-            </div>
+              <div className="flex items-center gap-1">
+                {noteLevel.nextThreshold != null ? (
+                  <span className="text-xs text-muted-foreground">
+                    Lv.{noteLevel.level + 1}까지 {remaining}개
+                  </span>
+                ) : (
+                  <span className="text-xs text-primary font-medium">최고 레벨 달성 🎉</span>
+                )}
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+              </div>
+            </button>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
               <div
                 className="h-full rounded-full bg-primary transition-all duration-500"
