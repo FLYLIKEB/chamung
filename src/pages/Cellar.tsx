@@ -527,7 +527,7 @@ export function Cellar() {
         )}
 
         {/* 찻장 목록 */}
-        <div className="pb-4">
+        <div className="pb-4 bg-muted/30">
           {activeItems.length === 0 && finishedItems.length === 0 ? (
             // 아이템 자체가 없는 전체 빈 상태
             <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground px-4">
