@@ -16,6 +16,7 @@ import { TEA_TYPES, TEA_TYPE_COLORS } from '../constants';
 import { TeaTypeBadge } from '../components/TeaTypeBadge';
 import { cn } from '../components/ui/utils';
 import { InfiniteScrollSentinel } from '../components/InfiniteScrollSentinel';
+import { FilterTabBar } from '../components/FilterTabBar';
 
 const UNIT_LABELS: Record<string, string> = {
   g: 'g',
@@ -415,62 +416,44 @@ export function Cellar() {
 
         {/* 차 종류 필터 탭 */}
         {activeItems.length > 0 && (
-          <div
-            className="flex gap-1 overflow-x-auto px-4 sm:px-6 pb-4 no-scrollbar border-b border-border"
-            role="group"
+          <FilterTabBar
+            activeKey={activeType}
+            onChange={setActiveType}
             aria-label="차 종류 필터"
-          >
-            {/* 전체 탭 */}
-            <button
-              type="button"
-              onClick={() => setActiveType('all')}
-              aria-pressed={activeType === 'all'}
-              className={cn(
-                'shrink-0 px-2 pb-2 text-sm transition-all border-b-2',
-                activeType === 'all'
-                  ? 'border-foreground text-foreground font-medium'
-                  : 'border-transparent text-muted-foreground hover:text-foreground',
-              )}
-              aria-label={`전체 ${activeItems.length}개 ${totalGrams}그램`}
-            >
-              전체 {activeItems.length}
-              {totalGrams > 0 && (
-                <span className="ml-1 opacity-80">
-                  · <span className="font-medium">{totalGrams.toLocaleString()}g</span>
-                </span>
-              )}
-            </button>
-
-            {/* 각 차 종류 탭 - 차가 있는 종류 먼저 */}
-            {[...TEA_TYPES].sort((a, b) => (typeCounts[b] ?? 0) - (typeCounts[a] ?? 0)).map((type) => {
-              const count = typeCounts[type] ?? 0;
-              const grams = typeGramsMap[type] ?? 0;
-              const isActive = activeType === type;
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setActiveType(type)}
-                  aria-pressed={isActive}
-                  className={cn(
-                    'shrink-0 inline-flex items-center gap-1 px-2 pb-2 text-sm transition-all border-b-2',
-                    isActive
-                      ? 'border-foreground text-foreground font-medium'
-                      : 'border-transparent text-muted-foreground hover:text-foreground',
-                    count === 0 ? 'opacity-40' : '',
-                  )}
-                  aria-label={`${type} ${count}개 ${grams}그램`}
-                >
-                  {type} {count}
-                  {grams > 0 && (
-                    <span className="ml-0.5 opacity-80">
-                      · <span className="font-medium">{grams.toLocaleString()}g</span>
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+            tabs={[
+              {
+                key: 'all' as const,
+                ariaLabel: `전체 ${activeItems.length}개 ${totalGrams}그램`,
+                label: (
+                  <>
+                    전체 {activeItems.length}
+                    {totalGrams > 0 && (
+                      <span className="ml-1 opacity-70">· {totalGrams.toLocaleString()}g</span>
+                    )}
+                  </>
+                ),
+              },
+              ...[...TEA_TYPES]
+                .sort((a, b) => (typeCounts[b] ?? 0) - (typeCounts[a] ?? 0))
+                .map((type) => {
+                  const count = typeCounts[type] ?? 0;
+                  const grams = typeGramsMap[type] ?? 0;
+                  return {
+                    key: type,
+                    tabClassName: count === 0 ? 'opacity-40' : undefined,
+                    ariaLabel: `${type} ${count}개 ${grams}그램`,
+                    label: (
+                      <>
+                        {type} {count}
+                        {grams > 0 && (
+                          <span className="ml-1 opacity-70">· {grams.toLocaleString()}g</span>
+                        )}
+                      </>
+                    ),
+                  };
+                }),
+            ]}
+          />
         )}
 
         {/* 아이템 수 + 정렬 드롭다운 */}
