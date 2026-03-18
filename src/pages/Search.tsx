@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { usePullToRefreshForPage } from '../contexts/PullToRefreshContext';
 import { useScrollRestoration } from '../hooks/useScrollRestoration';
 import { Search as SearchIcon, Clock, X } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Input } from '../components/ui/input';
 import { BottomNav } from '../components/BottomNav';
@@ -47,6 +47,7 @@ export function Search() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { recentSearches, addSearch, removeSearch, clearAll } = useRecentSearches();
   const filters = useSearchFilters();
@@ -79,6 +80,41 @@ export function Search() {
   const [cellarResults, setCellarResults] = useState<CellarItem[]>([]);
   const [allCellar, setAllCellar] = useState<CellarItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+
+  const navigableItems = useMemo(() => {
+    if (!showResults) return [];
+    if (searchCategory === 'tea') return teas.map((t) => `/tea/${t.id}`);
+    if (searchCategory === 'note') return noteResults.map((n) => `/note/${n.id}`);
+    if (searchCategory === 'cellar') return cellarResults.map((c) => `/cellar/${c.id}`);
+    if (searchCategory === 'seller') return sellerResults.map((s) => `/teahouse/${encodeURIComponent(s.name)}`);
+    if (searchCategory === 'tag') return tagResults.map((t) => `/tag/${encodeURIComponent(t.name)}`);
+    if (searchCategory === 'all') return [
+      ...teas.slice(0, 5).map((t) => `/tea/${t.id}`),
+      ...noteResults.slice(0, 6).map((n) => `/note/${n.id}`),
+      ...sellerResults.slice(0, 6).map((s) => `/teahouse/${encodeURIComponent(s.name)}`),
+      ...tagResults.slice(0, 8).map((t) => `/tag/${encodeURIComponent(t.name)}`),
+    ];
+    return [];
+  }, [searchCategory, teas, noteResults, cellarResults, sellerResults, tagResults, showResults]);
+
+  useEffect(() => { setSelectedIndex(-1); }, [searchQuery, searchCategory]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (navigableItems.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((i) => Math.min(i + 1, navigableItems.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((i) => Math.max(i - 1, -1));
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+      e.preventDefault();
+      navigate(navigableItems[selectedIndex]);
+    } else if (e.key === 'Escape') {
+      setSelectedIndex(-1);
+    }
+  }, [navigableItems, selectedIndex, navigate]);
 
   const filterCallbacks = useMemo(
     () => ({ setTeas, setIsLoading, setHasSearched }),
@@ -100,7 +136,7 @@ export function Search() {
               ? data
               : (data as { data?: Note[] })?.data ?? (data as { notes?: Note[] })?.notes ?? [];
             setAllNotes(notes);
-            setNoteResults(q ? notes.filter((n) => n.teaName?.toLowerCase().includes(q) || n.memo?.toLowerCase().includes(q) || n.sellerName?.toLowerCase().includes(q)) : notes.slice(0, 6));
+            setNoteResults(q ? notes.filter((n) => n.teaName?.toLowerCase().includes(q) || n.memo?.toLowerCase().includes(q) || n.teaSeller?.toLowerCase().includes(q)) : notes.slice(0, 6));
           })
           .catch(() => { setAllNotes([]); setNoteResults([]); }),
         tagsApi.getPopularTags(100)
@@ -124,7 +160,7 @@ export function Search() {
             ? data
             : (data as { data?: Note[] })?.data ?? (data as { notes?: Note[] })?.notes ?? [];
           setAllNotes(notes);
-          setNoteResults(q ? notes.filter((n) => n.teaName?.toLowerCase().includes(q) || n.memo?.toLowerCase().includes(q) || n.sellerName?.toLowerCase().includes(q)) : notes);
+          setNoteResults(q ? notes.filter((n) => n.teaName?.toLowerCase().includes(q) || n.memo?.toLowerCase().includes(q) || n.teaSeller?.toLowerCase().includes(q)) : notes);
         })
         .catch(() => { setAllNotes([]); setNoteResults([]); })
         .finally(() => setCategoryLoading(false));
@@ -165,7 +201,7 @@ export function Search() {
     const q = searchQuery.trim().toLowerCase();
     if (searchCategory === 'note' || searchCategory === 'all') {
       const filtered = allNotes.filter((n) => {
-        if (q && !n.teaName?.toLowerCase().includes(q) && !n.memo?.toLowerCase().includes(q) && !n.sellerName?.toLowerCase().includes(q)) return false;
+        if (q && !n.teaName?.toLowerCase().includes(q) && !n.memo?.toLowerCase().includes(q) && !n.teaSeller?.toLowerCase().includes(q)) return false;
         if (filterType && n.teaType !== filterType) return false;
         if (filterMinRating != null && (n.overallRating == null || n.overallRating < filterMinRating)) return false;
         if (urlTags.length > 0 && !urlTags.every((tag) => n.tags?.includes(tag))) return false;
@@ -298,6 +334,7 @@ export function Search() {
             placeholder="차 이름, 종류, 구매처로 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
             className={cn('pl-10 rounded-full transition-all', searchQuery ? 'pr-10' : '')}
           />
           {searchQuery && (
@@ -415,6 +452,7 @@ export function Search() {
             hasSearched={hasSearched}
             hasFilterParams={hasFilterParams}
             onGoBack={goBackToExplore}
+            selectedIndex={selectedIndex}
           />
         )}
 

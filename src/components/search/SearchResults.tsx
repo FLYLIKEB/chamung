@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Store, Package, PenLine, Leaf, ShoppingBag, Tag } from 'lucide-react';
 import { TeaCard } from '../TeaCard';
@@ -7,6 +7,7 @@ import { NoteCard } from '../NoteCard';
 import { NoteCardSkeleton } from '../NoteCardSkeleton';
 import { EmptyState } from '../EmptyState';
 import { CtaButton } from '../ui/CtaButton';
+import { cn } from '../ui/utils';
 import { Tea, Seller, Note, CellarItem } from '../../types';
 import { LucideIcon } from 'lucide-react';
 
@@ -46,6 +47,7 @@ interface SearchResultsProps {
   hasSearched: boolean;
   hasFilterParams: boolean;
   onGoBack: () => void;
+  selectedIndex?: number;
 }
 
 export function SearchResults({
@@ -60,8 +62,22 @@ export function SearchResults({
   hasSearched,
   hasFilterParams,
   onGoBack,
+  selectedIndex = -1,
 }: SearchResultsProps) {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (selectedIndex < 0) return;
+    const el = document.querySelector<HTMLElement>(`[data-kb-idx="${selectedIndex}"]`);
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [selectedIndex]);
+
+  const teasShown = Math.min(teas.length, 5);
+  const notesShown = Math.min(noteResults.length, 6);
+  const sellersShown = Math.min(sellerResults.length, 6);
+  const allNoteIdx = (i: number) => teasShown + i;
+  const allSellerIdx = (i: number) => teasShown + notesShown + i;
+  const allTagIdx = (i: number) => teasShown + notesShown + sellersShown + i;
 
   return (
     <>
@@ -84,7 +100,15 @@ export function SearchResults({
                 <section>
                   <p className="text-xs font-medium text-muted-foreground mb-2">차 {teas.length}개</p>
                   <div className="grid grid-cols-1 gap-3">
-                    {teas.slice(0, 5).map((tea) => <TeaCard key={tea.id} tea={tea} />)}
+                    {teas.slice(0, 5).map((tea, i) => (
+                      <div
+                        key={tea.id}
+                        data-kb-idx={i}
+                        className={cn('rounded-xl', selectedIndex === i && 'ring-2 ring-primary')}
+                      >
+                        <TeaCard tea={tea} />
+                      </div>
+                    ))}
                   </div>
                 </section>
               )}
@@ -92,7 +116,15 @@ export function SearchResults({
                 <section>
                   <p className="text-xs font-medium text-muted-foreground mb-2">차록 {noteResults.length}개</p>
                   <div className="grid grid-cols-3 gap-2">
-                    {noteResults.slice(0, 6).map((note) => <NoteCard key={note.id} note={note} />)}
+                    {noteResults.slice(0, 6).map((note, i) => (
+                      <div
+                        key={note.id}
+                        data-kb-idx={allNoteIdx(i)}
+                        className={cn('rounded-xl', selectedIndex === allNoteIdx(i) && 'ring-2 ring-primary')}
+                      >
+                        <NoteCard note={note} />
+                      </div>
+                    ))}
                   </div>
                 </section>
               )}
@@ -100,12 +132,16 @@ export function SearchResults({
                 <section>
                   <p className="text-xs font-medium text-muted-foreground mb-2">찻집 {sellerResults.length}개</p>
                   <div className="flex flex-wrap gap-2">
-                    {sellerResults.slice(0, 6).map((seller) => (
+                    {sellerResults.slice(0, 6).map((seller, i) => (
                       <button
                         key={seller.name}
                         type="button"
+                        data-kb-idx={allSellerIdx(i)}
                         onClick={() => navigate(`/teahouse/${encodeURIComponent(seller.name)}`)}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                        className={cn(
+                          'inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors',
+                          selectedIndex === allSellerIdx(i) && 'ring-2 ring-primary',
+                        )}
                       >
                         <Store className="w-4 h-4 text-muted-foreground" />
                         <span className="font-medium text-sm">{seller.name}</span>
@@ -118,12 +154,16 @@ export function SearchResults({
                 <section>
                   <p className="text-xs font-medium text-muted-foreground mb-2">향미 태그 {tagResults.length}개</p>
                   <div className="flex flex-wrap gap-2">
-                    {tagResults.slice(0, 8).map((tag) => (
+                    {tagResults.slice(0, 8).map((tag, i) => (
                       <button
                         key={tag.name}
                         type="button"
+                        data-kb-idx={allTagIdx(i)}
                         onClick={() => navigate(`/tag/${encodeURIComponent(tag.name)}`)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border border-border/60 bg-background hover:bg-muted/60 transition-colors"
+                        className={cn(
+                          'inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border border-border/60 bg-background hover:bg-muted/60 transition-colors',
+                          selectedIndex === allTagIdx(i) && 'ring-2 ring-primary',
+                        )}
                       >
                         #{tag.name}
                       </button>
@@ -147,7 +187,15 @@ export function SearchResults({
               <p className="text-xs text-muted-foreground">결과 {teas.length}개</p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {teas.map((tea, i) => (
-                  <div key={tea.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${i * 50}ms` }}>
+                  <div
+                    key={tea.id}
+                    data-kb-idx={i}
+                    className={cn(
+                      'animate-fade-in-up opacity-0 rounded-xl',
+                      selectedIndex === i && 'ring-2 ring-primary',
+                    )}
+                    style={{ animationDelay: `${i * 50}ms` }}
+                  >
                     <TeaCard tea={tea} />
                   </div>
                 ))}
@@ -172,7 +220,15 @@ export function SearchResults({
             <>
               <p className="text-xs text-muted-foreground">결과 {noteResults.length}개</p>
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
-                {noteResults.map((note) => <NoteCard key={note.id} note={note} />)}
+                {noteResults.map((note, i) => (
+                  <div
+                    key={note.id}
+                    data-kb-idx={i}
+                    className={cn('rounded-xl', selectedIndex === i && 'ring-2 ring-primary')}
+                  >
+                    <NoteCard note={note} />
+                  </div>
+                ))}
               </div>
             </>
           ) : (
@@ -194,12 +250,16 @@ export function SearchResults({
             <>
               <p className="text-xs text-muted-foreground">결과 {cellarResults.length}개</p>
               <div className="space-y-2">
-                {cellarResults.map((item) => (
+                {cellarResults.map((item, i) => (
                   <button
                     key={item.id}
                     type="button"
+                    data-kb-idx={i}
                     onClick={() => navigate(`/cellar/${item.id}`)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-card hover:bg-muted/40 transition-colors text-left"
+                    className={cn(
+                      'w-full flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-card hover:bg-muted/40 transition-colors text-left',
+                      selectedIndex === i && 'ring-2 ring-primary',
+                    )}
                   >
                     <Package className="w-5 h-5 text-muted-foreground shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -230,12 +290,16 @@ export function SearchResults({
             <>
               <p className="text-xs text-muted-foreground">결과 {sellerResults.length}개</p>
               <div className="flex flex-wrap gap-2">
-                {sellerResults.map((seller) => (
+                {sellerResults.map((seller, i) => (
                   <button
                     key={seller.name}
                     type="button"
+                    data-kb-idx={i}
                     onClick={() => navigate(`/teahouse/${encodeURIComponent(seller.name)}`)}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                    className={cn(
+                      'inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors',
+                      selectedIndex === i && 'ring-2 ring-primary',
+                    )}
                   >
                     <Store className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium">{seller.name}</span>
@@ -263,12 +327,16 @@ export function SearchResults({
             <>
               <p className="text-xs text-muted-foreground">결과 {tagResults.length}개</p>
               <div className="flex flex-wrap gap-2">
-                {tagResults.map((tag) => (
+                {tagResults.map((tag, i) => (
                   <button
                     key={tag.name}
                     type="button"
+                    data-kb-idx={i}
                     onClick={() => navigate(`/tag/${encodeURIComponent(tag.name)}`)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border border-border/60 bg-background hover:bg-muted/60 transition-colors"
+                    className={cn(
+                      'inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border border-border/60 bg-background hover:bg-muted/60 transition-colors',
+                      selectedIndex === i && 'ring-2 ring-primary',
+                    )}
                   >
                     #{tag.name}
                     {tag.noteCount > 0 && <span className="text-xs opacity-60">({tag.noteCount})</span>}
