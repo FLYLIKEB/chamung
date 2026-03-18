@@ -101,6 +101,7 @@ export class CreateNoteDto {
   drinkDate?: string | null;
 
   @IsOptional()
+  @Transform(({ value }) => value === null || value === undefined ? value : (typeof value === 'string' ? parseFloat(value) : value))
   @IsNumber({ maxDecimalPlaces: 1 })
   @Min(0.1)
   @Max(999.9)
