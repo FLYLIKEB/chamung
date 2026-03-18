@@ -221,7 +221,14 @@ export function ReportContent() {
                   )}>
                     {index + 1}
                   </span>
-                  <span className="flex-1 text-sm font-medium truncate">{tea.teaName}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{tea.teaName}</p>
+                    {(tea.teaYear || tea.teaSeller) && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {[tea.teaYear ? `${tea.teaYear}년` : null, tea.teaSeller].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                  </div>
                   <span className="text-sm text-muted-foreground shrink-0">{tea.count}번</span>
                 </>
               );

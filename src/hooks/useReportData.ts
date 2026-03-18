@@ -4,7 +4,7 @@ import { Note } from '../types';
 export interface ReportData {
   teaTypeDistribution: { type: string; count: number; percentage: number }[];
   ratingDistribution: { rating: string; count: number }[];
-  topTeas: { teaName: string; count: number; teaId?: number }[];
+  topTeas: { teaName: string; count: number; teaId?: number; teaYear?: number | null; teaSeller?: string | null }[];
   topTags: { tag: string; count: number }[];
   thisMonthCount: number;
   lastMonthCount: number;
@@ -63,17 +63,17 @@ export function useReportData(notes: Note[], selectedMonth: string | null): Repo
     }));
 
     // 자주 마신 차 Top 5
-    const teaMap: Record<string, { count: number; teaId?: number }> = {};
+    const teaMap: Record<string, { count: number; teaId?: number; teaYear?: number | null; teaSeller?: string | null }> = {};
     filteredNotes.forEach((n) => {
       if (n.teaName) {
-        if (!teaMap[n.teaName]) teaMap[n.teaName] = { count: 0, teaId: n.teaId };
+        if (!teaMap[n.teaName]) teaMap[n.teaName] = { count: 0, teaId: n.teaId, teaYear: n.teaYear, teaSeller: n.teaSeller };
         teaMap[n.teaName].count++;
       }
     });
     const topTeas = Object.entries(teaMap)
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 5)
-      .map(([teaName, { count, teaId }]) => ({ teaName, count, teaId }));
+      .map(([teaName, { count, teaId, teaYear, teaSeller }]) => ({ teaName, count, teaId, teaYear, teaSeller }));
 
     // 자주 쓴 태그 Top 8
     const tagMap: Record<string, number> = {};
