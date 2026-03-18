@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ArrowDownUp, ChevronRight, Flame, LayoutList } from 'lucide-react';
+import { Plus, ArrowDownUp, ChevronRight, Flame, LayoutList, PencilLine } from 'lucide-react';
 import { PostCardSkeleton } from '../components/PostCardSkeleton';
 import { Post, PostCategory, POST_CATEGORY_LABELS } from '../types';
 import { postsApi, type PostSort } from '../lib/api';
@@ -17,6 +17,7 @@ import { cn } from '../components/ui/utils';
 import { toast } from 'sonner';
 import { InfiniteScrollSentinel } from '../components/InfiniteScrollSentinel';
 import { FilterTabBar } from '../components/FilterTabBar';
+import { PageListContent } from '../components/ui/PageListContent';
 
 const SORT_OPTIONS: Array<{ value: PostSort; label: string }> = [
   { value: 'latest', label: '최신순' },
@@ -24,7 +25,7 @@ const SORT_OPTIONS: Array<{ value: PostSort; label: string }> = [
   { value: 'commented', label: '댓글순' },
 ];
 
-type GroupKey = 'all' | 'popular' | 'qna' | 'review' | 'announcement' | 'report';
+type GroupKey = 'all' | 'popular' | 'mine' | 'qna' | 'review' | 'announcement' | 'report';
 
 const CATEGORY_GROUPS: Array<{ key: GroupKey; label: string; categories: PostCategory[] }> = [
   {
@@ -63,9 +64,12 @@ export function Community() {
   const [selectedGroup, setSelectedGroup] = useState<GroupKey>(isMobile ? 'qna' : 'all');
   const [sort, setSort] = useState<PostSort>('latest');
 
-  const getGroupParams = useCallback((groupKey: GroupKey): { categoryParam: PostCategory | PostCategory[] | undefined; effectiveSort: PostSort } => {
+  const getGroupParams = useCallback((groupKey: GroupKey): { categoryParam: PostCategory | PostCategory[] | undefined; effectiveSort: PostSort; mine: boolean } => {
     if (groupKey === 'popular') {
-      return { categoryParam: undefined, effectiveSort: 'popular' };
+      return { categoryParam: undefined, effectiveSort: 'popular', mine: false };
+    }
+    if (groupKey === 'mine') {
+      return { categoryParam: undefined, effectiveSort: sort, mine: true };
     }
     const group = GROUPS.find((g) => g.key === groupKey);
     const categoryParam =
@@ -74,17 +78,17 @@ export function Community() {
         : group.categories.length === 1
           ? group.categories[0]
           : group.categories;
-    return { categoryParam, effectiveSort: sort };
+    return { categoryParam, effectiveSort: sort, mine: false };
   }, [sort]);
 
   const fetchPosts = useCallback(async () => {
-    const { categoryParam, effectiveSort } = getGroupParams(selectedGroup);
+    const { categoryParam, effectiveSort, mine } = getGroupParams(selectedGroup);
     setIsLoading(true);
     setPage(1);
     try {
       // 모바일: 선택된 그룹만 fetch / 데스크톱: 전체 fetch
       const [filtered, all] = await Promise.all([
-        postsApi.getAll(categoryParam, 1, PAGE_SIZE, effectiveSort),
+        postsApi.getAll(categoryParam, 1, PAGE_SIZE, effectiveSort, undefined, mine),
         isMobileRef.current ? Promise.resolve([]) : postsApi.getAll(undefined, 1, 50, sort),
       ]);
       setPosts(filtered);
@@ -98,11 +102,11 @@ export function Community() {
   }, [selectedGroup, sort, getGroupParams]);
 
   const handleLoadMore = useCallback(async () => {
-    const { categoryParam, effectiveSort } = getGroupParams(selectedGroup);
+    const { categoryParam, effectiveSort, mine } = getGroupParams(selectedGroup);
     const nextPage = page + 1;
     setIsLoadingMore(true);
     try {
-      const morePosts = await postsApi.getAll(categoryParam, nextPage, PAGE_SIZE, effectiveSort);
+      const morePosts = await postsApi.getAll(categoryParam, nextPage, PAGE_SIZE, effectiveSort, undefined, mine);
       setPosts((prev) => [...prev, ...morePosts]);
       setPage(nextPage);
       setHasMore(morePosts.length === PAGE_SIZE);
@@ -153,6 +157,21 @@ export function Community() {
             <Flame className="w-3.5 h-3.5" />
             인기글
           </button>
+          {user && (
+            <button
+              type="button"
+              onClick={() => setSelectedGroup('mine')}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                selectedGroup === 'mine'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-accent border border-border/60 text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <PencilLine className="w-3.5 h-3.5" />
+              내가 쓴 글
+            </button>
+          )}
           {/* 정렬 */}
           <div className="ml-auto">
             <button
@@ -177,7 +196,7 @@ export function Community() {
       </div>
 
       {/* 게시글 목록 */}
-      <div>
+      <PageListContent>
         {isLoading ? (
           <>
             {/* 모바일: 단일 리스트 스켈레톤 */}
@@ -285,7 +304,7 @@ export function Community() {
             </div>
           </>
         )}
-      </div>
+      </PageListContent>
 
       {/* 새 글 작성 FAB */}
       {user && (

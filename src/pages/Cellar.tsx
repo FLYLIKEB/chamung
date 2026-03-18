@@ -16,6 +16,7 @@ import { TEA_TYPES, TEA_TYPE_COLORS } from '../constants';
 import { cn } from '../components/ui/utils';
 import { InfiniteScrollSentinel } from '../components/InfiniteScrollSentinel';
 import { FilterTabBar } from '../components/FilterTabBar';
+import { PageListContent } from '../components/ui/PageListContent';
 
 const UNIT_LABELS: Record<string, string> = {
   g: 'g',
@@ -527,7 +528,7 @@ export function Cellar() {
         )}
 
         {/* 찻장 목록 */}
-        <div className="pb-4 bg-card">
+        <PageListContent className="pb-4">
           {activeItems.length === 0 && finishedItems.length === 0 ? (
             // 아이템 자체가 없는 전체 빈 상태
             <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground px-4">
@@ -631,7 +632,7 @@ export function Cellar() {
               )}
             </div>
           )}
-        </div>
+        </PageListContent>
       </div>
 
       <FloatingActionButton
