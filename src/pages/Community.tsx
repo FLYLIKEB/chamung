@@ -16,6 +16,7 @@ import { useIsMobile } from '../components/ui/use-mobile';
 import { cn } from '../components/ui/utils';
 import { toast } from 'sonner';
 import { InfiniteScrollSentinel } from '../components/InfiniteScrollSentinel';
+import { FilterTabBar } from '../components/FilterTabBar';
 
 const SORT_OPTIONS: Array<{ value: PostSort; label: string }> = [
   { value: 'latest', label: '최신순' },
@@ -168,24 +169,11 @@ export function Community() {
           </div>
         </div>
         {/* 카테고리 탭 */}
-        <div className="flex items-center border-b border-border/40">
-          <div className="flex overflow-x-auto scrollbar-hide px-4 gap-0 flex-1">
-            {CATEGORY_GROUPS.map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setSelectedGroup(key)}
-                className={cn(
-                  'shrink-0 px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
-                  selectedGroup === key
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <FilterTabBar
+          activeKey={selectedGroup}
+          onChange={setSelectedGroup}
+          tabs={CATEGORY_GROUPS.map(({ key, label }) => ({ key, label }))}
+        />
       </div>
 
       {/* 게시글 목록 */}
