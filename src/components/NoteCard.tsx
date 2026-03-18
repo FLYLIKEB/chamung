@@ -1,4 +1,4 @@
-import React, { type FC, useState, memo } from 'react';
+import React, { type FC, useState, memo, useCallback } from 'react';
 import { Star, Lock, Bookmark, Loader2 } from 'lucide-react';
 import { Note } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -38,6 +38,8 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
 
   const [isBookmarked, setIsBookmarked] = useState(note.isBookmarked ?? false);
   const [isTogglingBookmark, setIsTogglingBookmark] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const handleImageLoad = useCallback(() => setImageLoaded(true), []);
 
   const accentClass = note.teaType && note.teaType in TEA_TYPE_COLORS
     ? TEA_TYPE_COLORS[note.teaType as keyof typeof TEA_TYPE_COLORS]
@@ -94,11 +96,20 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
       {/* 상단 이미지 영역 — 가로 꽉, 세로 절반 */}
       <div className={cn('relative w-full h-[55%] overflow-hidden', !thumbnail && placeholderBg)}>
         {thumbnail ? (
-          <ImageWithFallback
-            src={thumbnail}
-            alt={note.teaName}
-            className="w-full h-full object-cover"
-          />
+          <>
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-muted animate-pulse" />
+            )}
+            <ImageWithFallback
+              src={thumbnail}
+              alt={note.teaName}
+              className={cn(
+                'w-full h-full object-cover transition-opacity duration-300',
+                imageLoaded ? 'opacity-100' : 'opacity-0',
+              )}
+              onLoad={handleImageLoad}
+            />
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <img src="/logo.png" alt="" className="w-10 h-10 object-contain opacity-25 brightness-0 invert" />

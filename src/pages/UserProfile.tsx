@@ -199,10 +199,12 @@ export function UserProfile() {
           showLogo={isOwnProfile}
           title={isOwnProfile ? '내 차록' : '사용자 프로필'}
         />
-        <div className="px-4 pt-4">
-          <div className="flex items-center gap-6">
-            <div className="w-24 h-24 rounded-full bg-muted animate-pulse shrink-0" />
-            <div className="flex-1 flex justify-around">
+        {/* Banner skeleton */}
+        <div className="h-20 bg-gradient-to-br from-primary/8 via-amber-50/30 to-transparent dark:from-primary/10 dark:via-stone-900/20 dark:to-transparent" />
+        <div className="px-4 -mt-10">
+          <div className="flex items-end gap-4">
+            <div className="w-24 h-24 rounded-full bg-muted animate-pulse shrink-0 ring-2 ring-background" />
+            <div className="flex-1 flex justify-around pb-2">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex flex-col items-center gap-1.5">
                   <div className="h-5 w-8 rounded bg-muted animate-pulse" />
@@ -212,16 +214,13 @@ export function UserProfile() {
             </div>
           </div>
           <div className="mt-3 space-y-2">
-            <div className="h-4 w-20 rounded bg-muted animate-pulse" />
+            <div className="h-4 w-24 rounded bg-muted animate-pulse" />
             <div className="h-3 w-40 rounded bg-muted animate-pulse" />
           </div>
-          <div className="mt-4 flex gap-2">
-            <div className="flex-1 h-9 rounded-lg bg-muted animate-pulse" />
-          </div>
         </div>
-        <div className="mt-6 grid grid-cols-3 gap-px">
+        <div className="mt-6 grid grid-cols-3 gap-2 px-2">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="aspect-square bg-muted animate-pulse" />
+            <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
           ))}
         </div>
         <BottomNav />
