@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flame, PenLine, Loader2, Plus } from 'lucide-react';
 import { notesApi } from '@/lib/api';
@@ -21,6 +21,11 @@ export function WeeklyStreak({ onTodayNoteStatus, onStreakLoaded }: WeeklyStreak
 
   const today = useMemo(() => new Date(), []);
   const weekDays = useMemo(() => getWeekDays(today), [today]);
+
+  const onTodayNoteStatusRef = useRef(onTodayNoteStatus);
+  const onStreakLoadedRef = useRef(onStreakLoaded);
+  useEffect(() => { onTodayNoteStatusRef.current = onTodayNoteStatus; }, [onTodayNoteStatus]);
+  useEffect(() => { onStreakLoadedRef.current = onStreakLoaded; }, [onStreakLoaded]);
 
   const [calendarData, setCalendarData] = useState<CalendarData | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(today);
@@ -47,16 +52,16 @@ export function WeeklyStreak({ onTodayNoteStatus, onStreakLoaded }: WeeklyStreak
     try {
       const data = await notesApi.getCalendar(user.id, today.getFullYear(), today.getMonth() + 1);
       setCalendarData(data);
-      onStreakLoaded?.(data.streak.current);
+      onStreakLoadedRef.current?.(data.streak.current);
       const todayKey = formatDateKey(today);
-      onTodayNoteStatus?.(data.dates.includes(todayKey));
+      onTodayNoteStatusRef.current?.(data.dates.includes(todayKey));
       await fetchNotesByDate(today);
     } catch {
       toast.error('캘린더 데이터를 불러오지 못했습니다.');
     } finally {
       setIsCalendarLoading(false);
     }
-  }, [user, today, onStreakLoaded, onTodayNoteStatus, fetchNotesByDate]);
+  }, [user, today, fetchNotesByDate]);
 
   useEffect(() => {
     fetchCalendar();
