@@ -208,24 +208,41 @@ export function ReportContent() {
       {report.topTeas.length > 0 && (
         <Section title="자주 마신 차 Top 5" spacing="sm">
           <div className="bg-card rounded-xl overflow-hidden">
-            {report.topTeas.map((tea, index) => (
-              <div
-                key={tea.teaName}
-                className="flex items-center gap-3 px-4 py-3 border-b border-border/40 last:border-0"
-              >
-                <span className={cn(
-                  'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
-                  index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                  index === 1 ? 'bg-gray-300 text-gray-700' :
-                  index === 2 ? 'bg-orange-300 text-orange-800' :
-                  'bg-muted text-muted-foreground',
-                )}>
-                  {index + 1}
-                </span>
-                <span className="flex-1 text-sm font-medium truncate">{tea.teaName}</span>
-                <span className="text-sm text-muted-foreground shrink-0">{tea.count}번</span>
-              </div>
-            ))}
+            {report.topTeas.map((tea, index) => {
+              const isClickable = !!tea.teaId;
+              const content = (
+                <>
+                  <span className={cn(
+                    'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
+                    index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                    index === 1 ? 'bg-gray-300 text-gray-700' :
+                    index === 2 ? 'bg-orange-300 text-orange-800' :
+                    'bg-muted text-muted-foreground',
+                  )}>
+                    {index + 1}
+                  </span>
+                  <span className="flex-1 text-sm font-medium truncate">{tea.teaName}</span>
+                  <span className="text-sm text-muted-foreground shrink-0">{tea.count}번</span>
+                </>
+              );
+              return isClickable ? (
+                <button
+                  key={tea.teaName}
+                  type="button"
+                  onClick={() => navigate(`/tea/${tea.teaId}`)}
+                  className="w-full flex items-center gap-3 px-4 py-3 border-b border-border/40 last:border-0 hover:bg-muted/40 transition-colors text-left"
+                >
+                  {content}
+                </button>
+              ) : (
+                <div
+                  key={tea.teaName}
+                  className="flex items-center gap-3 px-4 py-3 border-b border-border/40 last:border-0"
+                >
+                  {content}
+                </div>
+              );
+            })}
           </div>
         </Section>
       )}
