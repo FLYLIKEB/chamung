@@ -33,6 +33,7 @@ export const postsApi = {
     limit = 20,
     sort?: PostSort,
     bookmarked?: boolean,
+    mine?: boolean,
   ) => {
     const params = new URLSearchParams();
     if (Array.isArray(category) && category.length > 0) {
@@ -44,6 +45,7 @@ export const postsApi = {
     params.append('limit', String(limit));
     if (sort && sort !== 'latest') params.append('sort', sort);
     if (bookmarked) params.append('bookmarked', 'true');
+    if (mine) params.append('mine', 'true');
     return apiClient.get<Post[]>(`/posts?${params.toString()}`);
   },
   getById: (id: number) => apiClient.get<Post>(`/posts/${id}`),

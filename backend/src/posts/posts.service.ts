@@ -105,9 +105,13 @@ export class PostsService {
     sort: 'latest' | 'popular' | 'commented' | 'likes' = 'latest',
     currentUserId?: number,
     bookmarked?: boolean,
+    mine?: boolean,
   ): Promise<any[]> {
     if (bookmarked && !currentUserId) {
       throw new BadRequestException('북마크한 게시글을 조회하려면 로그인이 필요합니다.');
+    }
+    if (mine && !currentUserId) {
+      throw new BadRequestException('내가 쓴 글을 조회하려면 로그인이 필요합니다.');
     }
 
     const { take, skip } = PaginationHelper.normalize(page, limit, 50);
@@ -131,6 +135,10 @@ export class PostsService {
       } else {
         qb.where('post.category = :category', { category });
       }
+    }
+
+    if (mine && currentUserId) {
+      qb.andWhere('post.userId = :mineUserId', { mineUserId: currentUserId });
     }
 
     if (sort === 'popular') {
@@ -157,6 +165,9 @@ export class PostsService {
         popularQb.innerJoin('post_bookmarks', 'pb', 'pb.postId = pl.postId AND pb.userId = :bookmarkUserId', {
           bookmarkUserId: currentUserId,
         });
+      }
+      if (mine && currentUserId) {
+        popularQb.andWhere('p.userId = :mineUserId', { mineUserId: currentUserId });
       }
 
       const popularRows = await popularQb.skip(skip).take(take).getRawMany();
@@ -199,6 +210,9 @@ export class PostsService {
         allPostsQb.innerJoin('post_bookmarks', 'pb', 'pb.postId = post.id AND pb.userId = :bookmarkUserId', {
           bookmarkUserId: currentUserId,
         });
+      }
+      if (mine && currentUserId) {
+        allPostsQb.andWhere('post.userId = :mineUserId', { mineUserId: currentUserId });
       }
 
       const allPostRows = await allPostsQb.getRawMany();
@@ -266,6 +280,9 @@ export class PostsService {
         allPostsQb.innerJoin('post_bookmarks', 'pb', 'pb.postId = post.id AND pb.userId = :bookmarkUserId', {
           bookmarkUserId: currentUserId,
         });
+      }
+      if (mine && currentUserId) {
+        allPostsQb.andWhere('post.userId = :mineUserId', { mineUserId: currentUserId });
       }
 
       const allPostRows = await allPostsQb.getRawMany();

@@ -121,6 +121,7 @@ export class PostsController {
     @Query('limit') limit?: string,
     @Query('sort') sort?: string,
     @Query('bookmarked') bookmarked?: string,
+    @Query('mine') mine?: string,
     @Request() req?: any,
   ) {
     const validCategories = Object.values(PostCategory) as string[];
@@ -137,6 +138,7 @@ export class PostsController {
     const sortVal: 'latest' | 'popular' | 'commented' | 'likes' =
       sort === 'popular' || sort === 'commented' || sort === 'likes' ? sort : 'latest';
     const bookmarkedFilter = bookmarked === 'true';
+    const mineFilter = mine === 'true';
     const currentUserId = req?.user?.userId ? parseInt(req.user.userId, 10) : undefined;
     return this.postsService.findAll(
       categoryFilter,
@@ -145,6 +147,7 @@ export class PostsController {
       sortVal,
       currentUserId,
       bookmarkedFilter,
+      mineFilter,
     );
   }
 
