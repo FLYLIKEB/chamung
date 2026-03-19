@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
+import { useAutoFocus } from '../hooks/useAutoFocus';
 import { usePullToRefreshForPage } from '../contexts/PullToRefreshContext';
 import { useScrollRestoration } from '../hooks/useScrollRestoration';
 import { Search as SearchIcon, Clock, X } from 'lucide-react';
@@ -36,13 +37,8 @@ const SECTION_TITLES: Record<string, string> = {
 
 export function Search() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useAutoFocus();
   useScrollRestoration(scrollContainerRef);
-
-  useEffect(() => {
-    const timer = setTimeout(() => searchInputRef.current?.focus(), 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   const [searchParams, setSearchParams] = useSearchParams();
 

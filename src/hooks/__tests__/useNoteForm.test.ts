@@ -74,11 +74,11 @@ describe('useNoteForm - new 모드', () => {
     vi.clearAllMocks();
   });
 
-  it('초기 상태: overallRating null, memo 빈 문자열, isPublic false', () => {
+  it('초기 상태: overallRating RATING_DEFAULT, memo 빈 문자열, isPublic false', () => {
     const { result } = renderHook(() =>
       useNoteForm({ mode: 'new' }),
     );
-    expect(result.current.overallRating).toBeNull();
+    expect(result.current.overallRating).toBe(3);
     expect(result.current.memo).toBe('');
     expect(result.current.isPublic).toBe(false);
     expect(result.current.isSaving).toBe(false);

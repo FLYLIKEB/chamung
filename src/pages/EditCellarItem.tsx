@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useAutoFocus } from '../hooks/useAutoFocus';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Input } from '../components/ui/input';
@@ -44,15 +45,8 @@ export function EditCellarItem() {
   const [memo, setMemo] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const quantityRef = useRef<HTMLInputElement>(null);
+  const quantityRef = useAutoFocus(!isLoading, [isLoading]);
   const teaSearchRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!isLoading) {
-      const timer = setTimeout(() => quantityRef.current?.focus(), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading]);
 
   useEffect(() => {
     if (authLoading) return;

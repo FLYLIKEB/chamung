@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Loader2, CalendarDays } from 'lucide-react';
 import { Header } from '../components/Header';
@@ -18,6 +18,7 @@ import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import { useAuth } from '../contexts/AuthContext';
 import { useNoteForm } from '../hooks/useNoteForm';
+import { useAutoFocus } from '../hooks/useAutoFocus';
 import { RATING_DEFAULT } from '../constants';
 
 export function NewNote() {
@@ -25,14 +26,7 @@ export function NewNote() {
   const [searchParams] = useSearchParams();
   const preselectedTeaId = searchParams.get('teaId');
   const isSampleMode = searchParams.get('sample') === '1';
-  const teaInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!preselectedTeaId && !isSampleMode) {
-      const timer = setTimeout(() => teaInputRef.current?.focus(), 100);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+  const teaInputRef = useAutoFocus(!preselectedTeaId && !isSampleMode);
 
   const {
     teaSelector,

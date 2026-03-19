@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAutoFocus } from '../hooks/useAutoFocus';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus, Copy, X, History } from 'lucide-react';
 import { Header } from '../components/Header';
@@ -24,12 +25,7 @@ export function BlindSessionNew() {
     id: number;
     inviteCode: string;
   } | null>(null);
-  const teaInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => teaInputRef.current?.focus(), 100);
-    return () => clearTimeout(timer);
-  }, []);
+  const teaInputRef = useAutoFocus();
 
   useEffect(() => {
     const fetchTeas = async () => {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAutoFocus } from '../hooks/useAutoFocus';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, History } from 'lucide-react';
 import { Header } from '../components/Header';
@@ -25,14 +26,7 @@ export function SessionNew() {
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const teaInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!preselectedTeaId) {
-      const timer = setTimeout(() => teaInputRef.current?.focus(), 100);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+  const teaInputRef = useAutoFocus(!preselectedTeaId);
 
   useEffect(() => {
     const fetchTeas = async () => {

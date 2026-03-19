@@ -354,10 +354,13 @@ export function useNoteForm({
     } catch (error: unknown) {
       logger.error('Failed to save note:', error);
       const err = error as { statusCode?: number; message?: string };
+      const serverMessage = err?.message;
       if (mode === 'edit' && err?.statusCode === 403) {
         toast.error('이 차록을 수정할 권한이 없습니다.');
+      } else if (serverMessage) {
+        toast.error(serverMessage);
       } else {
-        toast.error(error instanceof Error ? error.message : mode === 'new' ? '저장에 실패했습니다.' : '수정에 실패했습니다.');
+        toast.error(mode === 'new' ? '저장에 실패했습니다.' : '수정에 실패했습니다.');
       }
     } finally {
       setIsSaving(false);

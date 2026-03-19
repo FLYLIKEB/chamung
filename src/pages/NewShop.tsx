@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAutoFocus } from '../hooks/useAutoFocus';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, Store } from 'lucide-react';
 import { Header } from '../components/Header';
@@ -26,12 +27,7 @@ export function NewShop() {
   const [description, setDescription] = useState('');
   const [businessHours, setBusinessHours] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const nameInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => nameInputRef.current?.focus(), 100);
-    return () => clearTimeout(timer);
-  }, []);
+  const nameInputRef = useAutoFocus();
 
   useEffect(() => {
     if (!isAuthenticated) {

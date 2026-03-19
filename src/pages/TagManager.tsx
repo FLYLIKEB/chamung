@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
+import { useAutoFocus } from '../hooks/useAutoFocus';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { BottomNav } from '../components/BottomNav';
@@ -24,14 +25,7 @@ export function TagManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [newTagName, setNewTagName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      const timer = setTimeout(() => inputRef.current?.focus(), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [authLoading, isAuthenticated]);
+  const inputRef = useAutoFocus(!authLoading && isAuthenticated, [authLoading, isAuthenticated]);
 
   const fetchTags = useCallback(async (tab: TabType) => {
     setIsLoading(true);
