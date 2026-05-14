@@ -39,6 +39,22 @@ describe('/auth - Refresh Token & Cookie 인증', () => {
     expect(cookieStr).toContain('HttpOnly');
   });
 
+  it('POST /auth/login - refresh_token 쿠키는 30일 유지되어야 한다', async () => {
+    const email = `refresh-cookie-${Date.now()}@example.com`;
+    await registerUser(email);
+
+    const res = await request(context.app.getHttpServer())
+      .post('/auth/login')
+      .send({ email, password: 'Password123!' })
+      .expect(201);
+
+    const cookies: string[] = res.headers['set-cookie'] as unknown as string[];
+    const refreshCookie = cookies.find((cookie) => cookie.startsWith('refresh_token='));
+
+    expect(refreshCookie).toBeDefined();
+    expect(refreshCookie).toContain('Max-Age=2592000');
+  });
+
   it('POST /auth/refresh - 유효한 refresh_token으로 토큰 갱신 성공', async () => {
     const email = `refresh-${Date.now()}@example.com`;
     const registerRes = await registerUser(email);

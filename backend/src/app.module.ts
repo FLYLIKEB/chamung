@@ -28,7 +28,7 @@ import { Tag } from './notes/entities/tag.entity';
 import { UsersService } from './users/users.service';
 import { UserRole } from './users/entities/user.entity';
 
-const AdminJSModulePromise = (async () => {
+const createAdminJsModule = async () => {
   const AdminJSTypeorm = await import('@adminjs/typeorm');
   const AdminJS = (await import('adminjs')).default;
   AdminJS.registerAdapter({
@@ -70,7 +70,9 @@ const AdminJSModulePromise = (async () => {
     },
     inject: [ConfigService, UsersService],
   });
-})();
+};
+
+const adminJsImports = process.env.NODE_ENV === 'test' ? [] : [createAdminJsModule()];
 
 @Module({
   imports: [
@@ -116,7 +118,7 @@ const AdminJSModulePromise = (async () => {
     AdminModule,
     TeaSessionsModule,
     BlindTastingModule,
-    AdminJSModulePromise,
+    ...adminJsImports,
   ],
   controllers: [HealthController],
   providers: [

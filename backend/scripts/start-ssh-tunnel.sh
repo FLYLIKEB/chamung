@@ -19,6 +19,17 @@ EC2_USER=${EC2_USER:-}
 SSH_TUNNEL_LOCAL_PORT=${SSH_TUNNEL_LOCAL_PORT:-3307}
 SSH_TUNNEL_REMOTE_HOST=${SSH_TUNNEL_REMOTE_HOST:-}
 SSH_TUNNEL_REMOTE_PORT=${SSH_TUNNEL_REMOTE_PORT:-3306}
+DATABASE_URL=${DATABASE_URL:-}
+
+# SSH_TUNNEL_REMOTE_HOST가 비어 있으면 DATABASE_URL에서 자동 추출
+if [ -z "$SSH_TUNNEL_REMOTE_HOST" ] && [ -n "$DATABASE_URL" ]; then
+    SSH_TUNNEL_REMOTE_HOST=$(node -e "const url = new URL(process.env.DATABASE_URL); console.log(url.hostname || '')")
+fi
+
+# SSH_TUNNEL_REMOTE_PORT가 비어 있으면 DATABASE_URL에서 자동 추출
+if [ -z "$SSH_TUNNEL_REMOTE_PORT" ] && [ -n "$DATABASE_URL" ]; then
+    SSH_TUNNEL_REMOTE_PORT=$(node -e "const url = new URL(process.env.DATABASE_URL); console.log(url.port || '3306')")
+fi
 
 # 필수 환경 변수 확인
 if [ -z "$SSH_KEY_PATH" ] || [ -z "$EC2_HOST" ] || [ -z "$EC2_USER" ] || [ -z "$SSH_TUNNEL_REMOTE_HOST" ]; then
@@ -28,7 +39,7 @@ if [ -z "$SSH_KEY_PATH" ] || [ -z "$EC2_HOST" ] || [ -z "$EC2_USER" ] || [ -z "$
     echo "  - SSH_KEY_PATH"
     echo "  - EC2_HOST (Lightsail Public IP)"
     echo "  - EC2_USER (Lightsail SSH 사용자명)"
-    echo "  - SSH_TUNNEL_REMOTE_HOST"
+    echo "  - SSH_TUNNEL_REMOTE_HOST (or DATABASE_URL)"
     exit 1
 fi
 

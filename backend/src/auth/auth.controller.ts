@@ -35,7 +35,7 @@ export class AuthController {
       registerDto.password,
     );
     res.cookie('access_token', result.access_token, { ...COOKIE_OPTIONS, maxAge: 60 * 60 * 1000 });
-    res.cookie('refresh_token', result.refresh_token, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie('refresh_token', result.refresh_token, { ...COOKIE_OPTIONS, maxAge: 30 * 24 * 60 * 60 * 1000 });
     return result;
   }
 
@@ -45,7 +45,7 @@ export class AuthController {
   async login(@Request() req, @Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.login(req.user);
     res.cookie('access_token', result.access_token, { ...COOKIE_OPTIONS, maxAge: 60 * 60 * 1000 });
-    res.cookie('refresh_token', result.refresh_token, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie('refresh_token', result.refresh_token, { ...COOKIE_OPTIONS, maxAge: 30 * 24 * 60 * 60 * 1000 });
     return result;
   }
 
@@ -54,7 +54,7 @@ export class AuthController {
   async loginWithKakao(@Body() kakaoLoginDto: KakaoLoginDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.loginWithKakao(kakaoLoginDto.accessToken);
     res.cookie('access_token', result.access_token, { ...COOKIE_OPTIONS, maxAge: 60 * 60 * 1000 });
-    res.cookie('refresh_token', result.refresh_token, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie('refresh_token', result.refresh_token, { ...COOKIE_OPTIONS, maxAge: 30 * 24 * 60 * 60 * 1000 });
     return result;
   }
 
@@ -63,7 +63,7 @@ export class AuthController {
   async loginWithGoogle(@Body() googleLoginDto: GoogleLoginDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.loginWithGoogle(googleLoginDto.accessToken);
     res.cookie('access_token', result.access_token, { ...COOKIE_OPTIONS, maxAge: 60 * 60 * 1000 });
-    res.cookie('refresh_token', result.refresh_token, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie('refresh_token', result.refresh_token, { ...COOKIE_OPTIONS, maxAge: 30 * 24 * 60 * 60 * 1000 });
     return result;
   }
 
@@ -74,7 +74,7 @@ export class AuthController {
     if (!rawToken) throw new UnauthorizedException('리프레시 토큰이 없습니다.');
     const result = await this.authService.validateAndRotateRefreshToken(rawToken);
     res.cookie('access_token', result.access_token, { ...COOKIE_OPTIONS, maxAge: 60 * 60 * 1000 });
-    res.cookie('refresh_token', result.refresh_token, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie('refresh_token', result.refresh_token, { ...COOKIE_OPTIONS, maxAge: 30 * 24 * 60 * 60 * 1000 });
     return { message: '토큰이 갱신되었습니다.' };
   }
 
