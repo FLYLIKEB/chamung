@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus, Leaf, PenLine, Package, RefreshCw, Eye, EyeOff, Store, ClipboardList, Tag } from 'lucide-react';
 import { cn } from './ui/utils';
 import { useAppMode } from '../contexts/AppModeContext';
+import { prepareKeyboard } from '../hooks/useMobileKeyboard';
 
 type MenuItem = {
   label: string;
@@ -55,8 +56,13 @@ export function SpeedDialFAB() {
 
   if (shouldHide) return null;
 
+  const FOCUS_PAGES = ['/note/new', '/cellar/new', '/teahouse/new', '/tags', '/tea/new'];
+
   const navigateTo = (path: string) => {
     setIsOpen(false);
+    if (FOCUS_PAGES.some((p) => path.startsWith(p))) {
+      prepareKeyboard();
+    }
     navigate(path);
   };
 

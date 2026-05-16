@@ -21,7 +21,7 @@ function getAllowedOrigin(req: any): string | null {
   const origin = req.headers?.origin;
   if (!origin) return null;
   const allowed = [
-    'https://cha-log-gilt.vercel.app',
+    'https://www.chamung.com',
     process.env.FRONTEND_URL,
     ...(process.env.FRONTEND_URLS?.split(',').map(u => u.trim()) ?? []),
   ].filter(Boolean);

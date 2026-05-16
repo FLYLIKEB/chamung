@@ -11,6 +11,7 @@ import { UserAuthentication } from '../users/entities/user-authentication.entity
 import { PasswordReset } from '../users/entities/password-reset.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { EmailVerificationToken } from './entities/email-verification-token.entity';
+import { EmailChangeToken } from './entities/email-change-token.entity';
 import { MailService } from '../mail/mail.service';
 import axios from 'axios';
 
@@ -76,6 +77,7 @@ describe('AuthService', () => {
   const mockMailService = {
     sendPasswordResetEmail: jest.fn(),
     sendVerificationEmail: jest.fn(),
+    sendEmailChangeEmail: jest.fn(),
   };
 
   const mockDataSource = {
@@ -117,6 +119,10 @@ describe('AuthService', () => {
         },
         {
           provide: getRepositoryToken(EmailVerificationToken),
+          useValue: mockRepository,
+        },
+        {
+          provide: getRepositoryToken(EmailChangeToken),
           useValue: mockRepository,
         },
         {
@@ -297,6 +303,33 @@ describe('AuthService', () => {
 
       await expect(service.loginWithKakao('invalid_token')).rejects.toThrow(
         UnauthorizedException,
+      );
+    });
+  });
+
+  describe('refresh token lifetime', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-05-14T00:00:00.000Z'));
+      mockUsersService.getUserEmail.mockResolvedValue('test@example.com');
+      mockJwtService.sign.mockReturnValue('mock_jwt_token');
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('로그인 시 refresh token 만료일을 30일 뒤로 저장해야 함', async () => {
+      const user = createMockUser();
+
+      await service.login(user);
+
+      expect(mockRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: user.id,
+          isRevoked: false,
+          expiresAt: new Date('2026-06-13T00:00:00.000Z'),
+        }),
       );
     });
   });

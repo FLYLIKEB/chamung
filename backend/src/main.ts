@@ -23,7 +23,7 @@ async function bootstrap() {
   const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
-    'https://cha-log-gilt.vercel.app',
+    'https://www.chamung.com',
   ];
   
   // 환경 변수에서 추가 origin 가져오기

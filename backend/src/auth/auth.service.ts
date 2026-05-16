@@ -81,7 +81,7 @@ export class AuthService {
   private async generateRefreshTokenValue(userId: number): Promise<string> {
     const raw = randomBytes(32).toString('hex');
     const tokenHash = createHash('sha256').update(raw).digest('hex');
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7일
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30일
     await this.refreshTokenRepository.save({ userId, tokenHash, expiresAt, isRevoked: false });
     return raw;
   }

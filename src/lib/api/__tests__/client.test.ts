@@ -103,12 +103,30 @@ describe('ApiClient', () => {
       window.removeEventListener('auth:logout', logoutHandler);
     });
 
-    it('/auth/ 엔드포인트에서는 토큰 갱신을 시도하지 않아야 한다', async () => {
-      fetchSpy.mockResolvedValueOnce(mockResponse(401, { message: 'Invalid credentials' }));
+    it('앱 시작 시 /auth/me가 401이면 토큰 갱신 후 다시 시도해야 한다', async () => {
+      fetchSpy.mockResolvedValueOnce(mockResponse(401, { message: 'Unauthorized' }));
+      fetchSpy.mockResolvedValueOnce(mockResponse(200, { message: '토큰이 갱신되었습니다.' }));
+      fetchSpy.mockResolvedValueOnce(mockResponse(200, { user: { id: 1, email: 'user@example.com', name: 'User' } }));
 
-      await expect(apiClient.get('/auth/me')).rejects.toMatchObject({ statusCode: 401 });
-      // refresh 호출 없이 1회만 호출
-      expect(fetchSpy).toHaveBeenCalledOnce();
+      const result = await apiClient.get<{ user: { id: number; email: string; name: string } }>('/auth/me');
+
+      expect(result).toEqual({ user: { id: 1, email: 'user@example.com', name: 'User' } });
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+      expect(fetchSpy.mock.calls[1][0]).toContain('/auth/refresh');
+      expect(fetchSpy.mock.calls[2][0]).toContain('/auth/me');
+    });
+
+    it('쿼리나 trailing slash가 붙은 /auth/me도 토큰 갱신 후 다시 시도해야 한다', async () => {
+      fetchSpy.mockResolvedValueOnce(mockResponse(401, { message: 'Unauthorized' }));
+      fetchSpy.mockResolvedValueOnce(mockResponse(200, { message: '토큰이 갱신되었습니다.' }));
+      fetchSpy.mockResolvedValueOnce(mockResponse(200, { user: { id: 1, email: 'user@example.com', name: 'User' } }));
+
+      const result = await apiClient.get<{ user: { id: number; email: string; name: string } }>('/auth/me/?source=boot');
+
+      expect(result).toEqual({ user: { id: 1, email: 'user@example.com', name: 'User' } });
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+      expect(fetchSpy.mock.calls[1][0]).toContain('/auth/refresh');
+      expect(fetchSpy.mock.calls[2][0]).toContain('/auth/me/?source=boot');
     });
 
     it('동시 401 요청 시 토큰 갱신은 1회만 수행해야 한다', async () => {

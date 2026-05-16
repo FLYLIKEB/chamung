@@ -1,13 +1,13 @@
 import { useEffect, useRef, type RefObject } from 'react';
+import { hasKeyboardProxy, transferFocus } from './useMobileKeyboard';
 
 /**
  * Mobile-compatible autofocus hook.
  *
- * On mobile browsers, programmatic `focus()` only opens the virtual keyboard
- * when called during a user-gesture or within the first animation frame after
- * navigation.  A short `requestAnimationFrame` + `setTimeout` combo gives the
- * browser enough time to finish layout while staying inside the "user
- * activation" window that iOS/Android require.
+ * If a keyboard proxy is active (created by `navigateWithKeyboard`),
+ * transfers focus from the proxy to the real input — keeping the iOS
+ * keyboard open.  Otherwise falls back to `requestAnimationFrame` +
+ * `setTimeout` which works on Desktop and Android.
  *
  * @param enabled - Whether to auto-focus (e.g. `!preselectedTeaId`)
  * @param deps   - Extra deps that should re-trigger the focus (default `[]`)
@@ -22,9 +22,13 @@ export function useAutoFocus<T extends HTMLElement = HTMLInputElement>(
   useEffect(() => {
     if (!enabled) return;
 
-    // requestAnimationFrame ensures the DOM is painted, then a minimal
-    // setTimeout pushes us past iOS's keyboard-suppression heuristic while
-    // keeping the delay imperceptible (~16-50 ms total).
+    // Path A: proxy input exists → transfer focus immediately (iOS keyboard stays open)
+    if (hasKeyboardProxy() && ref.current) {
+      transferFocus(ref.current);
+      return;
+    }
+
+    // Path B: no proxy → Desktop/Android fallback
     let raf: number;
     let timer: ReturnType<typeof setTimeout>;
 
