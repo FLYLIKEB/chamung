@@ -63,13 +63,13 @@ describe('Vercel Proxy', () => {
       globalThis.fetch = fetchMock;
 
       const req = createMockReq({
-        headers: { origin: 'https://cha-log-gilt.vercel.app' },
+        headers: { origin: 'https://www.chamung.com' },
       });
       const res = createMockRes();
 
       await handler(req, res);
 
-      expect(res._headers['access-control-allow-origin']).toBe('https://cha-log-gilt.vercel.app');
+      expect(res._headers['access-control-allow-origin']).toBe('https://www.chamung.com');
       expect(res._headers['access-control-allow-credentials']).toBe('true');
       expect(res._headers['vary']).toBe('Origin');
     });
@@ -129,7 +129,7 @@ describe('Vercel Proxy', () => {
     it('OPTIONS preflight에 200을 응답해야 한다', async () => {
       const req = createMockReq({
         method: 'OPTIONS',
-        headers: { origin: 'https://cha-log-gilt.vercel.app' },
+        headers: { origin: 'https://www.chamung.com' },
       });
       const res = createMockRes();
 
