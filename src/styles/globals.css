@@ -3668,17 +3668,18 @@ header[class*='bg-black/35'] h1 {
 }
 
 .note-detail-photo-toggle {
-  background: hsl(var(--muted) / 0.72);
-  border: 1px solid hsl(var(--border) / 0.55);
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 .note-detail-photo-toggle:hover {
-  background: hsl(var(--muted) / 0.9);
+  background: transparent !important;
 }
 
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-photo-toggle {
-  background: rgba(255,255,255,0.18) !important;
-  border-color: rgba(255,255,255,0.30) !important;
+  background: transparent !important;
+  border-color: transparent !important;
   color: rgba(255,255,255,0.94) !important;
 }
 
@@ -3694,10 +3695,10 @@ header[class*='bg-black/35'] h1 {
 }
 
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] :where(.bg-muted, .bg-secondary, [class*='bg-muted'], [class*='bg-secondary'], [data-slot='badge']) {
-  background: rgba(255,255,255,0.18) !important;
-  border-color: rgba(255,255,255,0.30) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 24px rgba(0,0,0,0.18) !important;
-  backdrop-filter: blur(10px);
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
 }
 
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] :where(.text-primary\/80, .text-primary, .text-muted-foreground, .text-secondary-foreground, .text-foreground, [class*='text-primary'], [class*='text-muted'], [class*='text-black']) {
@@ -3715,15 +3716,16 @@ header[class*='bg-black/35'] h1 {
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-privacy-lock,
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-owner-action,
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-scale-toggle {
-  background: rgba(255,255,255,0.18) !important;
-  border-color: rgba(255,255,255,0.36) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
   color: #fff !important;
   text-shadow: none;
-  backdrop-filter: blur(12px);
+  backdrop-filter: none !important;
 }
 
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .rating-visualization-poster-chart,
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .rating-visualization-poster [class*='bg-black'] {
-  background: rgba(255,255,255,0.12) !important;
-  border-radius: 1rem;
+  background: transparent !important;
+  border-radius: 0;
 }
