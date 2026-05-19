@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Share, PlusSquare } from 'lucide-react';
+import { BrandMark } from './BrandMark';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -73,7 +74,7 @@ export function PWAInstallBanner() {
       <div className="fixed bottom-0 left-0 right-0 z-[100] px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom duration-300">
         <div className="bg-card border border-border rounded-2xl shadow-lg p-4 max-w-md mx-auto">
           <div className="flex items-start gap-3">
-            <img src="/logo.png" alt="차멍" className="w-10 h-10 rounded-lg shrink-0" />
+            <BrandMark className="w-10 h-10 shrink-0" title="차멍" />
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm text-foreground">차멍 앱 설치하기</p>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
@@ -101,7 +102,7 @@ export function PWAInstallBanner() {
       <div className="fixed bottom-0 left-0 right-0 z-[100] px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom duration-300">
         <div className="bg-card border border-border rounded-2xl shadow-lg p-4 max-w-md mx-auto">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="차멍" className="w-10 h-10 rounded-lg shrink-0" />
+            <BrandMark className="w-10 h-10 shrink-0" title="차멍" />
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm text-foreground">차멍 앱 설치하기</p>
               <p className="text-xs text-muted-foreground mt-0.5">홈 화면에 추가하여 앱처럼 사용하세요</p>

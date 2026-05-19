@@ -9,41 +9,40 @@ type ModeCardProps = {
   icon: React.ReactNode;
   isActive: boolean;
   onClick: () => void;
-  gradientClass: string;
+  surfaceClass: string;
   tag?: string;
   tagClass?: string;
 };
 
-function ModeCard({ title, description, icon, isActive, onClick, gradientClass, tag, tagClass }: ModeCardProps) {
+function ModeCard({ title, description, icon, isActive, onClick, surfaceClass, tag, tagClass }: ModeCardProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        'flex-shrink-0 w-56 rounded-2xl px-3.5 py-3 text-left transition-all active:scale-[0.98] snap-start',
-        'text-white shadow-md',
-        gradientClass,
+        'mode-card-exception flex-shrink-0 w-56 rounded-sm px-3.5 py-3 text-left transition-colors snap-start no-underline text-white shadow-none',
+        surfaceClass,
       )}
     >
       <div className="flex items-center justify-between mb-2">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/20">
+        <div className="w-8 h-8 rounded-sm flex items-center justify-center bg-white/10 border-0">
           {icon}
         </div>
         <div className="flex items-center gap-1">
           {tag && (
             <span className={cn(
-              'text-[9px] font-bold px-1.5 py-0.5 rounded-full',
+              'text-[9px] font-bold px-1.5 py-0.5 rounded-sm border-0',
               tagClass ?? 'bg-white/25 text-white',
             )}>
               {tag}
             </span>
           )}
           {isActive && (
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/30 text-white">
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm bg-white/20 text-white">
               ON
             </span>
           )}
-          <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+          <ChevronRight className="w-3.5 h-3.5 opacity-35" />
         </div>
       </div>
       <p className="text-[13px] font-semibold">
@@ -67,7 +66,7 @@ export function ModeCarousel() {
       icon: <RefreshCw className="w-4 h-4 text-white" />,
       isActive: sessionMode.active,
       onClick: toggleSessionMode,
-      gradientClass: 'bg-gradient-to-br from-primary/90 to-primary',
+      surfaceClass: 'bg-neutral-700',
       tag: 'NEW',
       tagClass: 'bg-white/25 text-white',
     },
@@ -77,9 +76,9 @@ export function ModeCarousel() {
       icon: <EyeOff className="w-4 h-4 text-white" />,
       isActive: blindMode.active,
       onClick: toggleBlindMode,
-      gradientClass: 'bg-gradient-to-br from-violet-500 to-purple-700',
+      surfaceClass: 'bg-neutral-800',
       tag: 'NEW',
-      tagClass: 'bg-yellow-400 text-yellow-900',
+      tagClass: 'bg-white/20 text-white',
     },
   ];
 

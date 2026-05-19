@@ -174,5 +174,23 @@ describe('ApiClient', () => {
         method: 'POST',
       });
     });
+
+    it('403 응답의 구체적인 한글 메시지를 보존해야 한다', async () => {
+      fetchSpy.mockResolvedValueOnce(mockResponse(403, { message: '이메일 인증이 필요합니다.' }));
+
+      await expect(apiClient.post('/notes', { memo: 'test' })).rejects.toMatchObject({
+        statusCode: 403,
+        message: '이메일 인증이 필요합니다.',
+      });
+    });
+
+    it('403 응답이 영문 Forbidden이면 공통 권한 메시지로 치환해야 한다', async () => {
+      fetchSpy.mockResolvedValueOnce(mockResponse(403, { message: 'Forbidden' }));
+
+      await expect(apiClient.post('/notes', { memo: 'test' })).rejects.toMatchObject({
+        statusCode: 403,
+        message: '접근 권한이 없습니다.',
+      });
+    });
   });
 });

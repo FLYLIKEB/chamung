@@ -1,12 +1,12 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class AddTagCategory1773474193846 implements MigrationInterface {
-    name = 'AddTagCategory1773474193846'
+export class AddTagCategory1814000000000 implements MigrationInterface {
+    name = 'AddTagCategory1814000000000'
 
     private static readonly IDENTIFIER_PATTERN = /^[a-zA-Z0-9_]+$/;
 
     private validateIdentifier(value: string): void {
-        if (!AddTagCategory1773474193846.IDENTIFIER_PATTERN.test(value)) {
+        if (!AddTagCategory1814000000000.IDENTIFIER_PATTERN.test(value)) {
             throw new Error(`Invalid SQL identifier: ${value}`);
         }
     }

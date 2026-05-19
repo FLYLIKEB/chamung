@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, Loader2 } from 'lucide-react';
-import { Header } from '../components/Header';
+import { AuthPageShell } from '../components/AuthPageShell';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
@@ -30,7 +30,7 @@ function GoogleLoginButton({ onSuccess, disabled, isLoading }: GoogleLoginButton
       type="button"
       onClick={() => googleLogin()}
       disabled={disabled}
-      className="w-full bg-card text-foreground border border-border hover:bg-muted/50"
+      className="w-full text-foreground no-underline"
     >
       {isLoading ? (
         <>
@@ -40,10 +40,10 @@ function GoogleLoginButton({ onSuccess, disabled, isLoading }: GoogleLoginButton
       ) : (
         <>
           <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="currentColor" opacity="0.78"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="currentColor" opacity="0.64"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="currentColor" opacity="0.5"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="currentColor" opacity="0.72"/>
           </svg>
           구글로 로그인
         </>
@@ -176,30 +176,19 @@ export function Login() {
   }, [loginWithGoogle, navigate]);
 
   return (
-    <div className="min-h-screen">
-      <Header showBack title="로그인" showProfile />
-      
-      <div className="p-4 sm:max-w-md sm:mx-auto">
-        <div className="bg-card rounded-lg p-6 space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">로그인</h1>
-            <p className="text-gray-600 text-sm">
-              차 기록을 시작해보세요
-            </p>
-          </div>
-
+    <AuthPageShell title="로그인" description="차 기록을 시작해보세요">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">이메일</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/55" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="이메일을 입력하세요"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-transparent"
                   disabled={isLoading}
                 />
               </div>
@@ -208,14 +197,14 @@ export function Login() {
             <div className="space-y-2">
               <Label htmlFor="password">비밀번호</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/55" />
                 <Input
                   id="password"
                   type="password"
                   placeholder="비밀번호를 입력하세요"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-transparent"
                   disabled={isLoading}
                 />
               </div>
@@ -233,30 +222,25 @@ export function Login() {
             </Button>
 
             <div className="flex justify-end gap-3 text-sm">
-              <Link to="/find-email" className="text-emerald-600 hover:underline">
+              <Link to="/find-email" className="text-foreground/70 hover:text-foreground hover:underline">
                 아이디 찾기
               </Link>
-              <span className="text-gray-400">·</span>
-              <Link to="/forgot-password" className="text-emerald-600 hover:underline">
+              <span className="text-muted-foreground/45">·</span>
+              <Link to="/forgot-password" className="text-foreground/70 hover:text-foreground hover:underline">
                 비밀번호 찾기
               </Link>
             </div>
           </form>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">또는</span>
-            </div>
+          <div className="text-center text-xs uppercase tracking-[0.28em] text-muted-foreground/70">
+            또는
           </div>
 
           <Button
             type="button"
             onClick={handleKakaoLogin}
             disabled={isLoading || isKakaoLoading || isGoogleLoading}
-            className="w-full bg-[#FEE500] text-[#000000] hover:bg-[#FEE500]/90"
+            className="w-full text-foreground no-underline"
           >
             {isKakaoLoading ? (
               <>
@@ -287,13 +271,11 @@ export function Login() {
           )}
 
           <div className="text-center text-sm">
-            <span className="text-gray-600">계정이 없으신가요? </span>
-            <Link to="/register" className="text-emerald-600 hover:underline">
+            <span className="text-muted-foreground">계정이 없으신가요? </span>
+            <Link to="/register" className="text-foreground/70 hover:text-foreground hover:underline">
               회원가입
             </Link>
           </div>
-        </div>
-      </div>
-    </div>
+    </AuthPageShell>
   );
 }

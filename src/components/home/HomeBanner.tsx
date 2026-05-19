@@ -4,6 +4,7 @@ import { X, PenLine } from 'lucide-react';
 import { CtaButton } from '@/components/ui/CtaButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/components/ui/utils';
+import { BrandMark } from '@/components/BrandMark';
 
 const DISMISS_KEY = 'chalog-banner-dismissed';
 
@@ -27,7 +28,7 @@ export function HomeBanner() {
   };
 
   return (
-    <div className="relative rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 p-4 md:p-5">
+    <div className="relative rounded-sm bg-card p-4 md:p-5">
       <button
         onClick={handleDismiss}
         className="absolute top-3 right-3 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-background/50 transition-colors"
@@ -36,8 +37,8 @@ export function HomeBanner() {
         <X className="w-4 h-4" />
       </button>
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0">
-          <img src="/logo.png" alt="" className="w-8 h-8 object-contain" />
+        <div className="w-12 h-12 rounded-sm bg-primary/15 flex items-center justify-center shrink-0">
+          <BrandMark className="w-8 h-8" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground">

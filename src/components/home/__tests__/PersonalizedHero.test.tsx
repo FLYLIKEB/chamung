@@ -55,7 +55,7 @@ describe('PersonalizedHero - 로그인', () => {
 
   it('오늘 노트 없음 → 개인화 인사 표시', () => {
     renderWithRouter(<PersonalizedHero hasTodayNote={false} streak={0} />);
-    expect(screen.getByText('테스트님, 오늘 차 한 잔 어때요?')).toBeInTheDocument();
+    expect(screen.getByText('테스트님, 오늘의 차를 남겨요.')).toBeInTheDocument();
   });
 
   it('오늘 노트 없음 → 차록 쓰기 버튼 표시', () => {
@@ -65,16 +65,16 @@ describe('PersonalizedHero - 로그인', () => {
 
   it('오늘 노트 있음 → 완료 메시지 표시', () => {
     renderWithRouter(<PersonalizedHero hasTodayNote={true} streak={0} />);
-    expect(screen.getByText('테스트님, 오늘도 차록을 남겼네요!')).toBeInTheDocument();
+    expect(screen.getByText('테스트님의 오늘 차록.')).toBeInTheDocument();
   });
 
   it('streak > 0 → N일 연속 기록 중 표시', () => {
     renderWithRouter(<PersonalizedHero hasTodayNote={false} streak={5} />);
-    expect(screen.getByText('5일 연속 기록 중')).toBeInTheDocument();
+    expect(screen.getByText('5일째 이어지는 조용한 취향의 기록.')).toBeInTheDocument();
   });
 
   it('streak = 0 → 꾸준히 기록해보세요 표시', () => {
     renderWithRouter(<PersonalizedHero hasTodayNote={false} streak={0} />);
-    expect(screen.getByText('꾸준히 기록해보세요.')).toBeInTheDocument();
+    expect(screen.getByText('차 한 잔의 온도와 향을 가장 단순한 문장으로 남겨보세요.')).toBeInTheDocument();
   });
 });

@@ -114,7 +114,9 @@ if echo "${LOCAL_DATABASE_URL:-}" | grep -qE "localhost:3306|127\.0\.0\.1:3306";
     if npm run migration:run 2>/dev/null; then
         echo -e "${GREEN}✅ 마이그레이션 완료${NC}"
     else
-        echo -e "${YELLOW}⚠️  마이그레이션 건너뜀 (이미 적용됐거나 DB 미준비)${NC}"
+        echo -e "${RED}❌ 마이그레이션 실패${NC}"
+        echo "   로컬 서버를 시작하지 않고 종료합니다. 먼저 마이그레이션 오류를 해결하세요."
+        exit 1
     fi
     cd "$PROJECT_ROOT"
     echo ""
@@ -125,7 +127,7 @@ echo -e "${BLUE}🔧 백엔드 서버 시작 중...${NC}"
 cd "$BACKEND_DIR"
 # 로컬 개발 환경 (DB_SYNCHRONIZE=false → migrations 사용)
 export NODE_ENV=development
-npm run start:dev > /tmp/chalog-backend.log 2>&1 &
+nohup npm run start:dev > /tmp/chalog-backend.log 2>&1 &
 BACKEND_PID=$!
 echo -e "${GREEN}✅ 백엔드 서버 시작됨 (PID: $BACKEND_PID)${NC}"
 echo "   로그: tail -f /tmp/chalog-backend.log"
@@ -152,7 +154,7 @@ echo -e "${BLUE}🎨 프론트엔드 서버 시작 중...${NC}"
 cd "$PROJECT_ROOT"
 # 로컬 개발 환경으로 설정
 export NODE_ENV=development
-npm run dev > /tmp/chalog-frontend.log 2>&1 &
+nohup npm run dev > /tmp/chalog-frontend.log 2>&1 &
 FRONTEND_PID=$!
 echo -e "${GREEN}✅ 프론트엔드 서버 시작됨 (PID: $FRONTEND_PID)${NC}"
 echo "   로그: tail -f /tmp/chalog-frontend.log"
@@ -199,4 +201,3 @@ echo -e "${BLUE}🛑 서버 종료:${NC}"
 echo -e "   ${YELLOW}./scripts/stop-local.sh${NC} 또는"
 echo -e "   ${YELLOW}pkill -f 'nest start' && pkill -f 'vite' && cd backend && ./scripts/stop-ssh-tunnel.sh${NC}"
 echo ""
-

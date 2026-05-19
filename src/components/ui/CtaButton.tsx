@@ -15,10 +15,10 @@ export function CtaButton({ onClick, icon: Icon, label, variant = 'muted', class
       type="button"
       onClick={onClick}
       className={cn(
-        'mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-colors active:scale-[0.98]',
+        'mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-none bg-transparent border-0 text-sm font-medium underline underline-offset-[0.32em] decoration-current transition-colors',
         variant === 'primary'
-          ? 'bg-primary text-primary-foreground hover:bg-primary/90 font-semibold'
-          : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground',
+          ? 'text-foreground hover:text-foreground/65 font-semibold'
+          : 'text-muted-foreground hover:text-foreground',
         className,
       )}
     >

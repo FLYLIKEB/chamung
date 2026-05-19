@@ -217,12 +217,13 @@ const insertSampleData = async () => {
       }
 
       await connection.query(
-        'INSERT INTO notes (teaId, userId, rating, ratings, memo, isPublic) VALUES (?, ?, ?, ?, ?, ?)',
+        'INSERT INTO notes (teaId, userId, schemaId, overallRating, isRatingIncluded, memo, isPublic) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [
           teaId,
           userId,
+          1,
           note.rating,
-          JSON.stringify(note.ratings),
+          true,
           note.memo,
           note.isPublic,
         ]
@@ -256,4 +257,3 @@ const insertSampleData = async () => {
 };
 
 insertSampleData();
-

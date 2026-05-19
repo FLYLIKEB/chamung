@@ -8,17 +8,7 @@ import { toast } from 'sonner';
 import { notesApi } from '../lib/api';
 import { logger } from '../lib/logger';
 import { cn } from './ui/utils';
-import { TEA_TYPE_COLORS, TEA_TYPE_PLACEHOLDER_BG, type TeaType } from '../constants';
-
-const TEA_TYPE_TINT: Record<string, string> = {
-  녹차: 'bg-gradient-to-br from-emerald-300/[0.03] to-stone-200/10 dark:from-emerald-400/[0.04] dark:to-stone-400/10',
-  백차: 'bg-gradient-to-br from-stone-300/[0.03] to-stone-200/10 dark:from-stone-400/[0.04] dark:to-stone-500/10',
-  황차: 'bg-gradient-to-br from-amber-300/[0.03] to-stone-200/10 dark:from-amber-400/[0.04] dark:to-stone-400/10',
-  '청차/우롱차': 'bg-gradient-to-br from-blue-400/[0.03] to-stone-200/10 dark:from-blue-500/[0.04] dark:to-stone-400/10',
-  홍차: 'bg-gradient-to-br from-rose-300/[0.03] to-stone-200/10 dark:from-rose-400/[0.04] dark:to-stone-400/10',
-  '흑차/보이차': 'bg-gradient-to-br from-neutral-600/[0.03] to-stone-200/10 dark:from-neutral-500/[0.04] dark:to-stone-400/10',
-  대용차: 'bg-gradient-to-br from-slate-300/[0.03] to-stone-200/10 dark:from-slate-500/[0.04] dark:to-stone-400/10',
-};
+import { BrandMark } from './BrandMark';
 
 interface NoteCardProps {
   note: Note;
@@ -40,14 +30,6 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
   const [isTogglingBookmark, setIsTogglingBookmark] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const handleImageLoad = useCallback(() => setImageLoaded(true), []);
-
-  const accentClass = note.teaType && note.teaType in TEA_TYPE_COLORS
-    ? TEA_TYPE_COLORS[note.teaType as keyof typeof TEA_TYPE_COLORS]
-    : 'bg-muted-foreground/50';
-
-  const placeholderBg = note.teaType && note.teaType in TEA_TYPE_PLACEHOLDER_BG
-    ? TEA_TYPE_PLACEHOLDER_BG[note.teaType as keyof typeof TEA_TYPE_PLACEHOLDER_BG]
-    : 'bg-muted';
 
   const handleClick = () => {
     if (!canView) {
@@ -89,62 +71,48 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
       type="button"
       onClick={handleClick}
       className={cn(
-        'relative aspect-[3/4] w-full overflow-hidden flex flex-col rounded-2xl bg-card border border-border/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-left transition-all',
-        canView ? 'hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]' : 'opacity-60 cursor-not-allowed',
+        'relative aspect-[3/4] w-full overflow-hidden flex flex-col rounded-sm bg-card border-0 shadow-none text-left transition-colors',
+        canView ? 'hover:bg-muted/20' : 'opacity-60 cursor-not-allowed',
       )}
     >
-      {/* 상단 이미지 영역 — 가로 꽉, 세로 절반 */}
-      <div className={cn('relative w-full h-[55%] overflow-hidden', !thumbnail && placeholderBg)}>
-        {thumbnail ? (
-          <>
-            {!imageLoaded && (
-              <div className="absolute inset-0 bg-muted animate-pulse" />
+      {thumbnail ? (
+        <>
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-muted animate-pulse" />
+          )}
+          <ImageWithFallback
+            src={thumbnail}
+            alt={note.teaName}
+            className={cn(
+              'absolute inset-0 h-full w-full object-cover transition-opacity duration-500',
+              imageLoaded ? 'opacity-[0.09]' : 'opacity-0',
             )}
-            <ImageWithFallback
-              src={thumbnail}
-              alt={note.teaName}
-              className={cn(
-                'w-full h-full object-cover transition-opacity duration-300',
-                imageLoaded ? 'opacity-100' : 'opacity-0',
-              )}
-              onLoad={handleImageLoad}
-            />
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <img src="/logo.png" alt="" className="w-10 h-10 object-contain opacity-25 brightness-0 invert" />
-          </div>
-        )}
-
-        {/* 이미지 위 오버레이: 차 종류 뱃지 + 잠금 */}
-        <div className="absolute top-0 inset-x-0 flex items-center justify-between p-2">
-          {note.teaType ? (
-            <span className={cn(
-              'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold backdrop-blur-sm',
-              'bg-black/30 text-white',
-            )}>
-              <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', accentClass)} />
-              {note.teaType}
-            </span>
-          ) : <span />}
-          <div className="flex items-center gap-1">
-            {!note.isPublic && (
-              <span className="p-1 rounded-full bg-black/30 backdrop-blur-sm">
-                <Lock className="w-2.5 h-2.5 text-white" />
-              </span>
-            )}
-          </div>
+            style={{ filter: 'grayscale(1) saturate(0) contrast(0.85) brightness(1.08)' }}
+            onLoad={handleImageLoad}
+          />
+          <div className="absolute inset-0 bg-card/70" aria-hidden="true" />
+        </>
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/40" aria-hidden="true">
+          <BrandMark className="w-12 h-12 text-foreground/8" />
         </div>
+      )}
 
-        {/* 이미지 하단 그라데이션 */}
-        <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-card to-transparent" />
+      <div className="relative z-10 flex items-center justify-between px-2.5 pt-2">
+        {note.teaType ? (
+          <span className="inline-flex items-center gap-1 px-0 py-0 text-[9px] font-semibold text-muted-foreground">
+            <span className="w-1 h-1 rounded-full shrink-0 bg-muted-foreground/35" />
+            {note.teaType}
+          </span>
+        ) : <span />}
+        {!note.isPublic && (
+          <span className="p-0.5 rounded-sm text-muted-foreground" aria-label="비공개">
+            <Lock className="w-2.5 h-2.5" />
+          </span>
+        )}
       </div>
 
-      {/* 하단 정보 영역 — 왼쪽 정렬, 차종별 은은한 틴트 */}
-      <div className={cn(
-        'flex-1 flex flex-col justify-between px-2.5 pt-1.5 pb-2',
-        note.teaType && TEA_TYPE_TINT[note.teaType] ? TEA_TYPE_TINT[note.teaType] : '',
-      )}>
+      <div className="relative z-10 flex-1 flex flex-col justify-between px-2.5 pt-2 pb-2">
         <div className="space-y-0.5">
           {showTeaName && (
             <p className="text-xs font-semibold text-foreground truncate leading-tight">

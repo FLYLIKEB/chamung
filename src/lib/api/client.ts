@@ -650,12 +650,9 @@ class ApiClient {
             errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
           }
         } else if (response.status === 403) {
-          if (errorMessage.includes('permission') || errorMessage.includes('Forbidden')) {
-            // 백엔드에서 이미 한글 메시지를 보내므로 그대로 사용
-            if (!errorMessage.match(/[가-힣]/)) {
-              errorMessage = '접근 권한이 없습니다.';
-            }
-          } else {
+          // 백엔드가 구체적인 한글 사유(예: 이메일 인증 필요)를 내려주면 그대로 표시한다.
+          // 영문/기본 Forbidden 메시지만 사용자 친화적인 공통 문구로 치환한다.
+          if (!errorMessage.match(/[가-힣]/)) {
             errorMessage = '접근 권한이 없습니다.';
           }
         } else if (response.status === 404) {

@@ -53,12 +53,11 @@ function NavButton({
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center justify-center gap-1 transition-all duration-200 active:scale-95',
+        'flex items-center justify-center gap-1 transition-colors duration-200',
         direction === 'horizontal'
           ? 'min-h-[44px] min-w-[44px] flex-col'
-          : 'min-h-[40px] w-full px-3 py-2 rounded-xl flex-row gap-3',
+          : 'min-h-[40px] w-full px-3 py-2 rounded-none flex-row gap-3',
         isActive ? 'text-primary' : 'text-muted-foreground',
-        direction === 'vertical' && isActive && 'bg-primary/8',
       )}
       aria-label={item.label}
     >
@@ -96,19 +95,15 @@ function ProfileButton({
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center justify-center gap-1 transition-all duration-200 active:scale-95',
+        'flex items-center justify-center gap-1 transition-colors duration-200',
         direction === 'horizontal'
           ? 'min-h-[44px] min-w-[44px] flex-col'
-          : 'min-h-[40px] w-full px-3 py-2 rounded-xl flex-row gap-3',
+          : 'min-h-[40px] w-full px-3 py-2 rounded-none flex-row gap-3',
         isActive ? 'text-primary' : 'text-muted-foreground',
-        direction === 'vertical' && isActive && 'bg-primary/8',
       )}
       aria-label="내 차록"
     >
-      <div className={cn(
-        'w-6 h-6 rounded-full overflow-hidden',
-        isActive && 'ring-2 ring-primary',
-      )}>
+      <div className="w-6 h-6 rounded-full overflow-hidden">
         {user?.profileImageUrl ? (
           <img src={user.profileImageUrl} alt={user.name} className="w-6 h-6 rounded-full object-cover" />
         ) : (
@@ -146,7 +141,7 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
       {/* Mobile: horizontal bottom bar */}
       <nav
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-60 bg-card/95 backdrop-blur-md border-t border-black/5 rounded-t-2xl card-shadow-top px-2 py-3',
+          'fixed bottom-0 left-0 right-0 z-60 bg-background border-0 rounded-none shadow-none px-2 py-3',
           'pb-[calc(0.75rem+env(safe-area-inset-bottom))]',
           'flex items-center justify-around',
           'md:hidden',
@@ -175,7 +170,7 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
         className={cn(
           'hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 z-50',
           'flex-col items-center gap-1 p-2',
-          'bg-card/95 backdrop-blur-md border border-border/30 rounded-2xl shadow-lg',
+          'bg-background border-0 rounded-none shadow-none',
           'w-[140px]',
         )}
       >
@@ -186,7 +181,7 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
           className="scale-[0.6] origin-left -my-2 w-full"
         />
 
-        <div className="w-full h-px bg-border/30 mb-1" />
+        <div className="w-full h-px bg-transparent mb-1" />
 
         {NAV_ITEMS.map((item) => (
           <NavButton
