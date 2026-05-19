@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from './ui/utils';
 import { useIsKorean } from '../hooks/useLocale';
+import { BrandMark } from './BrandMark';
 
 interface ChaLogLogoProps {
   /** 아이콘만 표시 (제목과 함께 쓸 때) */
@@ -11,22 +12,18 @@ interface ChaLogLogoProps {
   onClick?: () => void;
 }
 
-/** 차멍 로고 - 개완(개가 빠진 컵) 모티프. 한국어권: 차멍, 영어권: ChaMeong */
+/** 차멍 로고 - 먹색 단색 기하 패턴 마크. 한국어권: 차멍, 영어권: ChaMeong */
 export function ChaLogLogo({ iconOnly = false, className, asButton, onClick }: ChaLogLogoProps) {
   const isKorean = useIsKorean();
 
   const content = (
     <>
-      <div className="flex items-center justify-center shrink-0 w-12 h-12">
-        <img src="/logo.png" alt="" className="w-12 h-12 object-contain" aria-hidden />
+      <div className="flex items-center justify-center shrink-0 w-11 h-11 text-primary">
+        <BrandMark className="w-11 h-11" />
       </div>
       {!iconOnly && (
-        <span className="font-['Jua'] font-normal tracking-tight text-2xl pt-1">
-          {isKorean ? (
-            <><span className="text-gray-700 dark:text-gray-400">차</span><span className="text-[#1e6b2e] dark:text-[#2d9a4a]">멍</span></>
-          ) : (
-            <><span className="text-gray-700 dark:text-gray-400">Cha</span><span className="text-[#1e6b2e] dark:text-[#2d9a4a]">Meong</span></>
-          )}
+        <span className="font-['Nanum_Myeongjo'] font-bold tracking-[-0.04em] text-2xl text-foreground pt-0.5">
+          {isKorean ? '차멍' : 'ChaMeong'}
         </span>
       )}
     </>
@@ -34,7 +31,7 @@ export function ChaLogLogo({ iconOnly = false, className, asButton, onClick }: C
 
   const wrapperClass = cn(
     'flex items-center gap-0.5 min-h-[48px] transition-colors',
-    (asButton || onClick) && 'hover:opacity-90 active:scale-[0.98] cursor-pointer rounded-xl px-1 -ml-1',
+    (asButton || onClick) && 'hover:opacity-80 cursor-pointer rounded-none px-1 -ml-1',
     className,
   );
 

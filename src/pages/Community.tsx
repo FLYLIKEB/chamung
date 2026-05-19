@@ -127,15 +127,15 @@ export function Community() {
       {/* 전체/인기글 + 카테고리 탭 */}
       <div className="sticky top-[calc(4.25rem+env(safe-area-inset-top))] md:top-0 z-10 bg-background">
         {/* 전체보기 / 인기글 — 항상 노출 */}
-        <div className="flex items-center gap-2 px-4 py-2">
+        <div className="flex items-center gap-5 px-4 py-2">
           <button
             type="button"
             onClick={() => setSelectedGroup('all')}
             className={cn(
-              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+              'inline-flex items-center gap-1.5 px-0 py-1.5 text-sm font-medium transition-colors no-underline',
               selectedGroup === 'all'
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-accent border border-border/60 text-muted-foreground hover:text-foreground',
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             <LayoutList className="w-3.5 h-3.5" />
@@ -145,10 +145,10 @@ export function Community() {
             type="button"
             onClick={() => setSelectedGroup('popular')}
             className={cn(
-              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+              'inline-flex items-center gap-1.5 px-0 py-1.5 text-sm font-medium transition-colors no-underline',
               selectedGroup === 'popular'
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-accent border border-border/60 text-muted-foreground hover:text-foreground',
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             <Flame className="w-3.5 h-3.5" />
@@ -159,10 +159,10 @@ export function Community() {
               type="button"
               onClick={() => setSelectedGroup('mine')}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                'inline-flex items-center gap-1.5 px-0 py-1.5 text-sm font-medium transition-colors no-underline',
                 selectedGroup === 'mine'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-accent border border-border/60 text-muted-foreground hover:text-foreground',
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
               <PencilLine className="w-3.5 h-3.5" />
@@ -201,9 +201,9 @@ export function Community() {
               {[1, 2, 3].map((i) => <PostCardSkeleton key={i} />)}
             </div>
             {/* 데스크톱: 게시판별 스켈레톤 */}
-            <div className="hidden md:grid md:grid-cols-2 gap-8 pt-4">
+            <div className="hidden md:grid md:grid-cols-2 gap-x-12 gap-y-10 pt-4">
               {DESKTOP_BOARDS.map((board) => (
-                <div key={board.key} className="rounded-xl border border-border/60 bg-card p-4 space-y-3">
+                <div key={board.key} className="space-y-3">
                   <div className="h-6 w-24 rounded bg-muted animate-pulse" />
                   {[1, 2, 3].map((i) => <PostCardSkeleton key={i} />)}
                 </div>
@@ -225,7 +225,7 @@ export function Community() {
                   action={{ label: '✍️ 첫 글 쓰기', onClick: () => navigate('/chadam/new') }}
                 />
               ) : (
-                <div className="divide-y divide-accent">
+                <div className="space-y-1">
                   {posts.map((post, i) => (
                     <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }}>
                       <PostCard post={post} />
@@ -243,19 +243,19 @@ export function Community() {
             {/* 데스크톱: selectedGroup === 'all' → 게시판별 분리 / 특정 그룹 → 단일 게시판 뷰 */}
             <div className="hidden md:block pt-4">
               {selectedGroup === 'all' ? (
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-2 gap-x-12 gap-y-10">
                   {DESKTOP_BOARDS.map((board) => {
                     const boardPosts = allPosts.filter((p) =>
                       board.categories.includes(p.category as PostCategory)
                     ).slice(0, 5);
                     return (
-                      <section key={board.key} className="rounded-xl border border-border/60 bg-card p-4 divide-y divide-accent">
-                        <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                      <section key={board.key} className="space-y-3">
+                        <div className="flex items-center justify-between pb-1">
                           <h2 className="font-semibold text-foreground">{board.label}</h2>
                           <button
                             type="button"
                             onClick={() => setSelectedGroup(board.key)}
-                            className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                            className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors no-underline"
                           >
                             더보기 <ChevronRight className="w-3.5 h-3.5" />
                           </button>
@@ -263,7 +263,7 @@ export function Community() {
                         {boardPosts.length === 0 ? (
                           <p className="text-sm text-muted-foreground py-4 text-center">아직 게시글이 없어요.</p>
                         ) : (
-                          <div className="divide-y divide-accent">
+                          <div className="space-y-1">
                             {boardPosts.map((post, i) => (
                               <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${i * 50}ms` }}>
                                 <PostCard post={post} />
@@ -277,7 +277,7 @@ export function Community() {
                 </div>
               ) : (
                 <>
-                  <div className="divide-y divide-accent">
+                  <div className="space-y-1">
                     {posts.map((post, i) => (
                       <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }}>
                         <PostCard post={post} />

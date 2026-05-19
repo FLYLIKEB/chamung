@@ -44,15 +44,16 @@ const mockNote: Note = {
 };
 
 describe('NoteCard - 그리드 카드', () => {
-  it('이미지가 있을 때 이미지 컨테이너에 rounded-2xl이 있어야 함', () => {
+  it('이미지가 있을 때 사진을 아주 옅은 무채색 배경으로 표시해야 함', () => {
     render(
       <MemoryRouter>
         <NoteCard note={mockNote} />
       </MemoryRouter>,
     );
 
-    const imageContainer = screen.getByAltText('테스트 차').parentElement;
-    expect(imageContainer).toHaveClass('rounded-2xl', 'overflow-hidden');
+    const image = screen.getByAltText('테스트 차');
+    expect(image).toHaveClass('absolute', 'inset-0', 'object-cover', 'opacity-0');
+    expect(image).toHaveStyle({ filter: 'grayscale(1) saturate(0) contrast(0.85) brightness(1.08)' });
   });
 
   it('imageThumbnails가 있으면 썸네일을 우선 표시해야 함', () => {

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Search, MessageSquare, FileText, Package, Bell, Settings } from 'lucide-react';
 import { cn } from './ui/utils';
 import { useAuth } from '../contexts/AuthContext';
+import { BrandMark } from './BrandMark';
 
 type NavItem = {
   path: string;
@@ -43,7 +44,7 @@ export function AppSidebar() {
         className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-6 hover:bg-primary/20 transition-colors"
         aria-label="홈으로"
       >
-        <img src="/logo.png" alt="차멍" className="w-6 h-6 object-contain" />
+        <BrandMark className="w-7 h-7" title="차멍" />
       </button>
 
       {/* Main nav */}

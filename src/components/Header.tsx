@@ -13,24 +13,35 @@ interface HeaderProps {
   showProfile?: boolean;
   /** 차멍 로고 표시 (메인 탭 등에서 브랜딩용, 클릭 시 홈으로) */
   showLogo?: boolean;
+  /** 상세/브랜드 화면에서 쓰는 어두운 유리 헤더 */
+  tone?: 'default' | 'glassDark';
 }
 
-export function Header({ title, showBack, onBack, showProfile, showLogo }: HeaderProps) {
+export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 'default' }: HeaderProps) {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const unreadCount = useNotificationCount();
 
   const headerHeight = 'var(--header-spacer)';
+  const isGlassDark = tone === 'glassDark';
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 md:left-[160px] z-100 bg-card/95 backdrop-blur-md border-b border-black/5 rounded-b-2xl py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))]">
+      <header
+        className={`fixed top-0 left-0 right-0 md:left-[160px] z-100 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] ${
+          isGlassDark
+            ? 'bg-neutral-950 text-white'
+            : 'bg-background text-foreground'
+        }`}
+      >
         <div className="max-w-2xl md:max-w-5xl lg:max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             {showBack && (
               <button
                 onClick={() => (onBack ? onBack() : navigate(-1))}
-                className="shrink-0 min-h-[44px] min-w-[44px] p-2.5 -ml-1 hover:bg-muted/60 rounded-full transition-colors flex items-center justify-center active:scale-95 text-foreground"
+                className={`shrink-0 min-h-[44px] min-w-[44px] p-2.5 -ml-1 rounded-none transition-colors flex items-center justify-center ${
+                  isGlassDark ? 'text-white/80 hover:text-white' : 'text-foreground hover:text-foreground/70'
+                }`}
                 aria-label="뒤로"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -44,7 +55,11 @@ export function Header({ title, showBack, onBack, showProfile, showLogo }: Heade
               />
             )}
             {title && (
-              <h1 className="font-['Jua'] font-normal text-2xl text-[#4a4540] dark:text-[#a09888] tracking-tight truncate min-w-0 pt-1">
+              <h1
+                className={`font-['Nanum_Myeongjo'] font-bold text-2xl tracking-[-0.04em] truncate min-w-0 pt-0.5 ${
+                  isGlassDark ? 'text-white/90' : 'text-foreground'
+                }`}
+              >
                 {title}
               </h1>
             )}
@@ -52,7 +67,9 @@ export function Header({ title, showBack, onBack, showProfile, showLogo }: Heade
           <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => navigate('/sasaek')}
-              className="min-h-[44px] min-w-[44px] p-2.5 hover:bg-muted/60 rounded-full transition-colors flex items-center justify-center active:scale-95"
+              className={`min-h-[44px] min-w-[44px] p-2.5 rounded-none transition-colors flex items-center justify-center ${
+                isGlassDark ? 'text-white/75 hover:text-white' : 'hover:text-foreground/70'
+              }`}
               aria-label="탐색"
             >
               <Search className="w-5 h-5" />
@@ -60,7 +77,9 @@ export function Header({ title, showBack, onBack, showProfile, showLogo }: Heade
             {isAuthenticated && (
               <button
                 onClick={() => navigate('/notifications')}
-                className="relative min-h-[44px] min-w-[44px] p-2.5 hover:bg-muted/60 rounded-full transition-colors flex items-center justify-center active:scale-95"
+                className={`relative min-h-[44px] min-w-[44px] p-2.5 rounded-none transition-colors flex items-center justify-center ${
+                  isGlassDark ? 'text-white/75 hover:text-white' : 'hover:text-foreground/70'
+                }`}
                 aria-label="알림"
               >
                 <Bell className="w-5 h-5" />
@@ -74,7 +93,9 @@ export function Header({ title, showBack, onBack, showProfile, showLogo }: Heade
             {showProfile && (
               <button
                 onClick={() => navigate(isAuthenticated ? '/settings' : '/login')}
-                className="min-h-[44px] min-w-[44px] p-2.5 hover:bg-muted/60 rounded-full transition-colors flex items-center justify-center active:scale-95"
+                className={`min-h-[44px] min-w-[44px] p-2.5 rounded-none transition-colors flex items-center justify-center ${
+                  isGlassDark ? 'text-white/75 hover:text-white' : 'hover:text-foreground/70'
+                }`}
               >
                 <User className="w-5 h-5" />
               </button>

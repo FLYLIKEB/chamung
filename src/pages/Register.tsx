@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, User, Loader2 } from 'lucide-react';
-import { Header } from '../components/Header';
+import { AuthPageShell } from '../components/AuthPageShell';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
-function getPasswordStrength(pw: string): { level: 'weak' | 'medium' | 'strong'; label: string; color: string } {
+function getPasswordStrength(pw: string): { level: 'weak' | 'medium' | 'strong'; label: string } {
   const hasLetter = /[A-Za-z]/.test(pw);
   const hasNumber = /\d/.test(pw);
   const hasSpecial = /[^A-Za-z0-9]/.test(pw);
   const isLong = pw.length >= 12;
 
-  if (pw.length === 0) return { level: 'weak', label: '', color: '' };
-  if (pw.length < 8 || !hasLetter || !hasNumber) return { level: 'weak', label: '약함', color: 'bg-red-500' };
-  if (hasLetter && hasNumber && hasSpecial && isLong) return { level: 'strong', label: '강함', color: 'bg-green-500' };
-  return { level: 'medium', label: '보통', color: 'bg-yellow-500' };
+  if (pw.length === 0) return { level: 'weak', label: '' };
+  if (pw.length < 8 || !hasLetter || !hasNumber) return { level: 'weak', label: '약함' };
+  if (hasLetter && hasNumber && hasSpecial && isLong) return { level: 'strong', label: '강함' };
+  return { level: 'medium', label: '보통' };
 }
 
 export function Register() {
@@ -71,30 +71,19 @@ export function Register() {
   };
 
   return (
-    <div className="min-h-screen">
-      <Header showBack title="회원가입" showProfile />
-
-      <div className="p-4 sm:max-w-md sm:mx-auto">
-        <div className="bg-card rounded-lg p-6 space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">회원가입</h1>
-            <p className="text-gray-600 text-sm">
-              새로운 계정을 만들어보세요
-            </p>
-          </div>
-
+    <AuthPageShell title="회원가입" description="새로운 계정을 만들어보세요">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">이름</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/55" />
                 <Input
                   id="name"
                   type="text"
                   placeholder="이름을 입력하세요"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-transparent"
                   disabled={isLoading}
                 />
               </div>
@@ -103,14 +92,14 @@ export function Register() {
             <div className="space-y-2">
               <Label htmlFor="email">이메일</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/55" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="이메일을 입력하세요"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-transparent"
                   disabled={isLoading}
                 />
               </div>
@@ -119,14 +108,14 @@ export function Register() {
             <div className="space-y-2">
               <Label htmlFor="password">비밀번호</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/55" />
                 <Input
                   id="password"
                   type="password"
                   placeholder="최소 8자, 영문+숫자 포함"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-transparent"
                   disabled={isLoading}
                 />
               </div>
@@ -137,20 +126,16 @@ export function Register() {
                       <div
                         key={level}
                         className={`h-1 flex-1 rounded-full transition-colors ${
-                          strength.level === 'weak' && i === 0 ? 'bg-red-500' :
-                          strength.level === 'medium' && i <= 1 ? 'bg-yellow-500' :
-                          strength.level === 'strong' ? 'bg-green-500' :
+                          strength.level === 'weak' && i === 0 ? 'bg-foreground/35' :
+                          strength.level === 'medium' && i <= 1 ? 'bg-foreground/50' :
+                          strength.level === 'strong' ? 'bg-foreground/65' :
                           'bg-muted'
                         }`}
                       />
                     ))}
                   </div>
                   {strength.label && (
-                    <p className={`text-xs font-medium ${
-                      strength.level === 'weak' ? 'text-red-500' :
-                      strength.level === 'medium' ? 'text-yellow-600' :
-                      'text-green-600'
-                    }`}>
+                    <p className="text-xs font-medium text-muted-foreground">
                       비밀번호 강도: {strength.label}
                     </p>
                   )}
@@ -161,14 +146,14 @@ export function Register() {
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">비밀번호 확인</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/55" />
                 <Input
                   id="confirmPassword"
                   type="password"
                   placeholder="비밀번호를 다시 입력하세요"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-transparent"
                   disabled={isLoading}
                 />
               </div>
@@ -187,13 +172,11 @@ export function Register() {
           </form>
 
           <div className="text-center text-sm">
-            <span className="text-gray-600">이미 계정이 있으신가요? </span>
-            <Link to="/login" className="text-emerald-600 hover:underline">
+            <span className="text-muted-foreground">이미 계정이 있으신가요? </span>
+            <Link to="/login" className="text-foreground/70 hover:text-foreground hover:underline">
               로그인
             </Link>
           </div>
-        </div>
-      </div>
-    </div>
+    </AuthPageShell>
   );
 }

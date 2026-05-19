@@ -129,7 +129,7 @@ export function SpeedDialFAB() {
       {/* 배경 오버레이 */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/20"
+          className="fixed inset-0 z-40 bg-transparent"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
@@ -155,14 +155,14 @@ export function SpeedDialFAB() {
                 )}
                 style={{ transitionDelay: isOpen ? `${delayMs}ms` : '0ms' }}
               >
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full shadow-sm border border-border bg-background/95 text-foreground whitespace-nowrap">
+                <span className="text-xs font-medium px-0 py-1 text-foreground/70 whitespace-nowrap">
                   {item.label}
                 </span>
                 <button
                   type="button"
                   aria-label={item.label}
                   onClick={item.onClick}
-                  className="w-11 h-11 rounded-full flex items-center justify-center shadow-md bg-background border border-border text-foreground hover:bg-muted transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  className="w-11 h-11 rounded-none flex items-center justify-center bg-transparent border-0 text-foreground hover:text-foreground/65 transition-colors focus-visible:outline-none"
                 >
                   {item.icon}
                 </button>
@@ -186,10 +186,10 @@ export function SpeedDialFAB() {
                 type="button"
                 aria-label={item.label}
                 onClick={item.onClick}
-                className="relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl bg-background/95 border border-border text-foreground hover:bg-muted shadow-sm transition-all active:scale-95"
+                className="relative flex flex-col items-center gap-1 px-0 py-2 rounded-none bg-transparent border-0 text-foreground underline underline-offset-[0.32em] decoration-current hover:text-foreground/65 transition-colors"
               >
                 {item.isNew && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
+                  <span className="absolute -top-2 right-0 text-[9px] font-medium text-muted-foreground no-underline">new</span>
                 )}
                 {item.icon}
                 <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
@@ -201,7 +201,7 @@ export function SpeedDialFAB() {
                 type="button"
                 aria-label={item.label}
                 onClick={item.onClick}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-foreground/90 text-background shadow-lg transition-all active:scale-95 font-semibold text-sm"
+                className="flex items-center gap-1.5 px-0 py-2.5 rounded-none bg-transparent border-0 text-foreground underline underline-offset-[0.32em] decoration-current transition-colors hover:text-foreground/65 font-semibold text-sm"
               >
                 {item.icon}
                 {item.label}
@@ -226,14 +226,12 @@ export function SpeedDialFAB() {
                 aria-label={item.label}
                 onClick={item.onClick}
                 className={cn(
-                  'relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all active:scale-95',
-                  item.isToggle && item.isActive
-                    ? 'bg-primary text-primary-foreground shadow-md'
-                    : 'bg-background/95 border border-border text-foreground hover:bg-muted shadow-sm',
+                  'relative flex flex-col items-center gap-1 px-0 py-2 rounded-none bg-transparent border-0 text-foreground underline underline-offset-[0.32em] decoration-current transition-colors hover:text-foreground/65',
+                  item.isToggle && item.isActive && 'font-semibold',
                 )}
               >
                 {item.isNew && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
+                  <span className="absolute -top-2 right-0 text-[9px] font-medium text-muted-foreground no-underline">new</span>
                 )}
                 {item.icon}
                 <span className="text-[10px] font-medium whitespace-nowrap">
@@ -249,7 +247,7 @@ export function SpeedDialFAB() {
                 type="button"
                 aria-label={item.label}
                 onClick={item.onClick}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-lg transition-all active:scale-95 font-semibold text-sm"
+                className="flex items-center gap-1.5 px-0 py-2.5 rounded-none bg-transparent border-0 text-foreground underline underline-offset-[0.32em] decoration-current transition-colors hover:text-foreground/65 font-semibold text-sm"
               >
                 {item.icon}
                 {item.label}
@@ -264,7 +262,7 @@ export function SpeedDialFAB() {
           aria-label={isOpen ? '메뉴 닫기' : '메뉴 열기'}
           aria-expanded={isOpen}
           onClick={() => setIsOpen((prev) => !prev)}
-          className="pointer-events-auto w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-[0_2px_12px_rgba(29,185,60,0.35)] flex items-center justify-center transition-all hover:bg-primary/90 hover:shadow-[0_4px_16px_rgba(29,185,60,0.4)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          className="minimal-fab-exception pointer-events-auto w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-[0_2px_12px_rgba(43,41,38,0.22)] flex items-center justify-center transition-colors hover:bg-primary/90 focus-visible:outline-none"
         >
           <span
             className={cn(

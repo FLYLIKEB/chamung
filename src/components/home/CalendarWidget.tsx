@@ -84,7 +84,7 @@ export function CalendarWidget() {
       />
 
       {/* Month calendar card */}
-      <div className="rounded-2xl border border-border/30 bg-card p-4 md:p-5 space-y-4">
+      <div className="rounded-sm border-0 bg-card p-4 md:p-5 space-y-4">
         {/* Month navigation */}
         <div className="flex items-center justify-between">
           <button
@@ -120,7 +120,7 @@ export function CalendarWidget() {
                   key={name}
                   className={cn(
                     'text-center text-[10px] font-medium pb-2',
-                    i === 0 ? 'text-rose-400' : 'text-muted-foreground',
+                    'text-muted-foreground',
                   )}
                 >
                   {name}

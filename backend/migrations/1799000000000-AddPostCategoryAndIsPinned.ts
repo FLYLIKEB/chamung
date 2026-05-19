@@ -6,7 +6,16 @@ export class AddPostCategoryAndIsPinned1799000000000 implements MigrationInterfa
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       ALTER TABLE \`posts\`
-        MODIFY COLUMN \`category\` enum('brewing_question','recommendation','tool','tea_room_review','announcement','bug_report') NOT NULL
+        MODIFY COLUMN \`category\` enum(
+          'brewing_question',
+          'recommendation',
+          'discussion',
+          'tea_review',
+          'tool_review',
+          'tea_room_review',
+          'announcement',
+          'bug_report'
+        ) NOT NULL
     `);
     await queryRunner.query(`
       ALTER TABLE \`posts\`

@@ -34,6 +34,7 @@ function toScore10(value: number, max: number): number {
 
 interface RatingVisualizationProps {
   use10Scale?: boolean;
+  variant?: 'default' | 'poster';
   axisValues: Array<{
     axisId: number;
     valueNumeric: number;
@@ -49,7 +50,7 @@ interface RatingVisualizationProps {
   }>;
 }
 
-export function RatingVisualization({ axisValues, use10Scale = false }: RatingVisualizationProps) {
+export function RatingVisualization({ axisValues, use10Scale = false, variant = 'default' }: RatingVisualizationProps) {
   const sortedAxisValues = [...axisValues].sort((a, b) => {
     const orderA = a.axis?.displayOrder || 0;
     const orderB = b.axis?.displayOrder || 0;
@@ -58,6 +59,11 @@ export function RatingVisualization({ axisValues, use10Scale = false }: RatingVi
 
   const fullMark = use10Scale ? FULL_MARK_10 : FULL_MARK_5;
   const toScore = use10Scale ? toScore10 : toScore5;
+  const isPoster = variant === 'poster';
+  const chartColor = isPoster ? 'rgba(8, 8, 8, 0.48)' : CHART_COLOR;
+  const chartFill = isPoster ? 'rgba(8, 8, 8, 0.26)' : CHART_COLOR;
+  const gridColor = isPoster ? 'rgba(8, 8, 8, 0.16)' : GRID_COLOR;
+  const tickColor = isPoster ? 'rgba(8, 8, 8, 0.48)' : 'rgb(107 114 128)';
 
   const radarData = sortedAxisValues.map((av) => {
     const rawNum = Number(av.valueNumeric) || 0;
@@ -81,12 +87,12 @@ export function RatingVisualization({ axisValues, use10Scale = false }: RatingVi
   // 축이 1~2개면 바형 유지 (레이더는 3개 이상에서 의미 있음)
   if (radarData.length < 3) {
     return (
-      <div className="space-y-3">
+      <div className={isPoster ? "rating-visualization-poster space-y-4" : "space-y-3"}>
         {radarData.map((item) => (
           <div key={item.subject}>
             <div className="flex items-center justify-between mb-1">
               <div className="flex min-w-0 items-center gap-1.5">
-                <span className="text-base truncate">{item.subject}</span>
+                <span className={isPoster ? "truncate text-sm uppercase tracking-[0.16em] text-black/55" : "text-base truncate"}>{item.subject}</span>
                 {item.description?.trim() && (
                   <Popover>
                     <PopoverTrigger asChild>
@@ -104,16 +110,18 @@ export function RatingVisualization({ axisValues, use10Scale = false }: RatingVi
                   </Popover>
                 )}
               </div>
-              <span className="text-sm text-muted-foreground tabular-nums">
+              <span className={isPoster ? "text-xs tabular-nums text-black/45" : "text-sm text-muted-foreground tabular-nums"}>
                 {Number(item.displayValue).toFixed(1)}/{item.displayMax}
               </span>
             </div>
-            <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+            <div className={isPoster ? "h-6 overflow-hidden rounded-full bg-black/[0.035] blur-[0.1px]" : "h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"}>
               <div
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${(item.rawValue / item.maxValue) * 100}%`,
-                  backgroundColor: CHART_COLOR,
+                  background: isPoster
+                    ? 'linear-gradient(90deg, rgba(0,0,0,0.08), rgba(0,0,0,0.34), rgba(0,0,0,0.08))'
+                    : chartColor,
                 }}
               />
             </div>
@@ -124,24 +132,24 @@ export function RatingVisualization({ axisValues, use10Scale = false }: RatingVi
   }
 
   return (
-    <div className="space-y-4">
-      <div className="aspect-square max-w-[300px] mx-auto p-2">
+    <div className={isPoster ? "rating-visualization-poster space-y-4" : "space-y-4"}>
+      <div className={isPoster ? "rating-visualization-poster-chart mx-auto aspect-square max-w-[300px] p-2" : "aspect-square max-w-[300px] mx-auto p-2"}>
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart
             data={radarData}
             margin={{ top: 36, right: 28, bottom: 28, left: 28 }}
             outerRadius="82%"
           >
-            <PolarGrid stroke={GRID_COLOR} strokeOpacity={0.8} />
+            <PolarGrid stroke={gridColor} strokeOpacity={isPoster ? 0.55 : 0.8} />
             <PolarAngleAxis
               dataKey="subject"
-              tick={{ fill: 'rgb(107 114 128)', fontSize: 12 }}
+              tick={{ fill: tickColor, fontSize: isPoster ? 10 : 12, letterSpacing: isPoster ? 1.5 : 0 }}
               tickLine={false}
             />
             <PolarRadiusAxis
               angle={180}
               domain={[0, fullMark]}
-              tick={{ fill: 'rgb(156 163 175)', fontSize: 11 }}
+              tick={{ fill: isPoster ? 'rgba(8, 8, 8, 0.28)' : 'rgb(156 163 175)', fontSize: isPoster ? 9 : 11 }}
               tickCount={6}
               axisLine={false}
               tickLine={false}
@@ -149,20 +157,20 @@ export function RatingVisualization({ axisValues, use10Scale = false }: RatingVi
             <Radar
               name="평가"
               dataKey="value"
-              stroke={CHART_COLOR}
-              fill={CHART_COLOR}
-              fillOpacity={0.15}
-              strokeWidth={1.5}
-              dot={{ r: 3.5, fill: 'rgb(5 46 22)', stroke: 'none' }}
+              stroke={chartColor}
+              fill={chartFill}
+              fillOpacity={isPoster ? 0.42 : 0.15}
+              strokeWidth={isPoster ? 0 : 1.5}
+              dot={isPoster ? false : { r: 3.5, fill: 'rgb(5 46 22)', stroke: 'none' }}
             />
             <Tooltip
               content={({ active, payload }) => {
                 if (!active || !payload?.[0]) return null;
                 const p = payload[0].payload;
                 return (
-                  <div className="bg-white dark:bg-gray-900 border rounded-lg px-3 py-2 shadow-md text-sm" style={{ borderColor: 'rgb(34 197 94 / 0.5)' }}>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">{p.subject}</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">
+                  <div className={isPoster ? 'rounded-sm bg-[#d7d7d4]/90 px-3 py-2 text-sm text-black shadow-none backdrop-blur-md' : 'bg-white dark:bg-gray-900 border rounded-lg px-3 py-2 shadow-md text-sm'} style={{ borderColor: isPoster ? 'transparent' : 'rgb(34 197 94 / 0.5)' }}>
+                    <p className={isPoster ? "font-normal tracking-tight text-black/70" : "font-medium text-gray-900 dark:text-gray-100"}>{p.subject}</p>
+                    <p className={isPoster ? "mt-0.5 text-sm text-black/45" : "text-gray-500 dark:text-gray-400 text-sm mt-0.5"}>
                       {Number(p.displayValue).toFixed(1)}/{p.displayMax}점
                     </p>
                   </div>
@@ -172,12 +180,12 @@ export function RatingVisualization({ axisValues, use10Scale = false }: RatingVi
           </RadarChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center text-sm text-gray-600 dark:text-gray-400">
+      <div className={isPoster ? "flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs uppercase tracking-[0.12em] text-black/48" : "flex flex-wrap gap-x-4 gap-y-2 justify-center text-sm text-gray-600 dark:text-gray-400"}>
         {radarData.map((item) => (
           <span key={item.subject} className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: CHART_COLOR }} />
+            <span className={isPoster ? "h-1.5 w-5 shrink-0 rounded-full blur-[0.3px]" : "w-1.5 h-1.5 rounded-full shrink-0"} style={{ background: isPoster ? "linear-gradient(90deg, transparent, rgba(0,0,0,0.42), transparent)" : chartColor }} />
             {item.subject}
-            <span className="font-medium tabular-nums text-gray-800 dark:text-gray-200">
+            <span className={isPoster ? "font-normal tabular-nums text-black/62" : "font-medium tabular-nums text-gray-800 dark:text-gray-200"}>
               {Number(item.displayValue).toFixed(1)}/{item.displayMax}
             </span>
             {item.description?.trim() && (

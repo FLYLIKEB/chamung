@@ -43,12 +43,13 @@ describe('ModeCarousel', () => {
     expect(allClasses).not.toContain('#1db93c');
   });
 
-  it('다회 모드 카드가 primary 디자인 토큰을 사용한다', () => {
+  it('다회 모드 카드가 무채색 카드 스타일을 유지한다', () => {
     const { container } = render(<ModeCarousel />);
     const buttons = container.querySelectorAll('button');
     const sessionCard = Array.from(buttons).find((btn) =>
       btn.textContent?.includes('다회 모드'),
     );
-    expect(sessionCard?.className).toContain('primary');
+    expect(sessionCard?.className).toContain('neutral');
+    expect(sessionCard?.className).toContain('no-underline');
   });
 });

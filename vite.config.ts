@@ -11,13 +11,13 @@ import path from 'path';
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.png', 'apple-touch-icon.png'],
+      includeAssets: ['logo.svg', 'logo.png', 'apple-touch-icon.png'],
       manifest: {
         name: '차멍 - 차 기록 앱',
         short_name: '차멍',
         description: '나만의 차 기록과 발견을 위한 앱',
-        theme_color: '#2d5a27',
-        background_color: '#ffffff',
+        theme_color: '#2b2926',
+        background_color: '#f4f0e9',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',

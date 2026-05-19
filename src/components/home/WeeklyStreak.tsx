@@ -80,15 +80,15 @@ export function WeeklyStreak({ onTodayNoteStatus, onStreakLoaded }: WeeklyStreak
   const selectedDateKey = formatDateKey(selectedDate);
 
   return (
-    <div className="rounded-2xl bg-card border border-border/30 p-4 md:p-5">
+    <div className="rounded-sm bg-card border-0 p-4 md:p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-foreground">이번 주 차록</span>
           {streak > 0 && (
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/10">
-              <Flame className="w-3 h-3 text-orange-500" />
-              <span className="text-[11px] font-semibold text-orange-500">{streak}일 연속</span>
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-primary/10">
+              <Flame className="w-3 h-3 text-primary/70" />
+              <span className="text-[11px] font-semibold text-primary/70">{streak}일 연속</span>
             </div>
           )}
         </div>
@@ -127,7 +127,7 @@ export function WeeklyStreak({ onTodayNoteStatus, onStreakLoaded }: WeeklyStreak
                   {DAY_NAMES[day.getDay()]}
                 </span>
                 <span className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors',
+                  'w-8 h-8 rounded-sm flex items-center justify-center text-sm font-semibold transition-colors',
                   isToday
                     ? 'bg-primary text-primary-foreground'
                     : isSelected
@@ -139,7 +139,7 @@ export function WeeklyStreak({ onTodayNoteStatus, onStreakLoaded }: WeeklyStreak
                   {day.getDate()}
                 </span>
                 <span className={cn(
-                  'w-1.5 h-1.5 rounded-full',
+                  'w-1.5 h-1.5 rounded-sm',
                   hasNote ? 'bg-primary' : 'bg-transparent',
                 )} />
               </button>
