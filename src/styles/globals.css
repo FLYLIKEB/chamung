@@ -3729,3 +3729,10 @@ header[class*='bg-black/35'] h1 {
   background: transparent !important;
   border-radius: 0;
 }
+
+/* ChaLog detail: keep tea title typography aligned with the logo wordmark. */
+.note-detail-card-deck .note-detail-hero .note-detail-tea-title {
+  font-family: 'Nanum Myeongjo', 'Apple SD Gothic Neo', serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.04em !important;
+}
