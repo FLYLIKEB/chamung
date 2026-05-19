@@ -330,10 +330,10 @@ export function NoteDetail() {
                     onClick={() => navigate(`/tea/${tea.id}`)}
                     className="text-left"
                   >
-                    <h2 className="text-xl font-bold text-foreground leading-tight">{tea.name}</h2>
+                    <h2 className="note-detail-tea-title font-['Nanum_Myeongjo'] text-xl font-bold text-foreground leading-tight">{tea.name}</h2>
                   </button>
                 ) : (
-                  <h2 className="text-xl font-bold text-foreground leading-tight">차록</h2>
+                  <h2 className="note-detail-tea-title font-['Nanum_Myeongjo'] text-xl font-bold text-foreground leading-tight">차록</h2>
                 )}
               </div>
               {note.overallRating !== null && (
