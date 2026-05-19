@@ -103,7 +103,7 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
         {comments.map((comment) => {
           const isOwner = user?.id === comment.userId;
           return (
-            <div key={comment.id} className="rounded-xl bg-muted/40 dark:bg-muted/20 px-3.5 py-3">
+            <div key={comment.id} className="rounded-xl px-0 py-3 border-b border-border/20 last:border-b-0">
               <div className="flex gap-2.5">
                 {/* 프로필 아바타 */}
                 <CommentAvatar
@@ -218,9 +218,9 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
       {user ? (
         <form
           onSubmit={handleSubmit}
-          className="fixed bottom-[var(--bottom-nav-spacer)] left-0 right-0 bg-surface-strong dark:bg-surface-strong border-t border-border/40 px-4 py-2.5 z-20"
+          className="fixed bottom-[var(--bottom-nav-spacer)] left-0 right-0 bg-background/80 backdrop-blur-md px-4 py-2.5 z-20"
         >
-          <div className="flex items-center gap-0 bg-card rounded-full overflow-hidden pl-3 pr-1">
+          <div className="flex items-center gap-0 bg-muted/30 rounded-full overflow-hidden pl-3 pr-1">
             {/* 닉네임 라벨 */}
             <span className="text-xs font-semibold text-primary shrink-0 pr-2">
               {user.name}

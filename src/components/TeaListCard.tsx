@@ -27,7 +27,7 @@ export const TeaListCard: FC<TeaListCardProps> = ({ tea, rank, isNew }) => {
     <button
       type="button"
       onClick={() => navigate(`/tea/${tea.id}`)}
-      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-card border border-border/30 hover:border-primary/20 hover:shadow-sm active:scale-[0.99] transition-all text-left"
+      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-card border-0 active:scale-[0.99] transition-all text-left"
     >
       {/* 랭킹 또는 NEW 뱃지 */}
       {rank != null && (

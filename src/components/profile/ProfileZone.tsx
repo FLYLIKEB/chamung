@@ -70,7 +70,7 @@ export function ProfileZone({
   return (
     <div>
       {/* Gradient banner */}
-      <div className="h-16 bg-gradient-to-br from-primary/8 via-amber-50/30 to-transparent dark:from-primary/10 dark:via-stone-900/20 dark:to-transparent" />
+      <div className="h-16" />
 
       <div className="px-4 -mt-8 pb-4 space-y-3">
 

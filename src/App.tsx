@@ -1,7 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
-import { PAGE_BG_GRADIENT } from './constants';
 import { Loader2 } from 'lucide-react';
 import { Toaster } from './components/ui/sonner';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -147,7 +146,7 @@ function AppContent() {
 
   return (
     <AppModeProvider>
-      <div className={`h-screen flex flex-col overflow-hidden ${PAGE_BG_GRADIENT}`}>
+      <div className="h-screen flex flex-col overflow-hidden bg-background">
         {/* 메인 콘텐츠 영역 */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0 md:pl-[160px]">
           <EmailVerificationBannerWrapper />
