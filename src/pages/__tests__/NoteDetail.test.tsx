@@ -64,12 +64,12 @@ const mockNote: Note = {
   createdAt: new Date(),
 };
 
-describe('NoteDetail - 이미지 가운데 정렬', () => {
+describe('NoteDetail - 카드 사진 배경', () => {
   beforeEach(() => {
     vi.mocked(notesApi.getById).mockResolvedValue(mockNote);
   });
 
-  it('이미지 갤러리에 justify-items-center 클래스가 있어야 함', async () => {
+  it('사진이 여러 장이면 카드 순서대로 사진 배경을 배정해야 함', async () => {
     render(
       <MemoryRouter>
         <NoteDetail />
@@ -77,12 +77,19 @@ describe('NoteDetail - 이미지 가운데 정렬', () => {
     );
 
     await waitFor(() => {
-      const imageGallery = screen.getByText('사진').nextElementSibling;
-      expect(imageGallery).toHaveClass('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-3');
+      expect(screen.getByText('테스트 사용자')).toBeInTheDocument();
     });
+
+    const cards = document.querySelectorAll<HTMLElement>('.note-detail-photo-card');
+    expect(cards[0]).toHaveAttribute('data-has-photo', 'true');
+    expect(cards[0].style.getPropertyValue('--note-card-photo')).toContain('image1.jpg');
+    expect(cards[1]).toHaveAttribute('data-has-photo', 'true');
+    expect(cards[1].style.getPropertyValue('--note-card-photo')).toContain('image2.jpg');
   });
 
-  it('각 이미지 컨테이너에 max-w-xs 클래스가 있어야 함', async () => {
+  it('사진이 한 장이면 첫 카드에만 사진 배경을 배정해야 함', async () => {
+    vi.mocked(notesApi.getById).mockResolvedValue({ ...mockNote, images: ['https://example.com/only.jpg'] });
+
     render(
       <MemoryRouter>
         <NoteDetail />
@@ -90,12 +97,13 @@ describe('NoteDetail - 이미지 가운데 정렬', () => {
     );
 
     await waitFor(() => {
-      const imageContainers = screen.getAllByAltText(/Note image/);
-      imageContainers.forEach((img) => {
-        const container = img.parentElement;
-        expect(container).toHaveClass('aspect-square', 'rounded-lg', 'overflow-hidden', 'bg-muted', 'w-full');
-      });
+      expect(screen.getByText('테스트 사용자')).toBeInTheDocument();
     });
+
+    const cards = document.querySelectorAll<HTMLElement>('.note-detail-photo-card');
+    expect(cards[0]).toHaveAttribute('data-has-photo', 'true');
+    expect(cards[0].style.getPropertyValue('--note-card-photo')).toContain('only.jpg');
+    expect(cards[1]).not.toHaveAttribute('data-has-photo');
   });
 
   it('작성자 이름을 클릭하면 프로필 페이지로 이동해야 함', async () => {
@@ -146,11 +154,9 @@ describe('NoteDetail - 수정/삭제/비공개 기능', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('수정')).toBeInTheDocument();
-    });
+    const editButton = await screen.findByRole('button', { name: '수정' });
 
-    await user.click(screen.getByText('수정'));
+    await user.click(editButton);
     expect(mockNavigate).toHaveBeenCalledWith('/note/1/edit');
   });
 
@@ -162,11 +168,9 @@ describe('NoteDetail - 수정/삭제/비공개 기능', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('비공개로 전환')).toBeInTheDocument();
-    });
+    const privacyButton = await screen.findByRole('button', { name: '비공개로 전환' });
 
-    await user.click(screen.getByText('비공개로 전환'));
+    await user.click(privacyButton);
 
     await waitFor(() => {
       expect(notesApi.update).toHaveBeenCalledWith(1, { isPublic: false });
@@ -181,9 +185,7 @@ describe('NoteDetail - 수정/삭제/비공개 기능', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('수정')).toBeInTheDocument();
-    });
+    await screen.findByRole('button', { name: '수정' });
 
     // 삭제 아이콘 버튼 클릭 (Trash2 아이콘 포함 버튼)
     const deleteButton = screen.getByRole('button', { name: /삭제/i });
@@ -218,8 +220,8 @@ describe('NoteDetail - 수정/삭제/비공개 기능', () => {
       expect(screen.getByText('테스트 사용자')).toBeInTheDocument();
     });
 
-    expect(screen.queryByText('수정')).not.toBeInTheDocument();
-    expect(screen.queryByText('비공개로 전환')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '비공개로 전환' })).not.toBeInTheDocument();
   });
 });
 

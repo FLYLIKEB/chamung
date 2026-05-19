@@ -3631,49 +3631,75 @@ header[class*='bg-black/35'] h1 {
   background: hsl(var(--destructive) / 0.10);
 }
 
-.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] {
-  background-size: cover !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.30), rgba(0,0,0,0.12) 34%, rgba(0,0,0,0.62)),
+    radial-gradient(circle at 50% 32%, rgba(255,255,255,0.18), transparent 45%),
+    var(--note-card-photo) center / cover no-repeat !important;
+  background-color: #15110c !important;
   overflow: hidden;
+  color: #fff !important;
 }
 
-.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url']::before {
-  content: '';
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true']::before {
+  content: '' !important;
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(0,0,0,0.36), rgba(0,0,0,0.18) 34%, rgba(0,0,0,0.56)),
-    radial-gradient(circle at 50% 32%, rgba(255,255,255,0.20), transparent 45%);
+    linear-gradient(90deg, rgba(0,0,0,0.22), transparent 32%, rgba(0,0,0,0.18)),
+    linear-gradient(180deg, rgba(0,0,0,0.20), transparent 42%, rgba(0,0,0,0.30));
 }
 
-.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] > * {
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] > * {
   position: relative;
   z-index: 1;
 }
 
-.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'],
-.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] :where(h2, p, span, button, a, div) {
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'],
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] :where(h1, h2, h3, p, span, button, a, div, li, code, blockquote) {
   color: #fff !important;
-  text-shadow: 0 1px 14px rgba(0,0,0,0.42);
+  text-shadow: 0 1px 14px rgba(0,0,0,0.46);
 }
 
-.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] :where(.bg-muted, [class*='bg-muted']) {
-  background-color: rgba(255,255,255,0.16) !important;
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] :where(svg) {
+  color: currentColor !important;
+  filter: drop-shadow(0 1px 8px rgba(0,0,0,0.44));
+}
+
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] :where(.bg-muted, .bg-secondary, [class*='bg-muted'], [class*='bg-secondary'], [data-slot='badge']) {
+  background: rgba(255,255,255,0.18) !important;
+  border-color: rgba(255,255,255,0.30) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 24px rgba(0,0,0,0.18) !important;
   backdrop-filter: blur(10px);
 }
 
-.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] :where(.text-primary\/80, .text-primary, [class*='text-primary']) {
-  color: #fff !important;
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] :where(.text-primary\/80, .text-primary, .text-muted-foreground, .text-secondary-foreground, .text-foreground, [class*='text-primary'], [class*='text-muted'], [class*='text-black']) {
+  color: rgba(255,255,255,0.94) !important;
 }
 
-.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] .note-privacy-lock,
-.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] .note-detail-owner-action {
-  background: rgba(255,255,255,0.16) !important;
-  border-color: rgba(255,255,255,0.34) !important;
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] :where(.fill-rating) {
+  fill: #ffe08a !important;
+}
+
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] :where(.text-rating) {
+  color: #ffe08a !important;
+}
+
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-privacy-lock,
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-owner-action,
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-scale-toggle {
+  background: rgba(255,255,255,0.18) !important;
+  border-color: rgba(255,255,255,0.36) !important;
   color: #fff !important;
   text-shadow: none;
   backdrop-filter: blur(12px);
+}
+
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .rating-visualization-poster-chart,
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .rating-visualization-poster [class*='bg-black'] {
+  background: rgba(255,255,255,0.12) !important;
+  border-radius: 1rem;
 }

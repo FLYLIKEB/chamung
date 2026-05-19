@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Trash2, Loader2, Heart, Bookmark, Edit, Flag, Share2, Lock, Unlock } from 'lucide-react';
 import { Header } from '../components/Header';
@@ -214,14 +214,23 @@ export function NoteDetail() {
   const hasProfileCard = !!((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0) || weather?.teaComment);
   const cardCount = [true, hasStoryCard, hasProfileCard].filter(Boolean).length;
 
-  const getCardBackgroundImage = (cardIndex: number) => {
+  const getCardPhotoUrl = (cardIndex: number) => {
     const images = note.images ?? [];
     if (images.length === 0) return undefined;
     if (images.length === 1 && cardIndex > 0) return undefined;
 
-    const image = images[cardIndex % images.length];
-    const imageUrl = typeof image === 'string' ? image : image?.url;
-    return imageUrl ? `url(${imageUrl})` : undefined;
+    return images[cardIndex % images.length];
+  };
+
+  const getPhotoCardProps = (cardIndex: number) => {
+    const imageUrl = getCardPhotoUrl(cardIndex);
+    const cssSafeUrl = imageUrl?.replace(/[\\"]/g, '\\$&');
+    return {
+      'data-has-photo': imageUrl ? 'true' : undefined,
+      style: cssSafeUrl
+        ? ({ '--note-card-photo': `url("${cssSafeUrl}")` } as CSSProperties)
+        : undefined,
+    };
   };
 
   const handleDeckScroll = () => {
@@ -276,7 +285,7 @@ export function NoteDetail() {
           {/* ── 카드 1: HERO ── */}
           <section
             className="note-detail-hero note-detail-photo-card flex flex-col px-4 pb-5 pt-4"
-            style={{ backgroundImage: getCardBackgroundImage(0) }}
+            {...getPhotoCardProps(0)}
           >
 
             {/* 상단: 작성자 + 공개여부 + 날짜 */}
@@ -422,7 +431,7 @@ export function NoteDetail() {
           {hasStoryCard && (
             <section
               className="note-detail-story-card note-detail-photo-card px-5 pt-4 pb-5"
-              style={{ backgroundImage: getCardBackgroundImage(1) }}
+              {...getPhotoCardProps(1)}
             >
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">NOTE</p>
@@ -456,7 +465,7 @@ export function NoteDetail() {
           {hasProfileCard && (
             <section
               className="note-detail-profile-card note-detail-section note-detail-section-axis note-detail-photo-card space-y-3 px-5 pt-4 pb-5"
-              style={{ backgroundImage: getCardBackgroundImage(hasStoryCard ? 2 : 1) }}
+              {...getPhotoCardProps(hasStoryCard ? 2 : 1)}
             >
               <div className="flex items-center justify-between">
                 <div>
