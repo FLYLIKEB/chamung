@@ -214,6 +214,16 @@ export function NoteDetail() {
   const hasProfileCard = !!((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0) || weather?.teaComment);
   const cardCount = [true, hasStoryCard, hasProfileCard].filter(Boolean).length;
 
+  const getCardBackgroundImage = (cardIndex: number) => {
+    const images = note.images ?? [];
+    if (images.length === 0) return undefined;
+    if (images.length === 1 && cardIndex > 0) return undefined;
+
+    const image = images[cardIndex % images.length];
+    const imageUrl = typeof image === 'string' ? image : image?.url;
+    return imageUrl ? `url(${imageUrl})` : undefined;
+  };
+
   const handleDeckScroll = () => {
     const deck = cardDeckRef.current;
     if (!deck) return;
@@ -264,7 +274,10 @@ export function NoteDetail() {
         <div ref={cardDeckRef} onScroll={handleDeckScroll} className="note-detail-card-deck" aria-label="차록 상세 콘텐츠">
 
           {/* ── 카드 1: HERO ── */}
-          <section className="note-detail-hero flex flex-col px-4 pb-5 pt-4">
+          <section
+            className="note-detail-hero note-detail-photo-card flex flex-col px-4 pb-5 pt-4"
+            style={{ backgroundImage: getCardBackgroundImage(0) }}
+          >
 
             {/* 상단: 작성자 + 공개여부 + 날짜 */}
             <div className="flex items-start justify-between gap-3">
@@ -407,7 +420,10 @@ export function NoteDetail() {
 
           {/* ── 카드 2: NOTE (메모 + 이미지) ── */}
           {hasStoryCard && (
-            <section className="note-detail-story-card px-5 pt-4 pb-5">
+            <section
+              className="note-detail-story-card note-detail-photo-card px-5 pt-4 pb-5"
+              style={{ backgroundImage: getCardBackgroundImage(1) }}
+            >
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">NOTE</p>
                 {note.images && note.images.length > 0 && (
@@ -438,7 +454,10 @@ export function NoteDetail() {
 
           {/* ── 카드 3: PROFILE (향미 그래프 + 태그) ── */}
           {hasProfileCard && (
-            <section className="note-detail-profile-card note-detail-section note-detail-section-axis space-y-3 px-5 pt-4 pb-5">
+            <section
+              className="note-detail-profile-card note-detail-section note-detail-section-axis note-detail-photo-card space-y-3 px-5 pt-4 pb-5"
+              style={{ backgroundImage: getCardBackgroundImage(hasStoryCard ? 2 : 1) }}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">PROFILE</p>

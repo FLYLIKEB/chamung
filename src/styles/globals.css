@@ -3630,3 +3630,50 @@ header[class*='bg-black/35'] h1 {
   border-color: hsl(var(--destructive) / 0.36);
   background: hsl(var(--destructive) / 0.10);
 }
+
+.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  overflow: hidden;
+}
+
+.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.36), rgba(0,0,0,0.18) 34%, rgba(0,0,0,0.56)),
+    radial-gradient(circle at 50% 32%, rgba(255,255,255,0.20), transparent 45%);
+}
+
+.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] > * {
+  position: relative;
+  z-index: 1;
+}
+
+.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'],
+.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] :where(h2, p, span, button, a, div) {
+  color: #fff !important;
+  text-shadow: 0 1px 14px rgba(0,0,0,0.42);
+}
+
+.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] :where(.bg-muted, [class*='bg-muted']) {
+  background-color: rgba(255,255,255,0.16) !important;
+  backdrop-filter: blur(10px);
+}
+
+.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] :where(.text-primary\/80, .text-primary, [class*='text-primary']) {
+  color: #fff !important;
+}
+
+.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] .note-privacy-lock,
+.note-detail-card-deck > .note-detail-photo-card[style*='background-image: url'] .note-detail-owner-action {
+  background: rgba(255,255,255,0.16) !important;
+  border-color: rgba(255,255,255,0.34) !important;
+  color: #fff !important;
+  text-shadow: none;
+  backdrop-filter: blur(12px);
+}
