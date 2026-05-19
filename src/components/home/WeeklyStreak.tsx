@@ -80,7 +80,7 @@ export function WeeklyStreak({ onTodayNoteStatus, onStreakLoaded }: WeeklyStreak
   const selectedDateKey = formatDateKey(selectedDate);
 
   return (
-    <div className="rounded-sm bg-card border-0 p-4 md:p-5">
+    <div className="rounded-sm bg-background/40 backdrop-blur-md border border-foreground/[0.04] p-4 md:p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
