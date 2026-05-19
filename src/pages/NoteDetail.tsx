@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Trash2, Loader2, Heart, Bookmark, Edit, Flag, Share2 } from 'lucide-react';
+import { Star, Trash2, Loader2, Heart, Bookmark, Edit, Flag, Share2, Lock, Unlock } from 'lucide-react';
 import { Header } from '../components/Header';
 import { DetailFallback } from '../components/DetailFallback';
 import { RatingVisualization } from '../components/RatingVisualization';
@@ -120,6 +120,8 @@ export function NoteDetail() {
   }
 
   const isMyNote = note.userId === user?.id;
+  const privacyLabel = note.isPublic ? '공개 차록' : '비공개 차록';
+  const privacyActionLabel = note.isPublic ? '비공개로 전환' : '공개하기';
 
   const handleTogglePublic = async () => {
     if (isNaN(noteId)) {
@@ -248,8 +250,25 @@ export function NoteDetail() {
                 {note.userName}
               </button>
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                <span>{note.isPublic ? 'PUBLIC' : 'PRIVATE'}</span>
                 <span>{dateYear}.{String(dateMonth).padStart(2, '0')}.{String(dateDay).padStart(2, '0')}</span>
+                <button
+                  type="button"
+                  onClick={isMyNote ? handleTogglePublic : undefined}
+                  disabled={!isMyNote || isUpdating}
+                  aria-label={isMyNote ? privacyActionLabel : privacyLabel}
+                  aria-pressed={!note.isPublic}
+                  title={isMyNote ? privacyActionLabel : privacyLabel}
+                  className={`note-privacy-lock ${note.isPublic ? 'is-public' : 'is-private'} ${isUpdating ? 'is-updating' : ''}`}
+                >
+                  <span className="note-privacy-lock__halo" aria-hidden />
+                  <span className="note-privacy-lock__icon note-privacy-lock__icon--locked" aria-hidden>
+                    <Lock className="h-4 w-4" />
+                  </span>
+                  <span className="note-privacy-lock__icon note-privacy-lock__icon--unlocked" aria-hidden>
+                    <Unlock className="h-4 w-4" />
+                  </span>
+                  <span className="sr-only">{privacyLabel}</span>
+                </button>
               </div>
             </div>
 
@@ -513,14 +532,6 @@ export function NoteDetail() {
                 className="min-h-[44px] flex-1"
               >
                 <Edit className="w-4 h-4 mr-2" />수정
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleTogglePublic}
-                className="min-h-[44px] flex-1"
-                disabled={isUpdating}
-              >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : (note.isPublic ? '비공개로 전환' : '공개하기')}
               </Button>
               <Button
                 variant="outline"

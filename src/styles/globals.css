@@ -407,6 +407,133 @@ header :where(button, [role='button']) {
   color: inherit;
 }
 
+
+.note-privacy-lock {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid hsl(var(--border) / 0.72);
+  border-radius: 9999px;
+  background: hsl(var(--background) / 0.86);
+  color: hsl(var(--foreground));
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    color 260ms ease,
+    border-color 260ms ease,
+    background 260ms ease,
+    box-shadow 260ms ease,
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.note-privacy-lock:not(:disabled) {
+  cursor: pointer;
+}
+
+.note-privacy-lock:not(:disabled):hover {
+  transform: translateY(-1px) scale(1.04);
+  border-color: hsl(var(--foreground) / 0.28);
+  box-shadow: 0 10px 24px hsl(var(--foreground) / 0.08);
+}
+
+.note-privacy-lock:disabled {
+  cursor: default;
+  opacity: 0.82;
+}
+
+.note-privacy-lock__halo {
+  position: absolute;
+  inset: 0.34rem;
+  z-index: -1;
+  border-radius: inherit;
+  background: hsl(var(--primary) / 0.12);
+  opacity: 0;
+  transform: scale(0.55) rotate(0deg);
+  transition:
+    opacity 320ms ease,
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 260ms ease;
+}
+
+.note-privacy-lock__icon {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity 240ms ease,
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.note-privacy-lock.is-public {
+  color: hsl(var(--primary));
+  border-color: hsl(var(--primary) / 0.28);
+  background: hsl(var(--primary) / 0.07);
+}
+
+.note-privacy-lock.is-public .note-privacy-lock__halo {
+  opacity: 1;
+  transform: scale(1) rotate(18deg);
+}
+
+.note-privacy-lock.is-private {
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--foreground) / 0.18);
+  background: hsl(var(--muted) / 0.72);
+}
+
+.note-privacy-lock.is-private .note-privacy-lock__halo {
+  opacity: 0.54;
+  transform: scale(0.72) rotate(-12deg);
+  background: hsl(var(--foreground) / 0.08);
+}
+
+.note-privacy-lock.is-public .note-privacy-lock__icon--locked,
+.note-privacy-lock.is-private .note-privacy-lock__icon--unlocked {
+  opacity: 0;
+  transform: translateY(0.45rem) scale(0.72) rotate(-28deg);
+}
+
+.note-privacy-lock.is-public .note-privacy-lock__icon--unlocked,
+.note-privacy-lock.is-private .note-privacy-lock__icon--locked {
+  opacity: 1;
+  transform: translateY(0) scale(1) rotate(0deg);
+}
+
+.note-privacy-lock.is-updating .note-privacy-lock__halo {
+  animation: note-privacy-lock-pulse 760ms ease-in-out infinite;
+}
+
+.note-privacy-lock.is-updating .note-privacy-lock__icon {
+  animation: note-privacy-lock-switch 520ms cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+}
+
+@keyframes note-privacy-lock-pulse {
+  0%, 100% { transform: scale(0.7) rotate(0deg); opacity: 0.36; }
+  50% { transform: scale(1.18) rotate(22deg); opacity: 0.9; }
+}
+
+@keyframes note-privacy-lock-switch {
+  from { transform: translateY(0) scale(1) rotate(-4deg); }
+  to { transform: translateY(-0.08rem) scale(1.08) rotate(4deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-privacy-lock,
+  .note-privacy-lock__halo,
+  .note-privacy-lock__icon {
+    transition: none;
+  }
+
+  .note-privacy-lock.is-updating .note-privacy-lock__halo,
+  .note-privacy-lock.is-updating .note-privacy-lock__icon {
+    animation: none;
+  }
+}
+
 .minimal-fab-exception {
   background: hsl(var(--primary)) !important;
   color: hsl(var(--primary-foreground)) !important;
