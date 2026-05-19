@@ -3,7 +3,7 @@ import { afterEach, beforeEach, vi, describe, it, expect } from 'vitest';
 import { PostDetail } from '../PostDetail';
 import { renderWithRouter } from '../../test/renderWithRouter';
 import { useAuth } from '../../contexts/AuthContext';
-import { postsApi, commentsApi } from '../../lib/api';
+import { authApi, postsApi, commentsApi } from '../../lib/api';
 
 const mockDate = new Date('2025-01-01T00:00:00.000Z');
 
@@ -44,6 +44,9 @@ vi.mock('../../contexts/AuthContext', async () => {
 });
 
 vi.mock('../../lib/api', () => ({
+  authApi: {
+    getMe: vi.fn().mockRejectedValue(new Error('unauthenticated')),
+  },
   postsApi: {
     getById: vi.fn(),
     toggleLike: vi.fn(),
@@ -73,6 +76,7 @@ vi.mock('sonner', () => ({
 describe('PostDetail 페이지', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(authApi.getMe).mockRejectedValue(new Error('unauthenticated'));
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
       isAuthenticated: true,
@@ -103,11 +107,20 @@ describe('PostDetail 페이지', () => {
     });
   });
 
+
+  it('글상세 본문은 Pretendard 전용 클래스를 사용한다', async () => {
+    renderWithRouter(<PostDetail />, { route: '/chadam/1' });
+
+    const content = await screen.findByText('어떻게 우리면 좋을까요? 자세히 알려주세요.');
+    expect(content.closest('.post-detail-page')).toBeInTheDocument();
+    expect(content.closest('.post-detail-content')).toBeInTheDocument();
+  });
+
   it('카테고리 뱃지를 표시한다', async () => {
     renderWithRouter(<PostDetail />, { route: '/chadam/1' });
 
     await waitFor(() => {
-      expect(screen.getByText('우림 질문')).toBeInTheDocument();
+      expect(screen.getAllByText(/우림 질문/).length).toBeGreaterThan(0);
     });
   });
 

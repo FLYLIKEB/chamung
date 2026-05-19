@@ -123,6 +123,29 @@ describe('NoteDetail - 카드 사진 배경', () => {
     expect(photoToggle).toHaveAttribute('aria-expanded', 'true');
   });
 
+
+  it('다회모드로 작성된 메모는 별도 표로 표시해야 함', async () => {
+    vi.mocked(notesApi.getById).mockResolvedValue({
+      ...mockNote,
+      memo: '첫 인상은 부드러웠습니다.\n\n---\n### 다회모드로 작성됨 🔄\n\n| 탕 | 시간 | 수색 | 향 | 물온도 | 몸반응 | 만족도 | 메모 |\n|:---|:---|:---|:---|:---|:---|:---|:---|\n| 1탕 | 30초 | 황금색 | 꽃향 | 85°C | 따뜻함 | 4/5 | 좋음 |\n| 2탕 | 45초 | 연노랑 | 과일향 | 90°C | 편안함 | 5/5 | 더 좋음 |',
+    });
+
+    render(
+      <MemoryRouter>
+        <NoteDetail />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('첫 인상은 부드러웠습니다.')).toBeInTheDocument();
+    expect(screen.queryByText('### 다회모드로 작성됨 🔄')).not.toBeInTheDocument();
+
+    const table = screen.getByRole('table', { name: '다회모드 탕 기록' });
+    expect(within(table).getByRole('columnheader', { name: '탕' })).toBeInTheDocument();
+    expect(within(table).getByText('1탕')).toBeInTheDocument();
+    expect(within(table).getByText('2탕')).toBeInTheDocument();
+    expect(within(table).getByText('더 좋음')).toBeInTheDocument();
+  });
+
   it('작성자 이름을 클릭하면 프로필 페이지로 이동해야 함', async () => {
     const user = userEvent.setup();
     render(

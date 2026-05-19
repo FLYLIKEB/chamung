@@ -3736,3 +3736,91 @@ header[class*='bg-black/35'] h1 {
   font-weight: 700 !important;
   letter-spacing: -0.04em !important;
 }
+
+.note-detail-session-table-wrap {
+  margin-top: 0.85rem;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.note-detail-session-table-title {
+  margin-bottom: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.note-detail-session-table {
+  width: 100%;
+  min-width: 39rem;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: hsl(var(--foreground));
+}
+
+.note-detail-session-table th,
+.note-detail-session-table td {
+  padding: 0.48rem 0.52rem;
+  border-bottom: 1px solid hsl(var(--border) / 0.58);
+  text-align: left;
+  vertical-align: top;
+  white-space: pre-wrap;
+}
+
+.note-detail-session-table th {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+  background: hsl(var(--muted) / 0.42);
+}
+
+.note-detail-session-table th:first-child,
+.note-detail-session-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 3.6rem;
+  font-weight: 700;
+  background: hsl(var(--background) / 0.88);
+  white-space: nowrap;
+}
+
+.note-detail-session-table th:first-child {
+  background: hsl(var(--muted) / 0.86);
+}
+
+.note-detail-session-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-session-table,
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-session-table :where(th, td) {
+  color: #fff !important;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.46);
+}
+
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-session-table th,
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-session-table td {
+  border-color: rgba(255,255,255,0.28) !important;
+}
+
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-session-table th,
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-session-table th:first-child,
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-session-table td:first-child {
+  background: rgba(255,255,255,0.10) !important;
+}
+
+.post-detail-page,
+.post-detail-page :where(article, section, div, p, span, button, a, h1, h2, h3, li, input, textarea, label),
+.post-detail-content,
+.post-detail-content :where(p, span, h1, h2, h3, h4, h5, h6, li, blockquote, table, th, td, code, pre, a) {
+  font-family:
+    'Pretendard',
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    sans-serif !important;
+}

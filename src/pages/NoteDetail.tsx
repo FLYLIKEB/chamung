@@ -32,6 +32,60 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { fetchWeather, type WeatherInfo } from '../utils/weather';
 
+type SessionMemoTable = {
+  introMemo: string;
+  rows: string[][];
+};
+
+const SESSION_MEMO_HEADING = /###\s*다회모드로 작성됨[^\n]*/;
+const SESSION_MEMO_HEADERS = ['탕', '시간', '수색', '향', '물온도', '몸반응', '만족도', '메모'];
+
+function parseMarkdownTableRow(line: string) {
+  const cells: string[] = [];
+  let cell = '';
+  const inner = line.trim().replace(/^\|/, '').replace(/\|$/, '');
+
+  for (let index = 0; index < inner.length; index += 1) {
+    const char = inner[index];
+    const nextChar = inner[index + 1];
+    if (char === '\\' && nextChar === '|') {
+      cell += '|';
+      index += 1;
+      continue;
+    }
+    if (char === '|') {
+      cells.push(cell.trim());
+      cell = '';
+      continue;
+    }
+    cell += char;
+  }
+  cells.push(cell.trim());
+
+  return cells.map((value) => value.replace(/<br\s*\/?>(\s*)/gi, '\n'));
+}
+
+function parseSessionMemoTable(memo?: string | null): SessionMemoTable | null {
+  if (!memo || !SESSION_MEMO_HEADING.test(memo)) return null;
+
+  const [introPart, sessionPart = ''] = memo.split(SESSION_MEMO_HEADING);
+  const introMemo = introPart.replace(/\n?---\s*$/m, '').trim();
+  const tableLines = sessionPart
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('|') && line.endsWith('|'));
+
+  if (tableLines.length < 3) return null;
+
+  const rows = tableLines
+    .slice(2)
+    .map(parseMarkdownTableRow)
+    .filter((row) => row.some((cell) => cell && cell !== '-'))
+    .map((row) => SESSION_MEMO_HEADERS.map((_, index) => row[index] ?? ''));
+
+  return rows.length > 0 ? { introMemo, rows } : null;
+}
+
 export function NoteDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -211,6 +265,8 @@ export function NoteDetail() {
   const dateWeekday = ['일', '월', '화', '수', '목', '금', '토'][displayDate.getDay()];
 
   const brewColor = note.appearance ? BREW_COLORS.find((c) => c.value === note.appearance) : null;
+  const sessionMemoTable = parseSessionMemoTable(note.memo);
+  const displayMemo = sessionMemoTable ? sessionMemoTable.introMemo : note.memo;
   const hasStoryCard = !!(note.memo || (note.images && note.images.length > 0));
   const hasProfileCard = !!((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0) || weather?.teaComment);
   const cardCount = [true, hasStoryCard, hasProfileCard].filter(Boolean).length;
@@ -256,7 +312,7 @@ export function NoteDetail() {
   };
 
   // 메모 첫 줄 (72자 제한)
-  const memoQuoteSource = note.memo
+  const memoQuoteSource = displayMemo
     ?.split(/\n+/)
     .map((line) => line.replace(/[#>*_`~\-[\]()]/g, '').replace(/\s+/g, ' ').trim())
     .find(Boolean);
@@ -448,7 +504,7 @@ export function NoteDetail() {
                   </button>
                 )}
               </div>
-              {note.memo && (
+              {displayMemo && (
                 <div className="note-detail-prose text-[0.92rem] leading-[1.75] text-foreground
                   [&_p]:my-1 [&_p]:whitespace-pre-wrap
                   [&_h1]:mt-3 [&_h1]:mb-1.5 [&_h1]:text-lg [&_h1]:font-bold
@@ -459,7 +515,32 @@ export function NoteDetail() {
                   [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:text-xs
                   [&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground
                   [&_a]:text-primary [&_a]:underline">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.memo}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayMemo}</ReactMarkdown>
+                </div>
+              )}
+              {sessionMemoTable && (
+                <div className="note-detail-session-table-wrap">
+                  <p className="note-detail-session-table-title">다회모드 기록</p>
+                  <table className="note-detail-session-table" aria-label="다회모드 탕 기록">
+                    <thead>
+                      <tr>
+                        {SESSION_MEMO_HEADERS.map((header) => (
+                          <th key={header} scope="col">{header}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sessionMemoTable.rows.map((row, rowIndex) => (
+                        <tr key={`${row[0] || 'steep'}-${rowIndex}`}>
+                          {row.map((cell, cellIndex) => (
+                            <td key={`${rowIndex}-${SESSION_MEMO_HEADERS[cellIndex]}`} data-label={SESSION_MEMO_HEADERS[cellIndex]}>
+                              {cell || '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
               {showStoryPhotos && note.images && note.images.length > 0 && (
