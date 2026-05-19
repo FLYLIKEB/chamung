@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useNoteForm } from '../useNoteForm';
 
 const mockNavigate = vi.fn();
+let mockSelectedTea: number | null = null;
+const mockUser = { id: 1, name: '김차인', email: 'test@example.com' };
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
@@ -37,7 +39,7 @@ vi.mock('../../contexts/AuthContext', async (importOriginal) => {
     ...actual,
     useAuth: () => ({
       isAuthenticated: true,
-      user: { id: 1, name: '김차인', email: 'test@example.com' },
+      user: mockUser,
       isLoading: false,
     }),
   };
@@ -45,7 +47,7 @@ vi.mock('../../contexts/AuthContext', async (importOriginal) => {
 
 vi.mock('../../hooks/useTeaSelector', () => ({
   useTeaSelector: () => ({
-    selectedTea: null,
+    selectedTea: mockSelectedTea,
     selectTea: vi.fn(),
     clearTea: vi.fn(),
     searchQuery: '',
@@ -72,6 +74,7 @@ vi.mock('../../lib/logger', () => ({
 describe('useNoteForm - new 모드', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSelectedTea = null;
   });
 
   it('초기 상태: overallRating RATING_DEFAULT, memo 빈 문자열, isPublic false', () => {
@@ -156,10 +159,51 @@ describe('useNoteForm - new 모드', () => {
 describe('useNoteForm - edit 모드', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSelectedTea = null;
   });
 
   it('edit 모드 초기 상태: isLoading true', () => {
     const { result } = renderHook(() => useNoteForm({ mode: 'edit', noteId: 1 }));
     expect(result.current.isLoading).toBe(true);
+  });
+
+  it('수정 저장 시 기존 overallRating이 0.5 단위가 아니어도 반올림해서 전송', async () => {
+    mockSelectedTea = 1;
+    const { notesApi } = await import('../../lib/api');
+    vi.mocked(notesApi.getById).mockResolvedValue({
+      id: 1,
+      teaId: 1,
+      teaName: '테스트 차',
+      userId: 1,
+      userName: '김차인',
+      schemaId: 1,
+      schemaIds: [1],
+      schema: { id: 1, code: 'standard', version: '1', nameKo: '기본', nameEn: 'Standard' },
+      overallRating: 4.8,
+      isRatingIncluded: true,
+      axisValues: [{ axisId: 10, valueNumeric: 4.8 }],
+      memo: '기존 메모',
+      images: null,
+      tags: [],
+      isPublic: false,
+      createdAt: new Date(),
+    } as any);
+
+    const { result } = renderHook(() => useNoteForm({ mode: 'edit', noteId: 1 }));
+
+    await waitFor(() => {
+      expect(result.current.note).not.toBeNull();
+    });
+
+    expect(result.current.overallRating).toBe(5);
+
+    await act(async () => {
+      await result.current.handleSave();
+    });
+
+    expect(notesApi.update).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ overallRating: 5 }),
+    );
   });
 });

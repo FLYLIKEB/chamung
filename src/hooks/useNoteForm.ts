@@ -8,6 +8,14 @@ import { logger } from '../lib/logger';
 import { RATING_DEFAULT, RATING_MIN, RATING_MAX, NAVIGATION_DELAY } from '../constants';
 import { useTeaSelector } from './useTeaSelector';
 
+const RATING_STEP = 0.5;
+
+function normalizeOverallRating(value: number | null): number | null {
+  if (value == null || !Number.isFinite(value)) return null;
+  const snapped = Math.round(value / RATING_STEP) * RATING_STEP;
+  return Math.max(RATING_MIN, Math.min(RATING_MAX, Number(snapped.toFixed(1))));
+}
+
 interface UseNoteFormOptions {
   mode: 'new' | 'edit';
   noteId?: number;
@@ -112,7 +120,7 @@ export function useNoteForm({
 
         setNote(normalizedNote);
         teaSelector.selectTea(normalizedNote.teaId, normalizedNote.teaName);
-        setOverallRating(normalizedNote.overallRating ?? null);
+        setOverallRating(normalizeOverallRating(normalizedNote.overallRating ?? null));
 
         const noteSchemaIds = (normalizedNote as Note & { schemaIds?: number[] }).schemaIds;
         const schemaIdsToLoad =
@@ -313,7 +321,7 @@ export function useNoteForm({
         await notesApi.create({
           teaId: selectedTea,
           schemaIds: schemaIdsToSend,
-          overallRating: overallRating!,
+          overallRating: normalizeOverallRating(overallRating)!,
           isRatingIncluded: true,
           axisValues: axisValuesArray,
           memo: processedMemo,
@@ -331,9 +339,7 @@ export function useNoteForm({
           (axisValuesArray.length > 0
             ? axisValuesArray.reduce((sum, av) => sum + av.value, 0) / axisValuesArray.length
             : null);
-        const calculatedOverallRating = rawOverallRating != null
-          ? rawOverallRating
-          : null;
+        const calculatedOverallRating = normalizeOverallRating(rawOverallRating);
 
         await notesApi.update(noteId!, {
           teaId: selectedTea,
