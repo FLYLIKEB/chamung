@@ -106,6 +106,23 @@ describe('NoteDetail - 카드 사진 배경', () => {
     expect(cards[1]).not.toHaveAttribute('data-has-photo');
   });
 
+  it('사진 목록은 사진 버튼을 눌렀을 때만 보여야 함', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <NoteDetail />
+      </MemoryRouter>,
+    );
+
+    const photoToggle = await screen.findByRole('button', { name: /사진/i });
+    expect(screen.queryByAltText('사진 1')).not.toBeInTheDocument();
+
+    await user.click(photoToggle);
+
+    expect(await screen.findByAltText('사진 1')).toBeInTheDocument();
+    expect(photoToggle).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('작성자 이름을 클릭하면 프로필 페이지로 이동해야 함', async () => {
     const user = userEvent.setup();
     render(

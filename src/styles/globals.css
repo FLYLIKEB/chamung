@@ -3634,10 +3634,8 @@ header[class*='bg-black/35'] h1 {
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] {
   position: relative;
   background:
-    linear-gradient(180deg, rgba(0,0,0,0.30), rgba(0,0,0,0.12) 34%, rgba(0,0,0,0.62)),
-    radial-gradient(circle at 50% 32%, rgba(255,255,255,0.18), transparent 45%),
-    var(--note-card-photo) center / cover no-repeat !important;
-  background-color: #15110c !important;
+    linear-gradient(180deg, #4e4e4e 0%, #3f3f3f 42%, #242424 100%) !important;
+  background-color: #2f2f2f !important;
   overflow: hidden;
   color: #fff !important;
 }
@@ -3648,14 +3646,40 @@ header[class*='bg-black/35'] h1 {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  background: var(--note-card-photo) center / cover no-repeat !important;
+  filter: grayscale(1) saturate(0) contrast(0.82) brightness(0.68);
+  opacity: 0.72;
+}
+
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true']::after {
+  content: '' !important;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(0,0,0,0.22), transparent 32%, rgba(0,0,0,0.18)),
-    linear-gradient(180deg, rgba(0,0,0,0.20), transparent 42%, rgba(0,0,0,0.30));
+    linear-gradient(180deg, rgba(56,56,56,0.72), rgba(86,86,86,0.62) 34%, rgba(16,16,16,0.84)),
+    linear-gradient(90deg, rgba(0,0,0,0.34), rgba(150,150,150,0.20) 42%, rgba(0,0,0,0.30));
 }
 
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] > * {
   position: relative;
   z-index: 1;
+}
+
+.note-detail-photo-toggle {
+  background: hsl(var(--muted) / 0.72);
+  border: 1px solid hsl(var(--border) / 0.55);
+}
+
+.note-detail-photo-toggle:hover {
+  background: hsl(var(--muted) / 0.9);
+}
+
+.note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'] .note-detail-photo-toggle {
+  background: rgba(255,255,255,0.18) !important;
+  border-color: rgba(255,255,255,0.30) !important;
+  color: rgba(255,255,255,0.94) !important;
 }
 
 .note-detail-card-deck > .note-detail-photo-card[data-has-photo='true'],

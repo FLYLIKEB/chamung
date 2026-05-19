@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Trash2, Loader2, Heart, Bookmark, Edit, Flag, Share2, Lock, Unlock } from 'lucide-react';
+import { Star, Trash2, Loader2, Heart, Bookmark, Edit, Flag, Share2, Lock, Unlock, ChevronDown } from 'lucide-react';
 import { Header } from '../components/Header';
 import { DetailFallback } from '../components/DetailFallback';
 import { RatingVisualization } from '../components/RatingVisualization';
@@ -55,6 +55,7 @@ export function NoteDetail() {
   const { share } = useShare();
   const cardDeckRef = useRef<HTMLDivElement | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [showStoryPhotos, setShowStoryPhotos] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (isNaN(noteId)) {
@@ -436,7 +437,15 @@ export function NoteDetail() {
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">NOTE</p>
                 {note.images && note.images.length > 0 && (
-                  <span className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">{note.images.length} Photo</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowStoryPhotos((value) => !value)}
+                    className="note-detail-photo-toggle inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground transition-colors"
+                    aria-expanded={showStoryPhotos}
+                  >
+                    사진
+                    <ChevronDown className={`h-3 w-3 transition-transform ${showStoryPhotos ? 'rotate-180' : ''}`} />
+                  </button>
                 )}
               </div>
               {note.memo && (
@@ -453,7 +462,7 @@ export function NoteDetail() {
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.memo}</ReactMarkdown>
                 </div>
               )}
-              {note.images && note.images.length > 0 && (
+              {showStoryPhotos && note.images && note.images.length > 0 && (
                 <div className="note-detail-image-stage mt-4">
                   <ImageCarousel images={note.images} />
                 </div>
