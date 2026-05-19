@@ -141,7 +141,7 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
       {/* Mobile: horizontal bottom bar */}
       <nav
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-60 bg-background border-0 rounded-none shadow-none px-2 py-3',
+          'app-bottom-nav fixed bottom-0 left-0 right-0 z-60 bg-background border-0 rounded-none shadow-none px-2 py-3',
           'pb-[calc(0.75rem+env(safe-area-inset-bottom))]',
           'flex items-center justify-around',
           'md:hidden',
@@ -168,7 +168,7 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
       {/* Desktop: vertical floating bar */}
       <nav
         className={cn(
-          'hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 z-50',
+          'app-bottom-nav hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 z-50',
           'flex-col items-center gap-1 p-2',
           'bg-background border-0 rounded-none shadow-none',
           'w-[140px]',

@@ -548,7 +548,7 @@ export function NoteDetail() {
       </div>
 
       <ReportModal open={showReportModal} onOpenChange={setShowReportModal} noteId={noteId} />
-      <BottomNav />
+      <BottomNav className="max-md:hidden" />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
