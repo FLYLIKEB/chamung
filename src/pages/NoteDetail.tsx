@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Trash2, Loader2, Heart, Bookmark, Edit, Flag, Share2, Lock, Unlock } from 'lucide-react';
 import { Header } from '../components/Header';
@@ -53,6 +53,8 @@ export function NoteDetail() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [use10Scale, setUse10Scale] = useState(false);
   const { share } = useShare();
+  const cardDeckRef = useRef<HTMLDivElement | null>(null);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   const fetchData = useCallback(async () => {
     if (isNaN(noteId)) {
@@ -208,6 +210,30 @@ export function NoteDetail() {
   const dateWeekday = ['일', '월', '화', '수', '목', '금', '토'][displayDate.getDay()];
 
   const brewColor = note.appearance ? BREW_COLORS.find((c) => c.value === note.appearance) : null;
+  const hasStoryCard = !!(note.memo || (note.images && note.images.length > 0));
+  const hasProfileCard = !!((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0) || weather?.teaComment);
+  const cardCount = [true, hasStoryCard, hasProfileCard].filter(Boolean).length;
+
+  const handleDeckScroll = () => {
+    const deck = cardDeckRef.current;
+    if (!deck) return;
+
+    const viewportCenter = deck.scrollLeft + deck.clientWidth / 2;
+    const cards = Array.from(deck.children) as HTMLElement[];
+    let nearestIndex = 0;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    cards.forEach((card, index) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const distance = Math.abs(cardCenter - viewportCenter);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+
+    setCurrentCardIndex(nearestIndex);
+  };
 
   // 메모 첫 줄 (72자 제한)
   const memoQuoteSource = note.memo
@@ -235,10 +261,10 @@ export function NoteDetail() {
       <div className="relative z-10 pt-2 pb-4">
         {/* 글라스 카드 래퍼 + 횡스크롤 카드 덱 */}
         <article className="note-detail-glass-card relative overflow-hidden">
-        <div className="note-detail-card-deck" aria-label="차록 상세 콘텐츠">
+        <div ref={cardDeckRef} onScroll={handleDeckScroll} className="note-detail-card-deck" aria-label="차록 상세 콘텐츠">
 
           {/* ── 카드 1: HERO ── */}
-          <section className="note-detail-hero px-4 pb-5 pt-4">
+          <section className="note-detail-hero flex flex-col px-4 pb-5 pt-4">
 
             {/* 상단: 작성자 + 공개여부 + 날짜 */}
             <div className="flex items-start justify-between gap-3">
@@ -354,10 +380,33 @@ export function NoteDetail() {
               </div>
             )}
 
+            {isMyNote && !isAuthLoading && (
+              <div className="note-detail-owner-actions mt-auto flex justify-end gap-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/note/${noteId}/edit`)}
+                  className="note-detail-owner-action"
+                  aria-label="수정"
+                  title="수정"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="note-detail-owner-action note-detail-owner-action--danger"
+                  aria-label="삭제"
+                  title="삭제"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
           </section>
 
           {/* ── 카드 2: NOTE (메모 + 이미지) ── */}
-          {(note.memo || (note.images && note.images.length > 0)) && (
+          {hasStoryCard && (
             <section className="note-detail-story-card px-5 pt-4 pb-5">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">NOTE</p>
@@ -388,7 +437,7 @@ export function NoteDetail() {
           )}
 
           {/* ── 카드 3: PROFILE (향미 그래프 + 태그) ── */}
-          {((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0) || weather?.teaComment) && (
+          {hasProfileCard && (
             <section className="note-detail-profile-card note-detail-section note-detail-section-axis space-y-3 px-5 pt-4 pb-5">
               <div className="flex items-center justify-between">
                 <div>
@@ -460,24 +509,18 @@ export function NoteDetail() {
         </div>
 
         {/* 페이지 인디케이터 */}
-        {(() => {
-          const cardCount = [
-            true,
-            !!(note.memo || (note.images && note.images.length > 0)),
-            !!(note.axisValues && note.axisValues.length > 0),
-          ].filter(Boolean).length;
-          if (cardCount <= 1) return null;
-          return (
-            <div className="flex items-center justify-center gap-1.5 py-2">
-              {Array.from({ length: cardCount }).map((_, i) => (
-                <span
-                  key={i}
-                  className="h-1.5 w-1.5 rounded-full bg-foreground/25"
-                />
-              ))}
-            </div>
-          );
-        })()}
+        {cardCount > 1 && (
+          <div className="flex items-center justify-center gap-1.5 py-2" aria-label={`현재 ${currentCardIndex + 1}번째 카드`}>
+            {Array.from({ length: cardCount }).map((_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-200 ${
+                  i === currentCardIndex ? 'w-4 bg-primary' : 'w-1.5 bg-foreground/25'
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* 액션 독 */}
         {user && (
@@ -524,25 +567,6 @@ export function NoteDetail() {
             </div>
           )}
 
-          {isMyNote && !isAuthLoading && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/note/${noteId}/edit`)}
-                className="min-h-[44px] flex-1"
-              >
-                <Edit className="w-4 h-4 mr-2" />수정
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteDialog(true)}
-                className="min-h-[44px] min-w-[44px] px-3 hover:bg-destructive/10 hover:text-destructive"
-                aria-label="삭제"
-              >
-                <Trash2 className="w-4.5 h-4.5 text-red-400" />
-              </Button>
-            </div>
-          )}
         </div>
         </article>
       </div>

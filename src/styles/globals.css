@@ -3594,3 +3594,39 @@ header[class*='bg-black/35'] h1 {
 .app-bottom-nav :where(svg, span, div) {
   color: inherit;
 }
+
+.note-detail-owner-actions {
+  min-height: 2.5rem;
+}
+
+.note-detail-owner-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid hsl(var(--border) / 0.72);
+  border-radius: 9999px;
+  background: hsl(var(--background) / 0.76);
+  color: hsl(var(--foreground));
+  transition:
+    transform 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.note-detail-owner-action:hover {
+  transform: translateY(-1px);
+  border-color: hsl(var(--foreground) / 0.28);
+  background: hsl(var(--muted) / 0.86);
+}
+
+.note-detail-owner-action--danger {
+  color: hsl(var(--destructive));
+}
+
+.note-detail-owner-action--danger:hover {
+  border-color: hsl(var(--destructive) / 0.36);
+  background: hsl(var(--destructive) / 0.10);
+}
