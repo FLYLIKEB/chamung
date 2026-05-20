@@ -3589,41 +3589,114 @@ header[class*='bg-black/35'] h1 {
   background: color-mix(in srgb, var(--background) 90%, transparent) !important;
 }
 
-.app-bottom-nav-mobile {
+/* Do not set position here: fixed/sticky consumers such as the bottom nav must keep their own positioning. */
+.liquid-glass-surface {
+  isolation: isolate;
+  overflow: visible;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.12) 42%, rgba(255, 255, 255, 0.2)),
-    color-mix(in srgb, var(--background) 24%, transparent) !important;
-  border-color: rgba(255, 255, 255, 0.42) !important;
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.035) 42%, rgba(255, 255, 255, 0.09)),
+    color-mix(in srgb, var(--background) 4%, transparent) !important;
+  border-color: transparent !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.16),
-    0 14px 34px rgba(0, 0, 0, 0.16);
+    inset 0 10px 24px rgba(255, 255, 255, 0.055),
+    inset 0 -10px 24px rgba(255, 255, 255, 0.025),
+    0 12px 42px rgba(255, 255, 255, 0.12),
+    0 22px 64px rgba(0, 0, 0, 0.12);
   -webkit-backdrop-filter: saturate(180%) blur(28px);
   backdrop-filter: saturate(180%) blur(28px);
 }
 
-.app-bottom-nav-mobile::before {
+.liquid-glass-surface::after {
   content: '';
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
+  inset: -20px;
+  z-index: 0;
+  border-radius: calc(1.5rem + 20px);
   background:
-    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.58), transparent 34%),
-    radial-gradient(circle at 86% 100%, rgba(255, 255, 255, 0.22), transparent 40%);
-  opacity: 0.85;
+    linear-gradient(135deg, rgba(255, 255, 255, 0.50), rgba(255, 255, 255, 0.08)),
+    rgba(255, 255, 255, 0.16);
+  filter: blur(34px);
+  opacity: 0.90;
   pointer-events: none;
 }
 
-.dark .app-bottom-nav-mobile {
+.liquid-glass-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06) 44%, rgba(255, 255, 255, 0.12)),
-    rgba(24, 24, 24, 0.28) !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
+    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.30), transparent 34%),
+    radial-gradient(circle at 86% 100%, rgba(255, 255, 255, 0.10), transparent 40%);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.dark .liquid-glass-surface {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025) 44%, rgba(255, 255, 255, 0.055)),
+    rgba(8, 8, 8, 0.12) !important;
+  border-color: transparent !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-    0 14px 34px rgba(0, 0, 0, 0.32);
+    inset 0 10px 24px rgba(255, 255, 255, 0.018),
+    inset 0 -10px 24px rgba(255, 255, 255, 0.008),
+    0 12px 42px rgba(255, 255, 255, 0.008),
+    0 22px 66px rgba(0, 0, 0, 0.50);
+}
+
+.dark .liquid-glass-surface::after {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)),
+    rgba(255, 255, 255, 0.07);
+  opacity: 0.28;
+}
+
+.liquid-glass-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.liquid-glass-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.liquid-glass-control {
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 8px 22px rgba(0, 0, 0, 0.08);
+  text-shadow: 0 1px 10px rgba(255, 255, 255, 0.42);
+}
+
+.liquid-glass-control:hover {
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.dark .liquid-glass-control {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.035);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 22px rgba(0, 0, 0, 0.24);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.36);
+}
+
+.dark .liquid-glass-control:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.liquid-glass-fab {
+  color: var(--primary) !important;
+  text-shadow: 0 1px 12px rgba(255, 255, 255, 0.5);
+}
+
+.dark .liquid-glass-fab {
+  color: rgba(255, 255, 255, 0.96) !important;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.74);
 }
 
 .app-bottom-nav :where(button) {
@@ -3635,7 +3708,12 @@ header[class*='bg-black/35'] h1 {
 }
 
 .dark .app-bottom-nav-mobile :where(button) {
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.36);
+  color: rgba(255, 255, 255, 0.82) !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.72);
+}
+
+.dark .app-bottom-nav :where(button[class*='text-primary']) {
+  color: rgba(255, 255, 255, 0.96) !important;
 }
 
 .app-bottom-nav :where(button[class*='text-primary']) {
@@ -3643,8 +3721,8 @@ header[class*='bg-black/35'] h1 {
 }
 
 .app-bottom-nav-mobile :where(button[class*='text-primary']) {
-  background: rgba(255, 255, 255, 0.22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.20);
 }
 
 .dark .app-bottom-nav-mobile :where(button[class*='text-primary']) {
