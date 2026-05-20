@@ -1,11 +1,12 @@
 import React, { RefObject } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Loader2, Plus, X } from 'lucide-react';
+import { Check, Loader2, X } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { TeaTypeBadge } from './TeaTypeBadge';
 import { Tea } from '../types';
+import { AddLogoIcon } from './AddLogoIcon';
 
 interface SelectedTeaData {
   name: string;
@@ -176,7 +177,7 @@ export function TeaSearchSection({
                       navigate(`${newTeaBasePath}&searchQuery=${encodeURIComponent(searchQuery)}`);
                     }}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <AddLogoIcon className="w-4 h-4 mr-2" />
                     새 차로 등록하기
                   </Button>
                 </div>

@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { X, Plus } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { RECOMMENDED_NOTE_TAGS } from '../constants';
+import { AddLogoIcon } from './AddLogoIcon';
 
 interface TagInputProps {
   tags: string[];
@@ -147,7 +148,7 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
               className="min-h-[32px] h-auto py-1 px-2 text-[11px] leading-none"
               onClick={() => handleSuggestionClick(tag)}
             >
-              <Plus className="w-4 h-4 mr-1" />
+              <AddLogoIcon className="w-4 h-4 mr-1" />
               {tag}
             </Button>
           ))}

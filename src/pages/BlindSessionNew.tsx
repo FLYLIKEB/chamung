@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAutoFocus } from '../hooks/useAutoFocus';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Copy, X, History } from 'lucide-react';
+import { Loader2, Copy, X, History } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';

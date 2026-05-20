@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { User, ChevronLeft, Bell, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,66 +20,173 @@ interface HeaderProps {
 }
 
 const HEADER_SHELL_CLASS = cn(
-  'fixed top-[calc(0.35rem+env(safe-area-inset-top,0px))] left-4 right-4 md:left-[176px] md:right-4',
-  'z-100 rounded-[1.5rem] py-1.5',
+  'fixed top-[calc(0.35rem+env(safe-area-inset-top,0px))]',
+  'left-1/2 -translate-x-1/2 md:left-[calc(50%+86px)]',
+  'z-100 py-1 transition-[width,border-radius,box-shadow,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[width,border-radius,box-shadow,opacity]',
   LIQUID_GLASS.surface,
 );
 
-const HEADER_CONTENT_CLASS = 'max-w-2xl md:max-w-5xl lg:max-w-6xl mx-auto flex items-center justify-between px-3 sm:px-5';
+const HEADER_CONTENT_CLASS = 'max-w-2xl md:max-w-5xl lg:max-w-6xl mx-auto relative flex items-center px-3 transition-[height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-5';
 const HEADER_ICON_CLASS = 'w-4.5 h-4.5';
+const HEADER_SIDE_CLASS = 'absolute inset-y-0 flex items-center';
 
 function headerIconButtonClass(isGlassDark: boolean, className?: string) {
   return cn(
-    'min-h-9 min-w-9 p-2 rounded-full transition-colors flex items-center justify-center',
+    'h-10 w-10 p-2 rounded-full transition-colors flex items-center justify-center',
     isGlassDark ? 'text-white/75 hover:text-white' : 'text-foreground hover:text-foreground/70',
     className,
   );
 }
 
 export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 'default' }: HeaderProps) {
+  const headerRef = useRef<HTMLElement | null>(null);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const unreadCount = useNotificationCount();
+  const [scrollState, setScrollState] = useState({ isScrolled: false, isScrollingDown: false });
 
   const headerHeight = 'var(--header-spacer)';
   const isGlassDark = tone === 'glassDark';
+  const isCollapsed = scrollState.isScrollingDown;
+
+  useEffect(() => {
+    const scrollRoot = headerRef.current?.closest('main') ?? window;
+    let previousTop = scrollRoot instanceof Window ? scrollRoot.scrollY : scrollRoot.scrollTop;
+    let downDistance = 0;
+    let upDistance = 0;
+    let isCollapsed = false;
+    let frame = 0;
+
+    const updateScrollState = () => {
+      const currentTop = scrollRoot instanceof Window ? scrollRoot.scrollY : scrollRoot.scrollTop;
+      const delta = currentTop - previousTop;
+      const isScrolled = currentTop > 12;
+
+      if (currentTop < 24) {
+        downDistance = 0;
+        upDistance = 0;
+        isCollapsed = false;
+      } else if (delta > 2) {
+        downDistance += delta;
+        upDistance = 0;
+        if (currentTop > 96 && downDistance > 36) {
+          isCollapsed = true;
+          downDistance = 0;
+        }
+      } else if (delta < -2) {
+        upDistance += Math.abs(delta);
+        downDistance = 0;
+        if (upDistance > 56) {
+          isCollapsed = false;
+          upDistance = 0;
+        }
+      }
+
+      const nextState = {
+        isScrolled,
+        isScrollingDown: isCollapsed,
+      };
+
+      previousTop = currentTop;
+      setScrollState((prev) =>
+        prev.isScrolled === nextState.isScrolled && prev.isScrollingDown === nextState.isScrollingDown
+          ? prev
+          : nextState,
+      );
+    };
+
+    const handleScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        updateScrollState();
+      });
+    };
+
+    updateScrollState();
+    scrollRoot.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      scrollRoot.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   return (
     <>
       <header
-        className={cn(HEADER_SHELL_CLASS, isGlassDark ? 'text-white' : 'text-foreground')}
+        ref={headerRef}
+        className={cn(
+          HEADER_SHELL_CLASS,
+          isGlassDark ? 'text-white' : 'text-foreground',
+          isCollapsed
+            ? 'w-[4.25rem] rounded-full opacity-100 shadow-[0_18px_52px_rgba(0,0,0,0.18)]'
+            : cn(
+                'w-[calc(100%-2rem)] rounded-[1.5rem] opacity-100 md:w-[calc(100%-12rem)]',
+                scrollState.isScrolled && 'rounded-[1.25rem] shadow-[0_16px_46px_rgba(0,0,0,0.16)]',
+              ),
+        )}
       >
-        <div className={HEADER_CONTENT_CLASS}>
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className={cn(HEADER_CONTENT_CLASS, isCollapsed ? 'h-10' : scrollState.isScrolled ? 'h-12' : 'h-12', isCollapsed && 'px-0 sm:px-0')}>
+          <div
+            className={cn(
+              HEADER_SIDE_CLASS,
+              'left-3 justify-start transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] sm:left-5',
+              isCollapsed && 'pointer-events-none -translate-x-2 opacity-0',
+            )}
+          >
             {showBack && (
               <button
                 onClick={() => (onBack ? onBack() : navigate(-1))}
-                className={headerIconButtonClass(isGlassDark, 'shrink-0 -ml-1')}
+                className={headerIconButtonClass(isGlassDark, '-ml-2')}
                 aria-label="뒤로"
               >
                 <ChevronLeft className={HEADER_ICON_CLASS} />
               </button>
             )}
-            {(showLogo || (!title && !showBack) || showBack) && (
+          </div>
+
+          <div className={cn(
+            'absolute inset-y-0 left-1/2 flex min-w-0 -translate-x-1/2 items-center justify-center text-center transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+            isCollapsed ? 'px-0' : 'px-12',
+          )}>
+            {isCollapsed ? (
               <ChaLogLogo
-                iconOnly={!!title}
+                iconOnly
                 asButton
                 onClick={() => navigate('/')}
                 size="compact"
+                className="ml-0 px-0"
               />
-            )}
-            {title && (
+            ) : showLogo || (!title && !showBack) ? (
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="flex flex-col items-center justify-center rounded-full px-0 transition-opacity hover:opacity-80"
+                aria-label="차멍 홈으로"
+              >
+                <ChaLogLogo iconOnly size="compact" className="ml-0 min-h-0 px-0" />
+                <span className="-mt-1 font-['Nanum_Myeongjo'] text-[10px] font-bold leading-none tracking-[-0.04em]">차멍</span>
+              </button>
+            ) : title ? (
               <h1
                 className={cn(
-                  "font-['Nanum_Myeongjo'] font-bold text-xl tracking-[-0.04em] truncate min-w-0 pt-0.5",
+                  "min-w-0 truncate pt-0.5 font-['Nanum_Myeongjo'] text-xl font-bold tracking-[-0.04em]",
                   isGlassDark ? 'text-white/90' : 'text-foreground',
                 )}
               >
                 {title}
               </h1>
-            )}
+            ) : null}
           </div>
-          <div className="flex items-center gap-1 shrink-0">
+
+          <div
+            className={cn(
+              HEADER_SIDE_CLASS,
+              'right-3 justify-end gap-0.5 transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] sm:right-5',
+              isCollapsed && 'pointer-events-none translate-x-2 opacity-0',
+            )}
+          >
             <button
               onClick={() => navigate('/sasaek')}
               className={headerIconButtonClass(isGlassDark)}
@@ -94,7 +202,7 @@ export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 
               >
                 <Bell className={HEADER_ICON_CLASS} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold leading-none">
+                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold leading-none text-primary-foreground">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}

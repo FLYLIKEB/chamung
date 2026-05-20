@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, PenLine } from 'lucide-react';
+import { Loader2, PenLine } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { NoteCard } from '@/components/NoteCard';
 import { NoteCardSkeleton } from '@/components/NoteCardSkeleton';
 import { formatDateLabel } from '@/utils/dateUtils';
 import type { Note } from '@/types';
+import { AddLogoIcon } from '../AddLogoIcon';
 
 interface DateNotesDrawerProps {
   open: boolean;
@@ -36,7 +37,7 @@ export function DateNotesDrawer({ open, onOpenChange, selectedDate, notes, isLoa
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/15 transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <AddLogoIcon className="w-3.5 h-3.5" />
             기록 추가
           </button>
         </DrawerHeader>

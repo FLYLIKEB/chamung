@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Bell, Package, Trash2, ChevronUp, ChevronDown, ChevronLeft, Pencil, CheckCircle2, BookOpen, Coffee } from 'lucide-react';
+import { Bell, Package, Trash2, ChevronUp, ChevronDown, ChevronLeft, Pencil, CheckCircle2, BookOpen, Coffee } from 'lucide-react';
 import { Header } from '../components/Header';
 import { BottomNav } from '../components/BottomNav';
 import { Button } from '../components/ui/button';
@@ -17,6 +17,7 @@ import { cn } from '../components/ui/utils';
 import { InfiniteScrollSentinel } from '../components/InfiniteScrollSentinel';
 import { FilterTabBar } from '../components/FilterTabBar';
 import { PageListContent } from '../components/ui/PageListContent';
+import { AddLogoIcon } from '../components/AddLogoIcon';
 
 const UNIT_LABELS: Record<string, string> = {
   g: 'g',
@@ -567,7 +568,7 @@ export function Cellar() {
                 onClick={() => navigate('/cellar/new')}
                 className="gap-1"
               >
-                <Plus className="w-4 h-4" />
+                <AddLogoIcon className="w-4 h-4" />
                 차 추가하기
               </Button>
             </div>
@@ -582,7 +583,7 @@ export function Cellar() {
                 onClick={() => navigate('/cellar/new')}
                 className="gap-1"
               >
-                <Plus className="w-4 h-4" />
+                <AddLogoIcon className="w-4 h-4" />
                 차 추가하기
               </Button>
             </div>
@@ -666,9 +667,7 @@ export function Cellar() {
         onClick={() => navigate('/cellar/new')}
         ariaLabel="찻장 아이템 추가"
         position="aboveNav"
-      >
-        <Plus className="w-6 h-6" />
-      </FloatingActionButton>
+      />
 
       <BottomNav />
     </div>

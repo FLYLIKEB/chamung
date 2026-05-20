@@ -12,9 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { Loader2, Trash2, Pencil, Merge, Plus, FileText } from 'lucide-react';
+import { Loader2, Trash2, Pencil, Merge, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { TEA_TYPES, COMMON_PRICES, COMMON_WEIGHTS, formatPriceToKorean } from '../../constants';
+import { AddLogoIcon } from '../../components/AddLogoIcon';
 
 type Tab = 'teas' | 'sellers' | 'tags' | 'users';
 
@@ -329,17 +330,17 @@ export function AdminMaster() {
         />
         {tab === 'teas' && (
           <Button size="sm" onClick={() => setCreateOpen((o) => ({ ...o, tea: true }))}>
-            <Plus className="w-4 h-4 mr-1" /> 추가
+            <AddLogoIcon className="w-4 h-4 mr-1" /> 추가
           </Button>
         )}
         {tab === 'sellers' && (
           <Button size="sm" onClick={() => setCreateOpen((o) => ({ ...o, seller: true }))}>
-            <Plus className="w-4 h-4 mr-1" /> 추가
+            <AddLogoIcon className="w-4 h-4 mr-1" /> 추가
           </Button>
         )}
         {tab === 'tags' && (
           <Button size="sm" onClick={() => setCreateOpen((o) => ({ ...o, tag: true }))}>
-            <Plus className="w-4 h-4 mr-1" /> 추가
+            <AddLogoIcon className="w-4 h-4 mr-1" /> 추가
           </Button>
         )}
       </div>

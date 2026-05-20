@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import { notesApi, CreateRatingSchemaRequest } from '../lib/api';
 import { RatingSchema } from '../types';
 import { toast } from 'sonner';
 import { logger } from '../lib/logger';
+import { AddLogoIcon } from './AddLogoIcon';
 
 interface AxisInput {
   nameKo: string;
@@ -177,7 +178,7 @@ export function AddTemplateModal({
                 onClick={addAxis}
                 className="h-8 px-2"
               >
-                <Plus className="w-4 h-4 mr-1" />
+                <AddLogoIcon className="w-4 h-4 mr-1" />
                 추가
               </Button>
             </div>

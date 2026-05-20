@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
-import { Minus, Plus } from 'lucide-react';
+import { Minus } from 'lucide-react';
+import { AddLogoIcon } from './AddLogoIcon';
 
 export function QuantityAdjuster({ quantity, onChange }: { quantity: string; onChange: (v: string) => void }) {
   const [adjustAmount, setAdjustAmount] = useState(3);
@@ -29,7 +30,7 @@ export function QuantityAdjuster({ quantity, onChange }: { quantity: string; onC
           <span className="text-xs text-center text-muted-foreground">{adjustAmount}g</span>
         </div>
         <Button type="button" variant="outline" size="sm" onClick={() => apply(1)}>
-          <Plus className="size-4" />
+          <AddLogoIcon className="size-4" />
         </Button>
       </div>
     </div>
