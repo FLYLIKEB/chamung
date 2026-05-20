@@ -3,7 +3,7 @@ import { afterEach, beforeEach, vi, describe, it, expect } from 'vitest';
 import { CommentList } from '../CommentList';
 import { renderWithRouter } from '../../test/renderWithRouter';
 import { useAuth } from '../../contexts/AuthContext';
-import { commentsApi } from '../../lib/api';
+import { authApi, commentsApi } from '../../lib/api';
 import { Comment } from '../../types';
 
 const mockDate = new Date('2025-01-01T00:00:00.000Z');
@@ -28,6 +28,9 @@ vi.mock('../../contexts/AuthContext', async () => {
 });
 
 vi.mock('../../lib/api', () => ({
+  authApi: {
+    getMe: vi.fn().mockRejectedValue(new Error('unauthenticated')),
+  },
   commentsApi: {
     create: vi.fn(),
     update: vi.fn(),
@@ -44,6 +47,7 @@ describe('CommentList 컴포넌트', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(authApi.getMe).mockRejectedValue(new Error('unauthenticated'));
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
       isAuthenticated: true,
@@ -140,15 +144,15 @@ describe('CommentList 컴포넌트', () => {
     renderWithRouter(
       <CommentList postId={1} comments={[myComment]} onCommentsChange={onCommentsChange} />,
     );
-    expect(screen.getByLabelText('댓글 수정')).toBeInTheDocument();
-    expect(screen.getByLabelText('댓글 삭제')).toBeInTheDocument();
+    fireEvent.pointerDown(screen.getByLabelText('더보기'));
+    expect(screen.getByText('수정')).toBeInTheDocument();
+    expect(screen.getByText('삭제')).toBeInTheDocument();
   });
 
   it('타인 댓글에 수정/삭제 버튼을 표시하지 않는다', () => {
     renderWithRouter(
       <CommentList postId={1} comments={mockComments} onCommentsChange={onCommentsChange} />,
     );
-    expect(screen.queryByLabelText('댓글 수정')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('댓글 삭제')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('더보기')).not.toBeInTheDocument();
   });
 });

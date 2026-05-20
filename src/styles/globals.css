@@ -1145,7 +1145,7 @@ header :where(button, [role='button']) {
   justify-content: center;
   gap: 0.4rem;
   min-width: 2.75rem;
-  min-height: 2.75rem;
+  min-height: 2.45rem;
   padding: 0 0.9rem;
   border-radius: 9999px;
   border: 0.5px solid rgba(255,255,255,0.1);
@@ -3823,4 +3823,174 @@ header[class*='bg-black/35'] h1 {
     BlinkMacSystemFont,
     system-ui,
     sans-serif !important;
+}
+
+/* Chadam post detail: Brunch-like reading surface. */
+.post-detail-page {
+  background: #fff;
+}
+
+.post-detail-paper,
+.post-detail-comments {
+  max-width: 720px;
+  margin-inline: auto;
+  background: #fff;
+}
+
+.post-detail-title {
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.post-detail-content {
+  color: #333;
+  font-size: clamp(1.05rem, 4.2vw, 1.28rem) !important;
+  font-weight: 350;
+  letter-spacing: -0.045em;
+  line-height: 2.05 !important;
+  word-break: keep-all;
+}
+
+.post-detail-content :where(p, li, blockquote) {
+  margin-block: 1.05em;
+}
+
+.post-detail-comments {
+  scroll-margin-top: var(--header-spacer);
+  scroll-margin-bottom: 3.5rem;
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+
+.post-detail-comment-list {
+  padding-bottom: 0.5rem;
+}
+
+.post-detail-comment {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.post-detail-comment-icon {
+  color: rgba(26, 26, 26, 0.34) !important;
+}
+
+.post-detail-comment-icon:hover {
+  color: rgba(26, 26, 26, 0.68) !important;
+}
+
+.post-detail-comment-form {
+  position: static;
+  background: transparent;
+}
+
+.post-detail-reading-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 55;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.post-detail-reading-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -2px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.post-detail-reading-progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #1f1f1f;
+  transition: width 120ms linear;
+}
+
+.post-detail-reading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  max-width: 720px;
+  min-height: 3.35rem;
+  margin-inline: auto;
+  padding: 0.35rem 1.25rem;
+}
+
+.post-detail-reading-action {
+  display: inline-flex;
+  min-width: 3rem;
+  min-height: 2.45rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: #777;
+  font-size: 0.95rem;
+  font-weight: 450;
+  transition: color 160ms ease;
+}
+
+.post-detail-reading-action:hover,
+.post-detail-reading-action.is-active {
+  color: #1f1f1f;
+}
+
+.post-detail-comment-jump {
+  color: #1f1f1f;
+}
+
+.dark .post-detail-page {
+  background: #181818;
+}
+
+.dark .post-detail-paper,
+.dark .post-detail-comments {
+  background: #181818;
+}
+
+.dark .post-detail-content {
+  color: #e7e7e7;
+}
+
+.dark .post-detail-reading-dock {
+  border-top-color: rgba(255, 255, 255, 0.10);
+  background: rgba(20, 20, 20, 0.96);
+}
+
+.dark .post-detail-reading-progress {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark .post-detail-reading-progress span {
+  background: #f2f2f2;
+}
+
+.dark .post-detail-reading-action {
+  color: #aaa;
+}
+
+.dark .post-detail-reading-action:hover,
+.dark .post-detail-reading-action.is-active,
+.dark .post-detail-comment-jump {
+  color: #f2f2f2;
+}
+
+@media (min-width: 768px) {
+  .post-detail-page {
+    padding-bottom: 4rem !important;
+  }
+
+  .post-detail-comments {
+    padding-bottom: 4rem;
+  }
+
+  .post-detail-reading-dock {
+    bottom: 0;
+    left: 172px;
+  }
 }
