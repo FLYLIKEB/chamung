@@ -5,8 +5,9 @@ import { ClipboardList, Eye, EyeOff, Leaf, Package, PenLine, RefreshCw, Store, T
 import { cn } from './ui/utils';
 import { useAppMode } from '../contexts/AppModeContext';
 import { prepareKeyboard } from '../hooks/useMobileKeyboard';
-import { BrandMark } from './BrandMark';
+import { AddLogoIcon } from './AddLogoIcon';
 import { LIQUID_GLASS } from '../constants/liquidGlass';
+import { LOGO_FAB_ABOVE_NAV_BOTTOM, LOGO_FAB_BUTTON_CLASS, LOGO_FAB_ICON_CLASS, LOGO_FAB_RIGHT_CLASS } from '../constants/logoFab';
 
 type MenuItem = {
   label: string;
@@ -56,7 +57,8 @@ const PRIMARY_ACTION_CLASS = cn(
   'flex items-center gap-1.5 px-3 py-2.5 rounded-2xl text-current underline underline-offset-[0.32em] decoration-current transition-colors font-semibold text-sm',
 );
 const FAB_CLASS = cn(
-  'minimal-fab-exception pointer-events-auto relative isolate w-14 h-14 overflow-visible rounded-full flex items-center justify-center',
+  'minimal-fab-exception pointer-events-auto relative isolate rounded-full flex items-center justify-center',
+  LOGO_FAB_BUTTON_CLASS,
   'transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 hover:scale-[1.03]',
   LIQUID_GLASS.surface,
   LIQUID_GLASS.fab,
@@ -166,8 +168,8 @@ export function SpeedDialFAB() {
       )}
 
       <div
-        className={cn('fixed right-6 z-50 flex flex-col items-end md:bottom-6', !isOpen && 'pointer-events-none')}
-        style={{ bottom: 'calc(var(--bottom-nav-spacer) + 0.75rem)' }}
+        className={cn('fixed z-50 flex flex-col items-end md:bottom-6', LOGO_FAB_RIGHT_CLASS, !isOpen && 'pointer-events-none')}
+        style={{ bottom: LOGO_FAB_ABOVE_NAV_BOTTOM }}
       >
         <div className={cn(isOpen ? PANEL_CLASS : HIDDEN_PANEL_CLASS)}>
           {menuItems.map((item, index) => {
@@ -201,10 +203,11 @@ export function SpeedDialFAB() {
           className={cn(FAB_CLASS, isOpen && 'scale-95')}
         >
           <span className="absolute inset-[5px] -z-10 rounded-full border border-transparent bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.24)] dark:hidden" />
-          <BrandMark
+          <AddLogoIcon
             className={cn(
-              'w-8 h-8 transition-transform duration-300 drop-shadow-[0_1px_6px_rgba(0,0,0,0.16)]',
-              isOpen ? 'scale-90 rotate-45' : 'scale-100 rotate-0',
+              LOGO_FAB_ICON_CLASS,
+              'transition-transform duration-300 drop-shadow-[0_1px_6px_rgba(0,0,0,0.16)]',
+              isOpen ? 'rotate-45' : 'rotate-0',
             )}
           />
         </button>

@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { cn } from './ui/utils';
 import { AddLogoIcon } from './AddLogoIcon';
 import { LIQUID_GLASS } from '../constants/liquidGlass';
+import { LOGO_FAB_ABOVE_NAV_BOTTOM, LOGO_FAB_BUTTON_CLASS, LOGO_FAB_ICON_CLASS, LOGO_FAB_RIGHT_CLASS } from '../constants/logoFab';
 
 type FloatingActionButtonProps = {
   onClick?: () => void;
@@ -29,17 +30,19 @@ export function FloatingActionButton({
       aria-label={ariaLabel}
       onClick={onClick}
       className={cn(
-        'minimal-fab-exception pointer-events-auto fixed right-6 z-[70] flex h-14 w-14 items-center justify-center rounded-full text-primary shadow-[0_10px_28px_rgba(43,41,38,0.22)] transition-transform hover:scale-[1.03] focus-visible:outline-none',
+        'minimal-fab-exception pointer-events-auto fixed z-[70] flex items-center justify-center rounded-full text-primary shadow-[0_10px_28px_rgba(43,41,38,0.22)] transition-transform hover:scale-[1.03] focus-visible:outline-none',
+        LOGO_FAB_BUTTON_CLASS,
+        LOGO_FAB_RIGHT_CLASS,
         LIQUID_GLASS.surface,
         LIQUID_GLASS.fab,
         positionClasses[position],
         className
       )}
       style={position === 'aboveNav' ? {
-        bottom: 'calc(var(--bottom-nav-spacer) + 0.75rem)',
+        bottom: LOGO_FAB_ABOVE_NAV_BOTTOM,
       } : undefined}
     >
-      {children ?? <AddLogoIcon className="h-8 w-8" />}
+      {children ?? <AddLogoIcon className={LOGO_FAB_ICON_CLASS} />}
     </button>
   );
 }
