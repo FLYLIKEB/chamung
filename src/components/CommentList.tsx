@@ -93,7 +93,7 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="post-detail-comment-list flex flex-col">
       <div className="space-y-2">
         {comments.length === 0 && (
           <p className="text-sm text-muted-foreground py-6 text-center">
@@ -103,7 +103,7 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
         {comments.map((comment) => {
           const isOwner = user?.id === comment.userId;
           return (
-            <div key={comment.id} className="rounded-xl px-0 py-3 border-b border-border/20 last:border-b-0">
+            <div key={comment.id} className="post-detail-comment rounded-xl px-0 py-4 border-b border-border/20 last:border-b-0">
               <div className="flex gap-2.5">
                 {/* 프로필 아바타 */}
                 <CommentAvatar
@@ -123,14 +123,14 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
                     <div className="flex items-center gap-0.5 shrink-0">
                       <button
                         type="button"
-                        className="p-1.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                        className="post-detail-comment-icon p-1.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors"
                         aria-label="답글"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
-                        className="p-1.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                        className="post-detail-comment-icon p-1.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors"
                         aria-label="공감"
                       >
                         <ThumbsUp className="w-3.5 h-3.5" />
@@ -140,7 +140,7 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
                           <DropdownMenuTrigger asChild>
                             <button
                               type="button"
-                              className="p-1.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                              className="post-detail-comment-icon p-1.5 rounded text-muted-foreground/40 hover:text-muted-foreground transition-colors"
                               aria-label="더보기"
                             >
                               <MoreVertical className="w-3.5 h-3.5" />
@@ -214,11 +214,11 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
         })}
       </div>
 
-      {/* 댓글 입력 - 네비게이션 바 바로 위 고정 */}
+      {/* 댓글 입력 - 글 흐름 안에 배치해 항상 떠 있지 않도록 유지 */}
       {user ? (
         <form
           onSubmit={handleSubmit}
-          className="fixed bottom-[var(--bottom-nav-spacer)] left-0 right-0 bg-background/80 backdrop-blur-md px-4 py-2.5 z-20"
+          className="post-detail-comment-form mt-5 border-t border-border/40 pt-4"
         >
           <div className="flex items-center gap-0 bg-muted/30 rounded-full overflow-hidden pl-3 pr-1">
             {/* 닉네임 라벨 */}
@@ -230,7 +230,7 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
               type="text"
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
-              placeholder="댓글을 입력하세요."
+              placeholder="댓글을 입력하세요..."
               maxLength={1000}
               className="flex-1 h-10 bg-transparent border-0 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none caret-primary"
             />
@@ -241,6 +241,7 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
               className="shrink-0 p-2 text-primary disabled:text-muted-foreground/20 transition-colors"
               aria-label="댓글 작성"
             >
+              <span className="sr-only">댓글 작성</span>
               {isSubmitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (

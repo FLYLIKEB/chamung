@@ -70,6 +70,7 @@ export function PullToRefreshProvider({ children }: { children: React.ReactNode 
   }, [location.pathname]);
 
   const showIndicator = !isPullDisabled && (pullDistance > 0 || isRefreshing);
+  const shouldRenderBottomNavSpacer = !/^\/chadam\/\d+$/.test(location.pathname);
 
   return (
     <PullToRefreshContext.Provider value={registerRefresh}>
@@ -137,7 +138,7 @@ export function PullToRefreshProvider({ children }: { children: React.ReactNode 
             ))}
           </div>
         {children}
-        <BottomNavSpacer />
+        {shouldRenderBottomNavSpacer && <BottomNavSpacer />}
         </div>
       </div>
     </PullToRefreshContext.Provider>

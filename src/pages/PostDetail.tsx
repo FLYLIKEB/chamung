@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -31,7 +31,6 @@ const CATEGORY_TO_BOARD: Record<PostCategory, string> = {
 };
 import { postsApi, commentsApi } from '../lib/api';
 import { Header } from '../components/Header';
-import { BottomNav } from '../components/BottomNav';
 import { ImageCarousel } from '../components/ImageCarousel';
 import { CommentList } from '../components/CommentList';
 import { PostReportModal } from '../components/PostReportModal';
@@ -62,6 +61,9 @@ export function PostDetail() {
   const [isTogglingLike, setIsTogglingLike] = useState(false);
   const [isTogglingBookmark, setIsTogglingBookmark] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [readingProgress, setReadingProgress] = useState(0);
+  const articleRef = useRef<HTMLDivElement | null>(null);
+  const commentsSectionRef = useRef<HTMLDivElement | null>(null);
   const { share } = useShare();
 
   const fetchData = useCallback(async () => {
@@ -92,6 +94,61 @@ export function PostDetail() {
     }
     fetchData();
   }, [postId, navigate, fetchData]);
+
+  useEffect(() => {
+    const scrollRoot = articleRef.current?.closest('.overflow-y-auto') as HTMLElement | null;
+
+    const updateReadingProgress = () => {
+      const article = articleRef.current;
+      if (!article) {
+        setReadingProgress(0);
+        return;
+      }
+
+      if (scrollRoot && scrollRoot.scrollTop + scrollRoot.clientHeight >= scrollRoot.scrollHeight - 2) {
+        setReadingProgress(100);
+        return;
+      }
+
+      const rootRect = scrollRoot?.getBoundingClientRect();
+      const articleRect = article.getBoundingClientRect();
+      const dockHeight = document.querySelector<HTMLElement>('.post-detail-reading-dock')?.offsetHeight ?? 0;
+      const viewportBottom = rootRect
+        ? rootRect.bottom - dockHeight
+        : window.innerHeight - dockHeight;
+      const readableDistance = Math.max(1, articleRect.height);
+      const progress = ((viewportBottom - articleRect.top) / readableDistance) * 100;
+
+      setReadingProgress(Math.min(100, Math.max(0, progress)));
+    };
+
+    const previousOverscrollBehaviorY = scrollRoot?.style.overscrollBehaviorY;
+    const previousScrollPaddingBottom = scrollRoot?.style.scrollPaddingBottom;
+
+    if (scrollRoot) {
+      scrollRoot.style.overscrollBehaviorY = 'none';
+      scrollRoot.style.scrollPaddingBottom = '3.5rem';
+    }
+
+    updateReadingProgress();
+    scrollRoot?.addEventListener('scroll', updateReadingProgress, { passive: true });
+    window.addEventListener('scroll', updateReadingProgress, { passive: true });
+    window.addEventListener('resize', updateReadingProgress);
+
+    return () => {
+      if (scrollRoot) {
+        scrollRoot.style.overscrollBehaviorY = previousOverscrollBehaviorY ?? '';
+        scrollRoot.style.scrollPaddingBottom = previousScrollPaddingBottom ?? '';
+      }
+      scrollRoot?.removeEventListener('scroll', updateReadingProgress);
+      window.removeEventListener('scroll', updateReadingProgress);
+      window.removeEventListener('resize', updateReadingProgress);
+    };
+  }, [post, comments.length]);
+
+  const handleScrollToComments = () => {
+    commentsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const handleToggleLike = async () => {
     if (!user) { toast.error('로그인이 필요합니다.'); return; }
@@ -141,11 +198,11 @@ export function PostDetail() {
   const authorImage = post.isAnonymous ? null : post.user?.profileImageUrl;
 
   return (
-    <div className="post-detail-page min-h-screen pb-32">
+    <div className="post-detail-page min-h-screen">
       <Header showBack title={CATEGORY_TO_BOARD[post.category] ?? '차담'} showProfile />
 
       {/* 게시글 영역 */}
-      <div className="px-5 pt-4 pb-3">
+      <div ref={articleRef} className="post-detail-paper px-5 pt-4 pb-3">
         {/* 작성자 */}
         <div className="flex items-center gap-2.5 mb-4">
           {authorImage ? (
@@ -196,7 +253,7 @@ export function PostDetail() {
 
         {/* 제목 */}
         {post.title && (
-          <h1 className="text-lg font-bold text-foreground leading-snug mb-3">{post.title}</h1>
+          <h1 className="post-detail-title text-lg font-bold text-foreground leading-snug mb-3">{post.title}</h1>
         )}
 
         {/* 본문 */}
@@ -230,10 +287,14 @@ export function PostDetail() {
               {likeCount > 0 && <span className="font-medium">{likeCount}</span>}
             </button>
 
-            <span className="flex items-center gap-1 text-sm text-muted-foreground">
+            <button
+              type="button"
+              onClick={handleScrollToComments}
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
               <MessageCircle className="w-[18px] h-[18px]" />
               {comments.length > 0 && <span className="font-medium">{comments.length}</span>}
-            </span>
+            </button>
 
             <button
               onClick={handleToggleBookmark}
@@ -289,7 +350,7 @@ export function PostDetail() {
       <div className="h-2 bg-muted/60 dark:bg-muted/30" />
 
       {/* 댓글 영역 */}
-      <div className="px-5 pt-4">
+      <div ref={commentsSectionRef} className="post-detail-comments px-5 pt-4">
         {/* 태그된 차록 */}
         {post.taggedNotes && post.taggedNotes.length > 0 && (
           <div className="flex flex-col gap-2 mb-4">
@@ -346,7 +407,58 @@ export function PostDetail() {
         postId={postId}
       />
 
-      <BottomNav />
+      <nav className="post-detail-reading-dock" aria-label="글 상세 액션">
+        <div className="post-detail-reading-progress" aria-hidden>
+          <span style={{ width: `${readingProgress}%` }} />
+        </div>
+        <div className="post-detail-reading-actions">
+          <button
+            type="button"
+            onClick={handleToggleLike}
+            disabled={isTogglingLike}
+            className={cn('post-detail-reading-action', isLiked && 'is-active')}
+            aria-label="좋아요"
+          >
+            {isTogglingLike ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Heart className={cn('w-5 h-5', isLiked && 'fill-current')} />
+            )}
+            <span>{likeCount}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleScrollToComments}
+            className="post-detail-reading-action post-detail-comment-jump"
+            aria-label="댓글로 이동"
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span>{comments.length}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => share(post?.title ?? '게시글', window.location.href)}
+            className="post-detail-reading-action"
+            aria-label="공유"
+          >
+            <Share2 className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleToggleBookmark}
+            disabled={isTogglingBookmark}
+            className={cn('post-detail-reading-action', isBookmarked && 'is-active')}
+            aria-label="스크랩"
+          >
+            {isTogglingBookmark ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Bookmark className={cn('w-5 h-5', isBookmarked && 'fill-current')} />
+            )}
+          </button>
+        </div>
+      </nav>
+
     </div>
   );
 }
