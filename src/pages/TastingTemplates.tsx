@@ -6,8 +6,9 @@ import { AddTemplateModal } from '../components/AddTemplateModal';
 import { notesApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
-import { Pin, PinOff, Plus, Loader2, ChevronRight, Pencil } from 'lucide-react';
+import { Pin, PinOff, Loader2, ChevronRight, Pencil } from 'lucide-react';
 import { cn } from '../components/ui/utils';
+import { AddLogoIcon } from '../components/AddLogoIcon';
 
 interface RatingAxis {
   id: number;
@@ -116,7 +117,7 @@ export function TastingTemplates() {
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold transition-colors hover:bg-primary/90 active:scale-95"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <AddLogoIcon className="w-3.5 h-3.5" />
             새 템플릿
           </button>
         </div>

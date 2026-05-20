@@ -1,17 +1,20 @@
-import { HTMLAttributes } from 'react';
+import type { ComponentType, HTMLAttributes, SVGProps } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, MessageSquare, Package } from 'lucide-react';
 import { cn } from './ui/utils';
 import { useAuth } from '../contexts/AuthContext';
 import { ChaLogLogo } from './ChaLogLogo';
+import { LIQUID_GLASS } from '../constants/liquidGlass';
 
 type NavItemDef = {
   label: string;
   path: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   activeStyle?: 'fill' | 'bold';
   isActive?: (pathname: string) => boolean;
 };
+
+type NavDirection = 'horizontal' | 'vertical';
 
 const NAV_ITEMS: NavItemDef[] = [
   { label: '홈', path: '/', icon: Home, activeStyle: 'fill' },
@@ -31,6 +34,22 @@ const NAV_ITEMS: NavItemDef[] = [
   },
 ];
 
+const MOBILE_BOTTOM_NAV_CLASS = cn(
+  'app-bottom-nav app-bottom-nav-mobile fixed left-6 right-6 z-60 rounded-[1.5rem] px-1.5 py-1',
+  'bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around md:hidden',
+  LIQUID_GLASS.surface,
+);
+
+function navItemClass(direction: NavDirection, isActive: boolean) {
+  return cn(
+    'flex items-center justify-center gap-1 transition-colors duration-200',
+    direction === 'horizontal'
+      ? 'min-h-[40px] min-w-[44px] flex-col rounded-xl px-0.5'
+      : 'min-h-[40px] w-full px-3 py-2 rounded-none flex-row gap-3',
+    isActive ? 'text-primary' : 'text-muted-foreground',
+  );
+}
+
 function NavButton({
   item,
   pathname,
@@ -40,7 +59,7 @@ function NavButton({
   item: NavItemDef;
   pathname: string;
   onClick: () => void;
-  direction: 'horizontal' | 'vertical';
+  direction: NavDirection;
 }) {
   const isActive = item.isActive ? item.isActive(pathname) : pathname === item.path;
   const Icon = item.icon;
@@ -52,13 +71,7 @@ function NavButton({
   return (
     <button
       onClick={onClick}
-      className={cn(
-        'flex items-center justify-center gap-1 transition-colors duration-200',
-        direction === 'horizontal'
-          ? 'min-h-[40px] min-w-[44px] flex-col rounded-xl px-0.5'
-          : 'min-h-[40px] w-full px-3 py-2 rounded-none flex-row gap-3',
-        isActive ? 'text-primary' : 'text-muted-foreground',
-      )}
+      className={navItemClass(direction, isActive)}
       aria-label={item.label}
     >
       <div className="w-5 h-5 flex items-center justify-center">
@@ -86,7 +99,7 @@ function ProfileButton({
 }: {
   pathname: string;
   onClick: () => void;
-  direction: 'horizontal' | 'vertical';
+  direction: NavDirection;
 }) {
   const { user } = useAuth();
   const isActive = pathname === '/my-notes' || pathname.startsWith('/user/');
@@ -94,13 +107,7 @@ function ProfileButton({
   return (
     <button
       onClick={onClick}
-      className={cn(
-        'flex items-center justify-center gap-1 transition-colors duration-200',
-        direction === 'horizontal'
-          ? 'min-h-[40px] min-w-[44px] flex-col rounded-xl px-0.5'
-          : 'min-h-[40px] w-full px-3 py-2 rounded-none flex-row gap-3',
-        isActive ? 'text-primary' : 'text-muted-foreground',
-      )}
+      className={navItemClass(direction, isActive)}
       aria-label="내 차록"
     >
       <div className="w-6 h-6 rounded-full overflow-hidden">
@@ -140,13 +147,7 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
     <>
       {/* Mobile: horizontal bottom bar */}
       <nav
-        className={cn(
-          'app-bottom-nav app-bottom-nav-mobile fixed left-6 right-6 z-60 overflow-hidden isolate border border-white/35 rounded-[1.5rem] shadow-[0_14px_34px_rgba(0,0,0,0.16)] px-1.5 py-1',
-          'bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))]',
-          'flex items-center justify-around',
-          'md:hidden',
-          className,
-        )}
+        className={cn(MOBILE_BOTTOM_NAV_CLASS, className)}
         {...rest}
       >
         {NAV_ITEMS.map((item) => (

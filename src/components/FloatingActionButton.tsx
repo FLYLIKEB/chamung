@@ -1,5 +1,7 @@
 import React, { ReactNode } from 'react';
 import { cn } from './ui/utils';
+import { AddLogoIcon } from './AddLogoIcon';
+import { LIQUID_GLASS } from '../constants/liquidGlass';
 
 type FloatingActionButtonProps = {
   onClick?: () => void;
@@ -27,7 +29,9 @@ export function FloatingActionButton({
       aria-label={ariaLabel}
       onClick={onClick}
       className={cn(
-        'minimal-fab-exception fixed right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-[0_2px_12px_rgba(43,41,38,0.22)] flex items-center justify-center transition-colors hover:bg-primary/90 focus-visible:outline-none',
+        'minimal-fab-exception pointer-events-auto fixed right-6 z-[70] flex h-14 w-14 items-center justify-center rounded-full text-primary shadow-[0_10px_28px_rgba(43,41,38,0.22)] transition-transform hover:scale-[1.03] focus-visible:outline-none',
+        LIQUID_GLASS.surface,
+        LIQUID_GLASS.fab,
         positionClasses[position],
         className
       )}
@@ -35,7 +39,7 @@ export function FloatingActionButton({
         bottom: 'calc(var(--bottom-nav-spacer) + 0.75rem)',
       } : undefined}
     >
-      {children}
+      {children ?? <AddLogoIcon className="h-8 w-8" />}
     </button>
   );
 }

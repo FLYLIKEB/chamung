@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame, PenLine, Loader2, Plus } from 'lucide-react';
+import { Flame, PenLine, Loader2 } from 'lucide-react';
 import { CtaButton } from '@/components/ui/CtaButton';
 import { notesApi } from '@/lib/api';
 import type { CalendarData } from '@/lib/api/notes.api';
@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { cn } from '@/components/ui/utils';
 import { DAY_NAMES, formatDateKey, getWeekDays } from '@/utils/dateUtils';
 import { NoteCard } from '@/components/NoteCard';
+import { AddLogoIcon } from '../AddLogoIcon';
 
 interface WeeklyStreakProps {
   onTodayNoteStatus?: (hasNote: boolean) => void;
@@ -167,7 +168,7 @@ export function WeeklyStreak({ onTodayNoteStatus, onStreakLoaded }: WeeklyStreak
               onClick={() => navigate('/note/new')}
               className="flex items-center gap-1 text-xs text-primary hover:underline"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <AddLogoIcon className="w-3.5 h-3.5" />
               기록 추가하기
             </button>
           </div>

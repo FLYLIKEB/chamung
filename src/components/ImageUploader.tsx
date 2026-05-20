@@ -1,11 +1,12 @@
 import React, { useRef } from 'react';
-import { X, Plus, Loader2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { notesApi } from '../lib/api';
 import { toast } from 'sonner';
 import { logger } from '../lib/logger';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useImageUpload } from '../hooks/useImageUpload';
+import { AddLogoIcon } from './AddLogoIcon';
 
 interface ImageUploaderProps {
   images: string[];
@@ -165,7 +166,7 @@ export function ImageUploader({ images, imageThumbnails = [], onChange, maxImage
                 <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
               ) : (
                 <>
-                  <Plus className="w-6 h-6 text-muted-foreground" />
+                  <AddLogoIcon className="w-6 h-6 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">추가</span>
                 </>
               )}

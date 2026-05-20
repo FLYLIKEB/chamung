@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ArrowDownUp, ChevronRight, Flame, LayoutList, PencilLine } from 'lucide-react';
+import { ArrowDownUp, ChevronRight, Flame, LayoutList, PencilLine } from 'lucide-react';
 import { PostCardSkeleton } from '../components/PostCardSkeleton';
 import { Post, PostCategory, POST_CATEGORY_LABELS } from '../types';
 import { postsApi, type PostSort } from '../lib/api';
@@ -309,9 +309,7 @@ export function Community() {
           onClick={() => navigate('/chadam/new')}
           ariaLabel="새 게시글 작성"
           position="aboveNav"
-        >
-          <Plus className="w-6 h-6" />
-        </FloatingActionButton>
+        />
       )}
 
       <BottomNav />

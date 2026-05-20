@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, Plus, ChevronRight, ChevronDown } from 'lucide-react';
+import { Store, ChevronRight, ChevronDown } from 'lucide-react';
 import { TeaCardSkeleton } from '../TeaCardSkeleton';
 import { UserAvatar } from '../ui/UserAvatar';
 import { Section } from '../ui/Section';
 import { Tea, Seller } from '../../types';
 import { CARD_WIDTH, CARD_SKELETON_CONTAINER_CLASSES } from '../../constants';
 import { cn } from '../ui/utils';
+import { AddLogoIcon } from '../AddLogoIcon';
 
 interface ExploreSectionProps {
   sectionsLoading: boolean;
@@ -303,7 +304,7 @@ export function ExploreSection({
           className="w-full flex items-center justify-between py-3.5 hover:opacity-70 active:opacity-50 transition-opacity text-left"
         >
           <div className="flex items-center gap-3">
-            <Plus className="w-4 h-4 text-primary" />
+            <AddLogoIcon className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-primary">새 차 등록</span>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground/50" />

@@ -6,8 +6,9 @@ import { BottomNav } from '../components/BottomNav';
 import { tagsApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
-import { Loader2, TrendingUp, Clock, Heart, Plus } from 'lucide-react';
+import { Loader2, TrendingUp, Clock, Heart } from 'lucide-react';
 import { cn } from '../components/ui/utils';
+import { AddLogoIcon } from '../components/AddLogoIcon';
 
 interface TagItem {
   name: string;
@@ -127,7 +128,7 @@ export function TagManager() {
               disabled={!newTagName.trim() || isCreating}
               className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+              {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <AddLogoIcon className="w-3.5 h-3.5" />}
               추가
             </button>
           </div>
