@@ -573,7 +573,7 @@ export function Cellar() {
         {activeItems.length > 0 && (
           <div className={cn(
             'sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/30',
-            'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+            'transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
             filterHidden ? '-translate-y-full' : 'translate-y-0',
           )}>
             {/* 전체 pill + 정렬 */}

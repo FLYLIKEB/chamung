@@ -129,7 +129,7 @@ export function Community() {
       {/* 전체/인기글 + 카테고리 탭 */}
       <div className={cn(
         'sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/30',
-        'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+        'transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
         filterHidden ? '-translate-y-full' : 'translate-y-0',
       )}>
         {/* 전체보기 / 인기글 — 항상 노출 */}
