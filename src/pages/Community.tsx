@@ -225,7 +225,7 @@ export function Community() {
                   action={{ label: '✍️ 첫 글 쓰기', onClick: () => navigate('/chadam/new') }}
                 />
               ) : (
-                <div className="space-y-1">
+                <div className="space-y-3">
                   {posts.map((post, i) => (
                     <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }}>
                       <PostCard post={post} />
@@ -263,7 +263,7 @@ export function Community() {
                         {boardPosts.length === 0 ? (
                           <p className="text-sm text-muted-foreground py-4 text-center">아직 게시글이 없어요.</p>
                         ) : (
-                          <div className="space-y-1">
+                          <div className="space-y-3">
                             {boardPosts.map((post, i) => (
                               <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${i * 50}ms` }}>
                                 <PostCard post={post} />
@@ -277,7 +277,7 @@ export function Community() {
                 </div>
               ) : (
                 <>
-                  <div className="space-y-1">
+                  <div className="space-y-3">
                     {posts.map((post, i) => (
                       <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }}>
                         <PostCard post={post} />

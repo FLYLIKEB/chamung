@@ -32,7 +32,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
     return (
       <div
         onClick={handleClick}
-        className="px-4 py-2.5 bg-muted/40 rounded-lg cursor-pointer active:bg-muted/60 transition-colors flex items-center gap-2"
+        className="px-4 py-3.5 bg-muted/40 rounded-lg cursor-pointer active:bg-muted/60 transition-colors flex items-center gap-2"
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
@@ -43,7 +43,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
         }}
       >
         <Pin className="w-4 h-4 text-green-600 shrink-0" />
-        <span className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">{post.title || post.content}</span>
+        <span className={cn('flex-1 min-w-0 text-sm font-medium text-foreground truncate', !post.title && 'post-card-content-preview')}>{post.title || post.content}</span>
         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
       </div>
     );
@@ -52,7 +52,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
   return (
     <div
       onClick={handleClick}
-      className="px-5 py-4 cursor-pointer active:bg-muted/20 transition-colors"
+      className="px-5 py-5 cursor-pointer active:bg-muted/20 transition-colors"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -115,7 +115,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
               {post.title}
             </h3>
           )}
-          <p className="text-[14px] text-foreground/80 line-clamp-2 leading-relaxed">
+          <p className="post-card-content-preview text-[14px] text-foreground/80 line-clamp-2 leading-relaxed">
             {post.content}
           </p>
         </div>

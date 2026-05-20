@@ -3963,6 +3963,60 @@ header[class*='bg-black/35'] h1 {
     sans-serif !important;
 }
 
+/* Chadam post detail: use the brand serif for page chrome, but keep article body/comments readable. */
+.post-detail-page :where(
+  header,
+  header *,
+  .post-detail-paper > :not(.post-detail-body),
+  .post-detail-paper > :not(.post-detail-body) *,
+  .post-detail-reading-dock,
+  .post-detail-reading-dock *
+) {
+  font-family: 'Nanum Myeongjo', 'Apple SD Gothic Neo', serif !important;
+}
+
+.post-detail-page .post-detail-title {
+  font-family: 'Nanum Myeongjo', 'Apple SD Gothic Neo', serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.post-detail-page :where(
+  .post-detail-comments,
+  .post-detail-comments *
+) {
+  font-family: 'Nanum Myeongjo', 'Apple SD Gothic Neo', serif !important;
+}
+
+.post-detail-page :where(
+  .post-detail-body,
+  .post-detail-body *,
+  .post-detail-comment-content,
+  .post-detail-comment-content *,
+  .post-detail-comment-editor,
+  .post-detail-comment-editor *,
+  .post-detail-comment-input
+) {
+  font-family:
+    'Pretendard',
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    sans-serif !important;
+}
+
+
+/* Chadam list: keep visible post body previews in Pretendard for readability. */
+.post-card-content-preview,
+.post-card-content-preview * {
+  font-family:
+    'Pretendard',
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    sans-serif !important;
+}
+
 /* Chadam post detail: Brunch-like reading surface. */
 .post-detail-page {
   background: #fff;
