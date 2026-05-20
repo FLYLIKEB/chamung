@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { InfiniteScrollSentinel } from '../components/InfiniteScrollSentinel';
 import { FilterTabBar } from '../components/FilterTabBar';
 import { PageListContent } from '../components/ui/PageListContent';
+import { useScrollHide } from '../hooks/useScrollHide';
 
 const SORT_OPTIONS: Array<{ value: PostSort; label: string }> = [
   { value: 'latest', label: '최신순' },
@@ -62,41 +63,7 @@ export function Community() {
   const [hasMore, setHasMore] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<GroupKey>(isMobile ? 'qna' : 'all');
   const [sort, setSort] = useState<PostSort>('latest');
-  const [filterHidden, setFilterHidden] = useState(false);
-
-  useEffect(() => {
-    let prev = window.scrollY;
-    let downDist = 0;
-    let upDist = 0;
-    let hidden = false;
-    let frame = 0;
-
-    const onScroll = () => {
-      if (frame) return;
-      frame = window.requestAnimationFrame(() => {
-        frame = 0;
-        const cur = window.scrollY;
-        const delta = cur - prev;
-        if (cur < 24) {
-          hidden = false; downDist = 0; upDist = 0;
-        } else if (delta > 2) {
-          downDist += delta; upDist = 0;
-          if (cur > 96 && downDist > 36) { hidden = true; downDist = 0; }
-        } else if (delta < -2) {
-          upDist += Math.abs(delta); downDist = 0;
-          if (upDist > 56) { hidden = false; upDist = 0; }
-        }
-        prev = cur;
-        setFilterHidden(hidden);
-      });
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-      window.removeEventListener('scroll', onScroll);
-    };
-  }, []);
+  const filterHidden = useScrollHide();
 
   const getGroupParams = useCallback((groupKey: GroupKey): { categoryParam: PostCategory | PostCategory[] | undefined; effectiveSort: PostSort; mine: boolean } => {
     if (groupKey === 'popular') {

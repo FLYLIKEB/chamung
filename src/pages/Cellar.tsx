@@ -18,6 +18,7 @@ import { InfiniteScrollSentinel } from '../components/InfiniteScrollSentinel';
 import { FilterTabBar } from '../components/FilterTabBar';
 import { PageListContent } from '../components/ui/PageListContent';
 import { AddLogoIcon } from '../components/AddLogoIcon';
+import { useScrollHide } from '../hooks/useScrollHide';
 
 const UNIT_LABELS: Record<string, string> = {
   g: 'g',
@@ -337,6 +338,7 @@ const CELLAR_PAGE_SIZE = 20;
 export function Cellar() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const filterHidden = useScrollHide();
   const [items, setItems] = useState<CellarItem[]>([]);
   const [reminders, setReminders] = useState<CellarItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -507,7 +509,7 @@ export function Cellar() {
   if (isLoading) {
     return (
       <div className="min-h-screen pb-32">
-        <Header showProfile title="내 찻장" showLogo />
+        <Header showProfile title="내 찻장" showLogo hideWhenCollapsed />
         <div className="px-4 sm:px-6 py-4 space-y-4">
           <div className="flex gap-2 overflow-x-hidden py-3">
             {[1, 2, 3, 4].map((i) => (
@@ -527,7 +529,7 @@ export function Cellar() {
 
   return (
     <div className="min-h-screen pb-32">
-      <Header showProfile title="내 찻장" showLogo />
+      <Header showProfile title="내 찻장" showLogo hideWhenCollapsed />
 
       <div className="space-y-0">
         {/* 리마인더 배너 */}
@@ -569,7 +571,11 @@ export function Cellar() {
 
         {/* 필터 + 정렬 — sticky */}
         {activeItems.length > 0 && (
-          <div className="sticky top-[calc(4.25rem+env(safe-area-inset-top))] z-10 bg-background">
+          <div className={cn(
+            'sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/30',
+            'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+            filterHidden ? '-translate-y-full' : 'translate-y-0',
+          )}>
             {/* 전체 pill + 정렬 */}
             <div className="flex items-center gap-2 px-4 py-2">
               <button
