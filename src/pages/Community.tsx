@@ -62,6 +62,41 @@ export function Community() {
   const [hasMore, setHasMore] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<GroupKey>(isMobile ? 'qna' : 'all');
   const [sort, setSort] = useState<PostSort>('latest');
+  const [filterHidden, setFilterHidden] = useState(false);
+
+  useEffect(() => {
+    let prev = window.scrollY;
+    let downDist = 0;
+    let upDist = 0;
+    let hidden = false;
+    let frame = 0;
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        const cur = window.scrollY;
+        const delta = cur - prev;
+        if (cur < 24) {
+          hidden = false; downDist = 0; upDist = 0;
+        } else if (delta > 2) {
+          downDist += delta; upDist = 0;
+          if (cur > 96 && downDist > 36) { hidden = true; downDist = 0; }
+        } else if (delta < -2) {
+          upDist += Math.abs(delta); downDist = 0;
+          if (upDist > 56) { hidden = false; upDist = 0; }
+        }
+        prev = cur;
+        setFilterHidden(hidden);
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
 
   const getGroupParams = useCallback((groupKey: GroupKey): { categoryParam: PostCategory | PostCategory[] | undefined; effectiveSort: PostSort; mine: boolean } => {
     if (groupKey === 'popular') {
@@ -122,10 +157,14 @@ export function Community() {
 
   return (
     <div className="min-h-screen pb-20">
-      <Header title="차담" showLogo showProfile />
+      <Header title="차담" showLogo showProfile hideWhenCollapsed />
 
       {/* 전체/인기글 + 카테고리 탭 */}
-      <div className="sticky top-[calc(4.25rem+env(safe-area-inset-top))] md:top-0 z-10 bg-background">
+      <div className={cn(
+        'sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/30',
+        'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+        filterHidden ? '-translate-y-full' : 'translate-y-0',
+      )}>
         {/* 전체보기 / 인기글 — 항상 노출 */}
         <div className="flex items-center gap-5 px-4 py-2">
           <button
@@ -225,7 +264,7 @@ export function Community() {
                   action={{ label: '✍️ 첫 글 쓰기', onClick: () => navigate('/chadam/new') }}
                 />
               ) : (
-                <div className="space-y-3">
+                <div className="divide-y divide-border/40">
                   {posts.map((post, i) => (
                     <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }}>
                       <PostCard post={post} />
@@ -263,7 +302,7 @@ export function Community() {
                         {boardPosts.length === 0 ? (
                           <p className="text-sm text-muted-foreground py-4 text-center">아직 게시글이 없어요.</p>
                         ) : (
-                          <div className="space-y-3">
+                          <div className="divide-y divide-border/40">
                             {boardPosts.map((post, i) => (
                               <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${i * 50}ms` }}>
                                 <PostCard post={post} />
@@ -277,7 +316,7 @@ export function Community() {
                 </div>
               ) : (
                 <>
-                  <div className="space-y-3">
+                  <div className="divide-y divide-border/40">
                     {posts.map((post, i) => (
                       <div key={post.id} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }}>
                         <PostCard post={post} />

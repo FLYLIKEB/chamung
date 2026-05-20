@@ -17,6 +17,8 @@ interface HeaderProps {
   showLogo?: boolean;
   /** 상세/브랜드 화면에서 쓰는 어두운 유리 헤더 */
   tone?: 'default' | 'glassDark';
+  /** 스크롤 다운 시 헤더를 완전히 숨김 (캡슐 축소 대신) */
+  hideWhenCollapsed?: boolean;
 }
 
 const HEADER_SHELL_CLASS = cn(
@@ -38,7 +40,7 @@ function headerIconButtonClass(isGlassDark: boolean, className?: string) {
   );
 }
 
-export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 'default' }: HeaderProps) {
+export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 'default', hideWhenCollapsed = false }: HeaderProps) {
   const headerRef = useRef<HTMLElement | null>(null);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -119,7 +121,9 @@ export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 
         className={cn(
           HEADER_SHELL_CLASS,
           isGlassDark ? 'text-white' : 'text-foreground',
-          isCollapsed
+          isCollapsed && hideWhenCollapsed
+            ? 'w-[calc(100%-2rem)] rounded-[1.5rem] opacity-0 pointer-events-none md:w-[calc(100%-12rem)]'
+            : isCollapsed
             ? 'w-[4.25rem] rounded-full opacity-100 shadow-[0_18px_52px_rgba(0,0,0,0.18)]'
             : cn(
                 'w-[calc(100%-2rem)] rounded-[1.5rem] opacity-100 md:w-[calc(100%-12rem)]',

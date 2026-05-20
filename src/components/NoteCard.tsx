@@ -1,4 +1,4 @@
-import React, { type FC, useState, memo, useCallback } from 'react';
+import { type FC, type MouseEvent, useState, memo, useCallback } from 'react';
 import { Star, Lock, Bookmark, Loader2 } from 'lucide-react';
 import { Note } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -39,7 +39,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
     navigate(`/note/${note.id}`);
   };
 
-  const handleBookmarkClick = async (e: React.MouseEvent) => {
+  const handleBookmarkClick = async (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     e.preventDefault();
 
@@ -163,11 +163,9 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
             )}
           </div>
           {user && (
-            <span
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
               onClick={handleBookmarkClick}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleBookmarkClick(e as unknown as React.MouseEvent); }}
               className="p-0.5 rounded-full hover:bg-muted/50 transition-colors shrink-0"
               aria-label={isBookmarked ? '북마크 해제' : '북마크 추가'}
             >
@@ -183,7 +181,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
                   )}
                 />
               )}
-            </span>
+            </button>
           )}
         </div>
       </div>
