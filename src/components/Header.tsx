@@ -28,7 +28,7 @@ export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 md:left-[160px] z-100 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] ${
+        className={`fixed top-0 left-0 right-0 md:left-[160px] z-100 py-2 pt-[calc(0.5rem+env(safe-area-inset-top,0px))] ${
           isGlassDark
             ? 'bg-neutral-950 text-white'
             : 'bg-background text-foreground'
@@ -39,12 +39,12 @@ export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 
             {showBack && (
               <button
                 onClick={() => (onBack ? onBack() : navigate(-1))}
-                className={`shrink-0 min-h-[44px] min-w-[44px] p-2.5 -ml-1 rounded-none transition-colors flex items-center justify-center ${
+                className={`shrink-0 min-h-9 min-w-9 p-2 -ml-1 rounded-none transition-colors flex items-center justify-center ${
                   isGlassDark ? 'text-white/80 hover:text-white' : 'text-foreground hover:text-foreground/70'
                 }`}
                 aria-label="뒤로"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4.5 h-4.5" />
               </button>
             )}
             {(showLogo || (!title && !showBack) || showBack) && (
@@ -52,11 +52,12 @@ export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 
                 iconOnly={!!title}
                 asButton
                 onClick={() => navigate('/')}
+                size="compact"
               />
             )}
             {title && (
               <h1
-                className={`font-['Nanum_Myeongjo'] font-bold text-2xl tracking-[-0.04em] truncate min-w-0 pt-0.5 ${
+                className={`font-['Nanum_Myeongjo'] font-bold text-xl tracking-[-0.04em] truncate min-w-0 pt-0.5 ${
                   isGlassDark ? 'text-white/90' : 'text-foreground'
                 }`}
               >
@@ -67,24 +68,24 @@ export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 
           <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => navigate('/sasaek')}
-              className={`min-h-[44px] min-w-[44px] p-2.5 rounded-none transition-colors flex items-center justify-center ${
+              className={`min-h-9 min-w-9 p-2 rounded-none transition-colors flex items-center justify-center ${
                 isGlassDark ? 'text-white/75 hover:text-white' : 'hover:text-foreground/70'
               }`}
               aria-label="탐색"
             >
-              <Search className="w-5 h-5" />
+              <Search className="w-4.5 h-4.5" />
             </button>
             {isAuthenticated && (
               <button
                 onClick={() => navigate('/notifications')}
-                className={`relative min-h-[44px] min-w-[44px] p-2.5 rounded-none transition-colors flex items-center justify-center ${
+                className={`relative min-h-9 min-w-9 p-2 rounded-none transition-colors flex items-center justify-center ${
                   isGlassDark ? 'text-white/75 hover:text-white' : 'hover:text-foreground/70'
                 }`}
                 aria-label="알림"
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-4.5 h-4.5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">
+                  <span className="absolute top-1 right-1 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold leading-none">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
@@ -93,11 +94,11 @@ export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 
             {showProfile && (
               <button
                 onClick={() => navigate(isAuthenticated ? '/settings' : '/login')}
-                className={`min-h-[44px] min-w-[44px] p-2.5 rounded-none transition-colors flex items-center justify-center ${
+                className={`min-h-9 min-w-9 p-2 rounded-none transition-colors flex items-center justify-center ${
                   isGlassDark ? 'text-white/75 hover:text-white' : 'hover:text-foreground/70'
                 }`}
               >
-                <User className="w-5 h-5" />
+                <User className="w-4.5 h-4.5" />
               </button>
             )}
           </div>

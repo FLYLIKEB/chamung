@@ -1,7 +1,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --header-spacer: calc(4.25rem + env(safe-area-inset-top, 0px));
+  --header-spacer: calc(3.25rem + env(safe-area-inset-top, 0px));
   --bottom-nav-spacer: calc(5rem + env(safe-area-inset-bottom, 0px));
   --font-size: 16px;
   /* 카드 공통 */
