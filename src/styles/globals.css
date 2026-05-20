@@ -1777,6 +1777,33 @@ header :where(button, [role='button']) {
   padding-right: 0 !important;
 }
 
+
+.note-detail-template-panel {
+  background: rgba(255, 255, 255, 0.74) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.note-detail-template-panel p {
+  color: rgba(0, 0, 0, 0.48) !important;
+}
+
+.note-detail-template-panel span {
+  color: rgba(0, 0, 0, 0.76) !important;
+}
+
+.dark .note-detail-template-panel {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.dark .note-detail-template-panel p {
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
+.dark .note-detail-template-panel span {
+  color: rgba(255, 255, 255, 0.90) !important;
+}
+
 .note-detail-scale-toggle {
   border: 0;
   background: transparent;
@@ -1803,7 +1830,7 @@ header :where(button, [role='button']) {
   transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.note-detail-scale-toggle button[aria-pressed='true']::after {
+.note-detail-scale-toggle button[aria-checked='true']::after {
   transform: scaleX(1);
 }
 
@@ -2829,44 +2856,6 @@ header :where(button, [role='button']) {
     linear-gradient(100deg, transparent 2%, rgba(255,255,255,0.07) 36%, rgba(232,203,139,0.18) 54%, transparent 94%) !important;
 }
 
-.note-detail-story-card,
-.note-detail-profile-card {
-  color: rgba(255, 250, 235, 0.9);
-}
-
-.note-detail-prose {
-  color: rgba(255, 250, 235, 0.88) !important;
-  font-weight: 420;
-}
-
-.note-detail-profile-card .text-white\/82,
-.note-detail-profile-card .text-white,
-.note-detail-card-deck .text-white {
-  color: rgba(255, 250, 235, 0.92) !important;
-}
-
-.note-detail-card-deck .text-white\/45,
-.note-detail-card-deck .text-white\/52,
-.note-detail-card-deck .text-white\/55 {
-  color: rgba(255, 250, 235, 0.58) !important;
-}
-
-.note-detail-card-deck .bg-white\/\[0\.04\],
-.note-detail-card-deck .bg-white\/\[0\.06\],
-.note-detail-card-deck .bg-white\/\[0\.08\] {
-  background:
-    linear-gradient(135deg, rgba(255,255,255,0.09), rgba(232,203,139,0.035)) !important;
-}
-
-.note-detail-card-deck .note-detail-section-tags .cursor-pointer,
-.note-detail-profile-card .note-detail-section-tags .cursor-pointer {
-  color: rgba(255, 244, 214, 0.88) !important;
-  background:
-    radial-gradient(circle at 30% 20%, rgba(232,203,139,0.16), transparent 58%),
-    rgba(255,255,255,0.058) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
-}
-
 .note-detail-action-dock {
   background:
     radial-gradient(circle at 50% 0%, rgba(232,203,139,0.12), transparent 58%),
@@ -3189,7 +3178,7 @@ header[class*='bg-black/35'] button {
   color: rgba(0,0,0,0.42) !important;
 }
 
-.note-detail-scale-toggle button[aria-pressed='true'] {
+.note-detail-scale-toggle button[aria-checked='true'] {
   color: rgba(0,0,0,0.78) !important;
 }
 

@@ -52,7 +52,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
   return (
     <div
       onClick={handleClick}
-      className="px-5 py-5 cursor-pointer active:bg-muted/20 transition-colors"
+      className="px-4 py-4 cursor-pointer active:bg-muted/30 transition-colors"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -63,7 +63,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
       }}
     >
       {/* 작성자 행 */}
-      <div className="flex items-center gap-2.5 mb-2.5">
+      <div className="flex items-center gap-2 mb-2">
         {/* 아바타 */}
         {authorImage ? (
           <img

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Trash2, Loader2, Heart, Bookmark, Edit, Flag, Share2, Lock, Unlock, ChevronDown } from 'lucide-react';
 import { Header } from '../components/Header';
@@ -127,11 +127,11 @@ export function NoteDetail() {
       if (normalizedNote.tea) {
         setTea(normalizedNote.tea);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to fetch note:', error);
-      if (error?.statusCode === 403) {
+      if ((error as { statusCode?: number })?.statusCode === 403) {
         toast.error('이 차록을 볼 권한이 없습니다.');
-      } else if (error?.statusCode === 404) {
+      } else if ((error as { statusCode?: number })?.statusCode === 404) {
         toast.error('차록을 찾을 수 없습니다.');
       } else {
         toast.error('차록을 불러오는데 실패했습니다.');
@@ -154,8 +154,43 @@ export function NoteDetail() {
 
   useEffect(() => {
     if (!weatherDateStr) return;
-    fetchWeather(weatherDateStr).then(setWeather).catch(() => {});
+    let ignore = false;
+    fetchWeather(weatherDateStr)
+      .then((data) => { if (!ignore) setWeather(data); })
+      .catch(() => {});
+    return () => { ignore = true; };
   }, [weatherDateStr]);
+
+  const { sessionMemoTable, displayMemo } = useMemo(() => {
+    const table = parseSessionMemoTable(note?.memo);
+    const memo = table ? table.introMemo : note?.memo;
+    return { sessionMemoTable: table, displayMemo: memo };
+  }, [note?.memo]);
+
+  useEffect(() => {
+    const deck = cardDeckRef.current;
+    if (!deck || typeof IntersectionObserver === 'undefined') return;
+    const cards = Array.from(deck.children) as HTMLElement[];
+    if (cards.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let maxRatio = 0;
+        let maxIndex = 0;
+        entries.forEach((entry) => {
+          if (entry.intersectionRatio > maxRatio) {
+            maxRatio = entry.intersectionRatio;
+            maxIndex = cards.indexOf(entry.target as HTMLElement);
+          }
+        });
+        if (maxRatio > 0) setCurrentCardIndex(maxIndex);
+      },
+      { root: deck, threshold: [0, 0.5, 1] },
+    );
+
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, [note]);
 
   if (isLoading) {
     return (
@@ -228,7 +263,7 @@ export function NoteDetail() {
       const result = await notesApi.toggleLike(noteId);
       setIsLiked(result.liked);
       setLikeCount(result.likeCount);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to toggle like:', error);
       toast.error('좋아요 처리에 실패했습니다.');
     } finally {
@@ -246,7 +281,7 @@ export function NoteDetail() {
       setIsTogglingBookmark(true);
       const result = await notesApi.toggleBookmark(noteId);
       setIsBookmarked(result.bookmarked);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to toggle bookmark:', error);
       toast.error('북마크 처리에 실패했습니다.');
     } finally {
@@ -265,11 +300,14 @@ export function NoteDetail() {
   const dateWeekday = ['일', '월', '화', '수', '목', '금', '토'][displayDate.getDay()];
 
   const brewColor = note.appearance ? BREW_COLORS.find((c) => c.value === note.appearance) : null;
-  const sessionMemoTable = parseSessionMemoTable(note.memo);
-  const displayMemo = sessionMemoTable ? sessionMemoTable.introMemo : note.memo;
   const hasStoryCard = !!(note.memo || (note.images && note.images.length > 0));
   const hasProfileCard = !!((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0) || weather?.teaComment);
-  const cardCount = [true, hasStoryCard, hasProfileCard].filter(Boolean).length;
+  const cardMeta = [
+    { id: 'hero' as const, show: true },
+    { id: 'story' as const, show: hasStoryCard },
+    { id: 'profile' as const, show: hasProfileCard },
+  ].filter((c) => c.show);
+  const cardCount = cardMeta.length;
 
   const getCardPhotoUrl = (cardIndex: number) => {
     const images = note.images ?? [];
@@ -281,35 +319,16 @@ export function NoteDetail() {
 
   const getPhotoCardProps = (cardIndex: number) => {
     const imageUrl = getCardPhotoUrl(cardIndex);
-    const cssSafeUrl = imageUrl?.replace(/[\\"]/g, '\\$&');
+    const encodedUrl = imageUrl ? encodeURI(imageUrl) : undefined;
     return {
       'data-has-photo': imageUrl ? 'true' : undefined,
-      style: cssSafeUrl
-        ? ({ '--note-card-photo': `url("${cssSafeUrl}")` } as CSSProperties)
+      style: encodedUrl
+        ? ({ '--note-card-photo': `url("${encodedUrl}")` } as CSSProperties)
         : undefined,
     };
   };
 
-  const handleDeckScroll = () => {
-    const deck = cardDeckRef.current;
-    if (!deck) return;
 
-    const viewportCenter = deck.scrollLeft + deck.clientWidth / 2;
-    const cards = Array.from(deck.children) as HTMLElement[];
-    let nearestIndex = 0;
-    let nearestDistance = Number.POSITIVE_INFINITY;
-
-    cards.forEach((card, index) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-      const distance = Math.abs(cardCenter - viewportCenter);
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestIndex = index;
-      }
-    });
-
-    setCurrentCardIndex(nearestIndex);
-  };
 
   // 메모 첫 줄 (72자 제한)
   const memoQuoteSource = displayMemo
@@ -337,12 +356,12 @@ export function NoteDetail() {
       <div className="relative z-10 pt-2 pb-4">
         {/* 글라스 카드 래퍼 + 횡스크롤 카드 덱 */}
         <article className="note-detail-glass-card relative overflow-hidden">
-        <div ref={cardDeckRef} onScroll={handleDeckScroll} className="note-detail-card-deck" aria-label="차록 상세 콘텐츠">
+        <div ref={cardDeckRef} className="note-detail-card-deck" aria-label="차록 상세 콘텐츠">
 
           {/* ── 카드 1: HERO ── */}
           <section
             className="note-detail-hero note-detail-photo-card flex flex-col px-4 pb-5 pt-4"
-            {...getPhotoCardProps(0)}
+            {...getPhotoCardProps(cardMeta.findIndex((c) => c.id === 'hero'))}
           >
 
             {/* 상단: 작성자 + 공개여부 + 날짜 */}
@@ -361,7 +380,7 @@ export function NoteDetail() {
                   onClick={isMyNote ? handleTogglePublic : undefined}
                   disabled={!isMyNote || isUpdating}
                   aria-label={isMyNote ? privacyActionLabel : privacyLabel}
-                  aria-pressed={!note.isPublic}
+                  aria-pressed={note.isPublic}
                   title={isMyNote ? privacyActionLabel : privacyLabel}
                   className={`note-privacy-lock ${note.isPublic ? 'is-public' : 'is-private'} ${isUpdating ? 'is-updating' : ''}`}
                 >
@@ -441,24 +460,6 @@ export function NoteDetail() {
               )}
             </div>
 
-            {/* 향미 태그 */}
-            {note.tags && note.tags.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1">
-                {note.tags.slice(0, 6).map((tag, i) => (
-                  <Link key={i} to={`/tag/${encodeURIComponent(tag)}`}>
-                    <Badge variant="secondary" className="cursor-pointer text-[11px]">
-                      {tag}
-                    </Badge>
-                  </Link>
-                ))}
-                {note.tags.length > 6 && (
-                  <Badge variant="secondary" className="text-[11px] text-muted-foreground">
-                    +{note.tags.length - 6}
-                  </Badge>
-                )}
-              </div>
-            )}
-
             {isMyNote && !isAuthLoading && (
               <div className="note-detail-owner-actions mt-auto flex justify-end gap-2 pt-4">
                 <button
@@ -488,7 +489,7 @@ export function NoteDetail() {
           {hasStoryCard && (
             <section
               className="note-detail-story-card note-detail-photo-card px-5 pt-4 pb-5"
-              {...getPhotoCardProps(1)}
+              {...getPhotoCardProps(cardMeta.findIndex((c) => c.id === 'story'))}
             >
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">NOTE</p>
@@ -555,7 +556,7 @@ export function NoteDetail() {
           {hasProfileCard && (
             <section
               className="note-detail-profile-card note-detail-section note-detail-section-axis note-detail-photo-card space-y-3 px-5 pt-4 pb-5"
-              {...getPhotoCardProps(hasStoryCard ? 2 : 1)}
+              {...getPhotoCardProps(cardMeta.findIndex((c) => c.id === 'profile'))}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -563,10 +564,11 @@ export function NoteDetail() {
                   <p className="mt-0.5 text-sm font-medium text-foreground">감각 프로필</p>
                 </div>
                 {note.axisValues && note.axisValues.length > 0 && (
-                  <div role="group" className="note-detail-scale-toggle flex p-0.5">
+                  <div role="radiogroup" aria-label="평점 척도" className="note-detail-scale-toggle flex p-0.5">
                     <button
                       type="button"
-                      aria-pressed={!use10Scale}
+                      role="radio"
+                      aria-checked={!use10Scale}
                       onClick={() => setUse10Scale(false)}
                       className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${!use10Scale ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     >
@@ -574,7 +576,8 @@ export function NoteDetail() {
                     </button>
                     <button
                       type="button"
-                      aria-pressed={use10Scale}
+                      role="radio"
+                      aria-checked={use10Scale}
                       onClick={() => setUse10Scale(true)}
                       className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${use10Scale ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     >
@@ -586,20 +589,23 @@ export function NoteDetail() {
 
               {note.axisValues && note.axisValues.length > 0 && (
                 <>
-                  {((note.schemas?.length ?? 0) > 0 || note.schema) && (
-                    <div className="rounded-lg bg-muted px-3 py-2">
-                      <p className="mb-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">템플릿</p>
-                      {(note.schemas?.length ?? 0) > 0 ? (
+                  {(() => {
+                    const schemaList = (note.schemas?.length ?? 0) > 0
+                      ? note.schemas!
+                      : note.schema
+                        ? [note.schema]
+                        : [];
+                    return schemaList.length > 0 && (
+                      <div className="note-detail-template-panel rounded-lg px-3 py-2">
+                        <p className="mb-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">템플릿</p>
                         <div className="flex flex-wrap gap-1">
-                          {note.schemas!.map((s) => (
+                          {schemaList.map((s) => (
                             <span key={s.id} className="text-xs font-medium text-foreground">{s.nameKo}</span>
                           ))}
                         </div>
-                      ) : note.schema && (
-                        <span className="text-xs font-medium text-foreground">{note.schema.nameKo}</span>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    );
+                  })()}
                   <RatingVisualization axisValues={note.axisValues} use10Scale={use10Scale} variant="poster" />
                 </>
               )}
