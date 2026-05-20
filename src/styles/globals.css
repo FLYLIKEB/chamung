@@ -2,7 +2,7 @@
 
 :root {
   --header-spacer: calc(3.25rem + env(safe-area-inset-top, 0px));
-  --bottom-nav-spacer: calc(5rem + env(safe-area-inset-bottom, 0px));
+  --bottom-nav-spacer: calc(5.25rem + env(safe-area-inset-bottom, 0px));
   --font-size: 16px;
   /* 카드 공통 */
   --card-shadow: none;
@@ -3579,8 +3579,14 @@ header[class*='bg-black/35'] h1 {
 
 /* Keep shared navigation readable across light/dark themes, even inside page-scoped scenes. */
 .app-bottom-nav {
-  background: var(--background) !important;
+  background: color-mix(in srgb, var(--background) 94%, transparent) !important;
   color: var(--muted-foreground) !important;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.dark .app-bottom-nav {
+  background: color-mix(in srgb, var(--background) 90%, transparent) !important;
 }
 
 .app-bottom-nav :where(button) {
