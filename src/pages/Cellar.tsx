@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Bell, Package, Trash2, ChevronUp, ChevronDown, ChevronLeft, Pencil, CheckCircle2, BookOpen, Coffee } from 'lucide-react';
+import { Bell, Package, Trash2, ChevronUp, ChevronDown, ChevronLeft, Pencil, CheckCircle2, BookOpen, Coffee, Minus } from 'lucide-react';
 import { Header } from '../components/Header';
 import { BottomNav } from '../components/BottomNav';
 import { Button } from '../components/ui/button';
@@ -62,15 +62,19 @@ function CellarRow({
   onEdit,
   onNoteClick,
   onSessionClick,
+  onQuantityChange,
 }: {
   item: CellarItem;
   onDelete: (id: number) => void;
   onEdit: (id: number) => void;
   onNoteClick: (teaId: number) => void;
   onSessionClick: (teaId: number) => void;
+  onQuantityChange: (item: CellarItem) => void;
 }) {
   const [deleting, setDeleting] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
 
@@ -101,7 +105,26 @@ function CellarRow({
     setRevealed(dx < 0);
   };
 
+  const adjustQuantity = async (delta: number) => {
+    const current = Number(item.quantity) || 0;
+    const nextQuantity = Math.max(0, current + delta);
+    if (nextQuantity === current || adjusting) return;
+
+    setAdjusting(true);
+    try {
+      const updated = await cellarApi.update(item.id, { quantity: nextQuantity });
+      onQuantityChange(updated);
+      toast.success(`잔량을 ${nextQuantity}${UNIT_LABELS[updated.unit] ?? updated.unit}로 변경했습니다.`);
+    } catch (error) {
+      logger.error('Failed to update cellar quantity:', error);
+      toast.error('잔량 변경에 실패했습니다.');
+    } finally {
+      setAdjusting(false);
+    }
+  };
+
   const tea = item.tea;
+  const canAdjustGrams = item.unit === 'g';
   const accentClass =
     tea.type && tea.type in TEA_TYPE_COLORS
       ? TEA_TYPE_COLORS[tea.type as keyof typeof TEA_TYPE_COLORS]
@@ -159,10 +182,25 @@ function CellarRow({
       {/* 행 콘텐츠 */}
       <div
         className={cn(
-          'flex items-center gap-3 px-4 py-2.5 transition-transform duration-200 ease-out',
+          'flex items-center gap-3 px-4 py-2.5 transition-transform duration-200 ease-out cursor-pointer',
           revealed ? '-translate-x-44' : 'translate-x-0 hover:bg-accent/40',
         )}
-        onClick={() => revealed && setRevealed(false)}
+        onClick={() => {
+          if (revealed) {
+            setRevealed(false);
+            return;
+          }
+          setExpanded((prev) => !prev);
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded((prev) => !prev);
+          }
+        }}
       >
         {/* 차 종류 색 dot */}
         <span className={cn('w-2 h-2 rounded-full shrink-0', accentClass)} aria-hidden />
@@ -170,13 +208,16 @@ function CellarRow({
         {/* 이름 + 메타 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-1.5 min-w-0">
-            <Link
-              to={`/tea/${item.teaId}`}
-              onClick={(e) => e.stopPropagation()}
-              className="text-sm font-medium text-foreground truncate hover:text-primary hover:underline transition-colors"
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((prev) => !prev);
+              }}
+              className="min-w-0 truncate text-left text-sm font-medium text-foreground transition-colors hover:text-primary"
             >
               {tea.name}
-            </Link>
+            </button>
             {tea.type && (
               <span className="text-[10px] text-muted-foreground shrink-0">{tea.type}</span>
             )}
@@ -218,8 +259,73 @@ function CellarRow({
         </span>
 
         {/* 스와이프 어포던스 힌트 */}
-        <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0 -mr-1" aria-hidden />
+        <ChevronLeft className={cn('w-3.5 h-3.5 text-muted-foreground/30 shrink-0 -mr-1 transition-transform', expanded && '-rotate-90')} aria-hidden />
       </div>
+
+      {expanded && !revealed && (
+        <div className="px-4 pb-3 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+          <div className="rounded-2xl border border-border/40 bg-card/70 px-4 py-3 text-center shadow-sm">
+            <p className="text-[11px] font-medium text-muted-foreground">잔량 빠른 조정</p>
+
+            <div className="mt-2 flex items-center justify-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  adjustQuantity(-3);
+                }}
+                disabled={adjusting || !canAdjustGrams || Number(item.quantity) <= 0}
+                className="h-11 min-w-20 rounded-full px-4 text-sm font-semibold"
+                aria-label="잔량 3g 줄이기"
+              >
+                <Minus className="mr-1.5 h-4 w-4" />
+                3g
+              </Button>
+
+              <div className="min-w-24 rounded-full bg-background/80 px-4 py-2">
+                <p className="text-lg font-semibold tabular-nums text-foreground leading-none">
+                  {Number(item.quantity)}
+                  <span className="ml-0.5 text-xs font-medium text-muted-foreground">{UNIT_LABELS[item.unit] ?? item.unit}</span>
+                </p>
+                <p className="mt-1 text-[10px] text-muted-foreground">현재 잔량</p>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  adjustQuantity(3);
+                }}
+                disabled={adjusting || !canAdjustGrams}
+                className="h-11 min-w-20 rounded-full px-4 text-sm font-semibold"
+                aria-label="잔량 3g 늘리기"
+              >
+                <AddLogoIcon className="mr-1.5 h-4 w-4" />
+                3g
+              </Button>
+            </div>
+
+            {!canAdjustGrams && (
+              <p className="mt-2 text-[11px] text-muted-foreground">g 단위 아이템만 ±3g 조정이 가능해요.</p>
+            )}
+
+            <div className="mt-3 flex items-center justify-center gap-2 text-[11px]">
+              <Link
+                to={`/tea/${item.teaId}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-primary hover:underline"
+              >
+                차 상세 보기
+              </Link>
+              {adjusting && <span className="text-muted-foreground">저장 중...</span>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -371,6 +477,11 @@ export function Cellar() {
   const handleDelete = (id: number) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
     setReminders((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleQuantityChange = (updatedItem: CellarItem) => {
+    setItems((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
+    setReminders((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
   };
 
   const handleNoteClick = (teaId: number) => {
@@ -615,6 +726,7 @@ export function Cellar() {
                       onEdit={handleEdit}
                       onNoteClick={handleNoteClick}
                       onSessionClick={handleSessionClick}
+                      onQuantityChange={handleQuantityChange}
                     />
                   </div>
                 ))}
@@ -654,6 +766,7 @@ export function Cellar() {
                       onEdit={handleEdit}
                       onNoteClick={handleNoteClick}
                       onSessionClick={handleSessionClick}
+                      onQuantityChange={handleQuantityChange}
                     />
                   ))}
                 </div>
