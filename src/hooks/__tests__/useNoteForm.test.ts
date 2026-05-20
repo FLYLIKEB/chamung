@@ -206,4 +206,42 @@ describe('useNoteForm - edit 모드', () => {
       expect.objectContaining({ overallRating: 5 }),
     );
   });
+
+  it('수정 저장 시 현재 선택된 차 ID를 update payload에 담아 전송', async () => {
+    mockSelectedTea = 2;
+    const { notesApi } = await import('../../lib/api');
+    vi.mocked(notesApi.getById).mockResolvedValue({
+      id: 1,
+      teaId: 1,
+      teaName: '기존 차',
+      userId: 1,
+      userName: '김차인',
+      schemaId: 1,
+      schemaIds: [1],
+      schema: { id: 1, code: 'standard', version: '1', nameKo: '기본', nameEn: 'Standard' },
+      overallRating: 4,
+      isRatingIncluded: true,
+      axisValues: [{ axisId: 10, valueNumeric: 4 }],
+      memo: '기존 메모',
+      images: null,
+      tags: [],
+      isPublic: false,
+      createdAt: new Date(),
+    } as any);
+
+    const { result } = renderHook(() => useNoteForm({ mode: 'edit', noteId: 1 }));
+
+    await waitFor(() => {
+      expect(result.current.note).not.toBeNull();
+    });
+
+    await act(async () => {
+      await result.current.handleSave();
+    });
+
+    expect(notesApi.update).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ teaId: 2 }),
+    );
+  });
 });

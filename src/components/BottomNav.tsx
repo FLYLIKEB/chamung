@@ -55,7 +55,7 @@ function NavButton({
       className={cn(
         'flex items-center justify-center gap-1 transition-colors duration-200',
         direction === 'horizontal'
-          ? 'min-h-[46px] min-w-[50px] flex-col rounded-2xl px-1'
+          ? 'min-h-[40px] min-w-[44px] flex-col rounded-xl px-0.5'
           : 'min-h-[40px] w-full px-3 py-2 rounded-none flex-row gap-3',
         isActive ? 'text-primary' : 'text-muted-foreground',
       )}
@@ -97,7 +97,7 @@ function ProfileButton({
       className={cn(
         'flex items-center justify-center gap-1 transition-colors duration-200',
         direction === 'horizontal'
-          ? 'min-h-[46px] min-w-[50px] flex-col rounded-2xl px-1'
+          ? 'min-h-[40px] min-w-[44px] flex-col rounded-xl px-0.5'
           : 'min-h-[40px] w-full px-3 py-2 rounded-none flex-row gap-3',
         isActive ? 'text-primary' : 'text-muted-foreground',
       )}
@@ -141,7 +141,7 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
       {/* Mobile: horizontal bottom bar */}
       <nav
         className={cn(
-          'app-bottom-nav fixed left-4 right-4 z-60 border border-border/70 rounded-[1.75rem] shadow-[0_16px_40px_rgba(0,0,0,0.14)] px-2 py-1.5',
+          'app-bottom-nav app-bottom-nav-mobile fixed left-6 right-6 z-60 overflow-hidden isolate border border-white/35 rounded-[1.5rem] shadow-[0_14px_34px_rgba(0,0,0,0.16)] px-1.5 py-1',
           'bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))]',
           'flex items-center justify-around',
           'md:hidden',

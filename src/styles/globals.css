@@ -2,7 +2,7 @@
 
 :root {
   --header-spacer: calc(3.25rem + env(safe-area-inset-top, 0px));
-  --bottom-nav-spacer: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  --bottom-nav-spacer: calc(4.5rem + env(safe-area-inset-bottom, 0px));
   --font-size: 16px;
   /* 카드 공통 */
   --card-shadow: none;
@@ -3589,12 +3589,66 @@ header[class*='bg-black/35'] h1 {
   background: color-mix(in srgb, var(--background) 90%, transparent) !important;
 }
 
+.app-bottom-nav-mobile {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.12) 42%, rgba(255, 255, 255, 0.2)),
+    color-mix(in srgb, var(--background) 24%, transparent) !important;
+  border-color: rgba(255, 255, 255, 0.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.16),
+    0 14px 34px rgba(0, 0, 0, 0.16);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  backdrop-filter: saturate(180%) blur(28px);
+}
+
+.app-bottom-nav-mobile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.58), transparent 34%),
+    radial-gradient(circle at 86% 100%, rgba(255, 255, 255, 0.22), transparent 40%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.dark .app-bottom-nav-mobile {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06) 44%, rgba(255, 255, 255, 0.12)),
+    rgba(24, 24, 24, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 34px rgba(0, 0, 0, 0.32);
+}
+
 .app-bottom-nav :where(button) {
   color: var(--muted-foreground) !important;
 }
 
+.app-bottom-nav-mobile :where(button) {
+  text-shadow: 0 1px 10px rgba(255, 255, 255, 0.42);
+}
+
+.dark .app-bottom-nav-mobile :where(button) {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.36);
+}
+
 .app-bottom-nav :where(button[class*='text-primary']) {
   color: var(--primary) !important;
+}
+
+.app-bottom-nav-mobile :where(button[class*='text-primary']) {
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.dark .app-bottom-nav-mobile :where(button[class*='text-primary']) {
+  background: rgba(255, 255, 255, 0.10);
 }
 
 .app-bottom-nav :where(svg, span, div) {

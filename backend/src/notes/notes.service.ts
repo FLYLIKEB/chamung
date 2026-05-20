@@ -340,8 +340,24 @@ export class NotesService {
       }
     }
 
-    // tags와 axisValues 필드를 분리
-    const { tags, axisValues, schemaId: _schemaId, schemaIds: _schemaIds, ...noteData } = updateNoteDto as any;
+    // tags, axisValues, teaId 필드를 분리
+    // teaId는 relation이 함께 로드된 상태에서 Object.assign으로만 바꾸면
+    // 기존 note.tea relation이 저장 시 다시 우선되어 FK가 되돌아갈 수 있어 명시 처리한다.
+    const {
+      tags,
+      axisValues,
+      teaId: requestedTeaId,
+      schemaId: _schemaId,
+      schemaIds: _schemaIds,
+      ...noteData
+    } = updateNoteDto as any;
+    const previousTeaId = note.teaId;
+
+    if (requestedTeaId !== undefined && requestedTeaId !== note.teaId) {
+      const tea = await this.teasService.findOne(requestedTeaId);
+      note.teaId = tea.id;
+      (note as any).tea = tea;
+    }
 
     // 이미지 변경 시 제거된 이미지 S3에서 삭제
     if (noteData.images !== undefined && note.images && note.images.length > 0) {
@@ -377,7 +393,12 @@ export class NotesService {
     }
 
     // 차의 평균 평점 업데이트
-    await this.updateTeaRating(note.teaId);
+    // 차가 바뀐 경우 기존 차와 새 차 양쪽의 집계가 달라진다.
+    await Promise.all(
+      [...new Set([previousTeaId, updatedNote.teaId])].map((teaId) =>
+        this.updateTeaRating(teaId),
+      ),
+    );
 
     // 축 값와 태그를 포함한 업데이트된 노트 반환
     return this.findOne(id, userId);

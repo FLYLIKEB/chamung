@@ -56,9 +56,9 @@ describe('SpeedDialFAB', () => {
     fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
     expect(screen.getByRole('button', { name: '차 추가' })).toBeVisible();
     expect(screen.getByRole('button', { name: '차록 작성' })).toBeVisible();
-    expect(screen.getByRole('button', { name: '찻장 추가' })).toBeVisible();
-    expect(screen.getByRole('button', { name: '다회모드' })).toBeVisible();
-    expect(screen.getByRole('button', { name: '블라인드모드' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '찻장에 추가' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '다회 작성' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '블라인드 작성' })).toBeVisible();
   });
 
   it('차 추가 클릭 → /tea/new 이동', () => {
@@ -78,21 +78,21 @@ describe('SpeedDialFAB', () => {
   it('찻장 추가 클릭 → /cellar/new 이동', () => {
     renderFAB();
     fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
-    fireEvent.click(screen.getByRole('button', { name: '찻장 추가' }));
+    fireEvent.click(screen.getByRole('button', { name: '찻장에 추가' }));
     expect(mockNavigate).toHaveBeenCalledWith('/cellar/new');
   });
 
   it('다회모드 클릭 → toggleSessionMode 호출', () => {
     renderFAB();
     fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
-    fireEvent.click(screen.getByRole('button', { name: '다회모드' }));
+    fireEvent.click(screen.getByRole('button', { name: '다회 작성' }));
     expect(mockToggleSessionMode).toHaveBeenCalledOnce();
   });
 
   it('블라인드모드 클릭 → toggleBlindMode 호출', () => {
     renderFAB();
     fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
-    fireEvent.click(screen.getByRole('button', { name: '블라인드모드' }));
+    fireEvent.click(screen.getByRole('button', { name: '블라인드 작성' }));
     expect(mockToggleBlindMode).toHaveBeenCalledOnce();
   });
 
@@ -100,7 +100,7 @@ describe('SpeedDialFAB', () => {
     renderFAB();
     fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
     // 오버레이 클릭
-    const overlay = document.querySelector('[aria-hidden="true"]') as HTMLElement;
+    const overlay = document.querySelector('.fixed.inset-0[aria-hidden="true"]') as HTMLElement;
     expect(overlay).toBeInTheDocument();
     fireEvent.click(overlay);
     expect(screen.getByRole('button', { name: '메뉴 열기' })).toBeInTheDocument();

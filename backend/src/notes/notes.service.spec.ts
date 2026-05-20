@@ -34,6 +34,7 @@ describe('NotesService', () => {
 
   const mockQueryBuilder = {
     leftJoinAndSelect: jest.fn().mockReturnThis(),
+    leftJoin: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
     addSelect: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
@@ -553,6 +554,24 @@ describe('NotesService', () => {
       });
     });
 
+    it('차를 변경할 때 새 차 존재를 확인하고 변경된 teaId로 저장해야 함', async () => {
+      const newTea = { id: 2, name: '새 차', type: '홍차' };
+      mockTeasService.findOne.mockResolvedValue(newTea);
+      mockNotesRepository.save.mockImplementation(async (note) => note);
+
+      await service.update(noteId, userId, { teaId: 2 });
+
+      expect(mockTeasService.findOne).toHaveBeenCalledWith(2);
+      expect(mockNotesRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          teaId: 2,
+          tea: newTea,
+        }),
+      );
+      expect(mockTeasService.updateRating).toHaveBeenCalledWith(1, 0, 0);
+      expect(mockTeasService.updateRating).toHaveBeenCalledWith(2, 0, 0);
+    });
+
     it('존재하지 않는 스키마로 변경 시도 시 NotFoundException을 던져야 함', async () => {
       const updateNoteDto: UpdateNoteDto = {
         schemaId: 999,
@@ -724,6 +743,7 @@ describe('NotesService', () => {
       select: jest.fn().mockReturnThis(),
       addSelect: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       groupBy: jest.fn().mockReturnThis(),
