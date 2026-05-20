@@ -225,7 +225,12 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <AppContent />
-          <Toaster offset={{ bottom: 'calc(var(--bottom-nav-spacer) + 0.5rem)' }} />
+          <Toaster
+            position="top-center"
+            offset={{ top: 'calc(var(--header-spacer) + 2.5rem)' }}
+            mobileOffset={{ top: 'calc(var(--header-spacer) + 2.5rem)', left: '1rem', right: '1rem' }}
+            swipeDirections={["left", "right", "top"]}
+          />
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
