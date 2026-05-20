@@ -55,7 +55,7 @@ function NavButton({
       className={cn(
         'flex items-center justify-center gap-1 transition-colors duration-200',
         direction === 'horizontal'
-          ? 'min-h-[44px] min-w-[44px] flex-col'
+          ? 'min-h-[46px] min-w-[50px] flex-col rounded-2xl px-1'
           : 'min-h-[40px] w-full px-3 py-2 rounded-none flex-row gap-3',
         isActive ? 'text-primary' : 'text-muted-foreground',
       )}
@@ -97,7 +97,7 @@ function ProfileButton({
       className={cn(
         'flex items-center justify-center gap-1 transition-colors duration-200',
         direction === 'horizontal'
-          ? 'min-h-[44px] min-w-[44px] flex-col'
+          ? 'min-h-[46px] min-w-[50px] flex-col rounded-2xl px-1'
           : 'min-h-[40px] w-full px-3 py-2 rounded-none flex-row gap-3',
         isActive ? 'text-primary' : 'text-muted-foreground',
       )}
@@ -141,8 +141,8 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
       {/* Mobile: horizontal bottom bar */}
       <nav
         className={cn(
-          'app-bottom-nav fixed bottom-0 left-0 right-0 z-60 bg-background border-0 rounded-none shadow-none px-2 py-3',
-          'pb-[calc(0.75rem+env(safe-area-inset-bottom))]',
+          'app-bottom-nav fixed left-4 right-4 z-60 border border-border/70 rounded-[1.75rem] shadow-[0_16px_40px_rgba(0,0,0,0.14)] px-2 py-1.5',
+          'bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))]',
           'flex items-center justify-around',
           'md:hidden',
           className,
