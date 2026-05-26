@@ -787,10 +787,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const handleAuthLogout = () => { void logout(); };
+    const handleAuthLogout = () => {
+      if (!token && !user) return;
+      void logout();
+    };
     window.addEventListener('auth:logout', handleAuthLogout);
     return () => window.removeEventListener('auth:logout', handleAuthLogout);
-  }, [logout]);
+  }, [logout, token, user]);
 
   // isAuthenticated 계산값 메모이제이션
   const isAuthenticated = useMemo(() => !!token && !!user, [token, user]);

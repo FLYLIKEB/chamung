@@ -172,7 +172,7 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
                         onChange={(e) => setEditContent(e.target.value)}
                         rows={2}
                         autoFocus
-                        className="post-detail-comment-editor min-h-0 text-sm"
+                        className="post-detail-comment-editor min-h-0 text-base md:text-sm"
                       />
                       <div className="flex gap-2">
                         <Button
@@ -232,7 +232,7 @@ export function CommentList({ postId, comments, onCommentsChange }: CommentListP
               onChange={(e) => setNewContent(e.target.value)}
               placeholder="댓글을 입력하세요..."
               maxLength={1000}
-              className="post-detail-comment-input flex-1 h-10 bg-transparent border-0 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none caret-primary"
+              className="post-detail-comment-input flex-1 h-10 bg-transparent border-0 text-base md:text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none caret-primary"
             />
             {/* 전송 버튼 */}
             <button

@@ -147,7 +147,18 @@ export function PostDetail() {
   }, [post, comments.length]);
 
   const handleScrollToComments = () => {
-    commentsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const commentsSection = commentsSectionRef.current;
+    const scrollRoot = articleRef.current?.closest('.overflow-y-auto') as HTMLElement | null;
+
+    if (commentsSection && scrollRoot) {
+      scrollRoot.scrollTo({
+        top: Math.max(commentsSection.offsetTop - scrollRoot.offsetTop, 0),
+        behavior: 'smooth',
+      });
+      return;
+    }
+
+    commentsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleToggleLike = async () => {

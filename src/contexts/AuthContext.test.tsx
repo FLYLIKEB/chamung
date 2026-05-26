@@ -3,9 +3,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider, isKakaoLoginCallbackUrl } from './AuthContext';
 import { authApi, usersApi } from '../lib/api';
 
+const { toast } = vi.hoisted(() => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock('sonner', () => ({ toast }));
+
 vi.mock('../lib/api', () => ({
   authApi: {
     getMe: vi.fn(),
+    logout: vi.fn(),
   },
   usersApi: {
     getOnboardingPreference: vi.fn(),
@@ -15,10 +25,12 @@ vi.mock('../lib/api', () => ({
 describe('AuthProvider initial session check', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     window.history.replaceState({}, '', '/');
     vi.mocked(authApi.getMe).mockResolvedValue({
       user: { id: 1, email: 'user@example.com', name: 'User' },
     });
+    vi.mocked(authApi.logout).mockResolvedValue(undefined);
     vi.mocked(usersApi.getOnboardingPreference).mockResolvedValue({
       hasCompletedOnboarding: true,
     });
@@ -51,5 +63,22 @@ describe('AuthProvider initial session check', () => {
     );
 
     await waitFor(() => expect(authApi.getMe).not.toHaveBeenCalled());
+  });
+
+  it('does not show a logout toast when auth:logout fires while already unauthenticated', async () => {
+    vi.mocked(authApi.getMe).mockRejectedValueOnce(new Error('Unauthorized'));
+
+    render(
+      <AuthProvider>
+        <div>app</div>
+      </AuthProvider>,
+    );
+
+    await waitFor(() => expect(authApi.getMe).toHaveBeenCalledTimes(1));
+
+    window.dispatchEvent(new Event('auth:logout'));
+
+    await waitFor(() => expect(authApi.logout).not.toHaveBeenCalled());
+    expect(toast.success).not.toHaveBeenCalledWith('로그아웃되었습니다.');
   });
 });
