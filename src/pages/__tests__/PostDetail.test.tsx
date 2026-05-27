@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, vi, describe, it, expect } from 'vitest';
 import { PostDetail } from '../PostDetail';
 import { renderWithRouter } from '../../test/renderWithRouter';
@@ -130,6 +130,37 @@ describe('PostDetail 페이지', () => {
     await waitFor(() => {
       expect(screen.getByText('첫 번째 댓글입니다.')).toBeInTheDocument();
     });
+  });
+
+  it('댓글 이동은 내부 스크롤 컨테이너를 직접 스크롤한다', async () => {
+    const scrollTo = vi.fn();
+    const scrollIntoView = vi.fn();
+
+    renderWithRouter(
+      <div className="flex h-screen flex-col overflow-hidden">
+        <div
+          className="flex-1 overflow-y-auto"
+          ref={(node) => {
+            if (!node) return;
+            Object.defineProperty(node, 'scrollTo', { value: scrollTo, configurable: true });
+          }}
+        >
+          <PostDetail />
+        </div>
+      </div>,
+      { route: '/chadam/1' }
+    );
+
+    const commentHeading = await screen.findByText('댓글');
+    const commentsSection = commentHeading.closest('.post-detail-comments') as HTMLDivElement;
+
+    Object.defineProperty(commentsSection, 'offsetTop', { value: 640, configurable: true });
+    Object.defineProperty(commentsSection, 'scrollIntoView', { value: scrollIntoView, configurable: true });
+
+    fireEvent.click(screen.getByLabelText('댓글로 이동'));
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 640, behavior: 'smooth' });
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
   it('협찬 뱃지를 표시한다 (isSponsored=true)', async () => {

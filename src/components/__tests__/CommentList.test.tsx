@@ -89,6 +89,23 @@ describe('CommentList 컴포넌트', () => {
     expect(screen.getByPlaceholderText('댓글을 입력하세요...')).toBeInTheDocument();
   });
 
+  it('모바일 확대를 막기 위해 댓글 입력 폰트 크기를 16px 이상으로 유지한다', () => {
+    const myComment: Comment = { ...mockComments[0], userId: mockUser.id };
+
+    renderWithRouter(
+      <CommentList postId={1} comments={[myComment]} onCommentsChange={onCommentsChange} />,
+    );
+
+    const createInput = screen.getByPlaceholderText('댓글을 입력하세요...');
+    expect(createInput.className).toContain('text-base');
+
+    fireEvent.pointerDown(screen.getByLabelText('더보기'));
+    fireEvent.click(screen.getByText('수정'));
+
+    const editInput = screen.getByDisplayValue('첫 번째 댓글입니다.');
+    expect(editInput.className).toContain('text-base');
+  });
+
   it('비로그인 사용자에게 댓글 입력 안내를 표시한다', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,

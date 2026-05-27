@@ -13,7 +13,7 @@ PR 링크 또는 PR 번호만 제공하면, 모든 리뷰를 자동으로 확인
 PR 링크 또는 PR 번호를 제공하면 자동으로 처리됩니다:
 
 ```
-PR 링크: https://github.com/FLYLIKEB/ChaLog/pull/19
+PR 링크: https://github.com/FLYLIKEB/chamung/pull/19
 또는
 PR 번호: 19
 ```
@@ -33,7 +33,7 @@ PR 번호: 19
 
 ```bash
 # PR 링크에서 번호 추출
-PR_URL="https://github.com/FLYLIKEB/ChaLog/pull/19"
+PR_URL="https://github.com/FLYLIKEB/chamung/pull/19"
 PR_NUMBER=$(echo $PR_URL | grep -oP '/pull/\K\d+')
 # 또는 직접 제공
 PR_NUMBER=19
@@ -44,7 +44,7 @@ PR_NUMBER=19
 ```bash
 gh api graphql -f query="
 query {
-  repository(owner: \"FLYLIKEB\", name: \"ChaLog\") {
+  repository(owner: \"FLYLIKEB\", name: \"chamung\") {
     pullRequest(number: $PR_NUMBER) {
       reviewThreads(first: 100) {
         nodes {

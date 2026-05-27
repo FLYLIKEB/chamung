@@ -4,13 +4,13 @@ set -e
 set -u
 
 # 사용법: ./scripts/apply-pr-review.sh <PR_URL_OR_NUMBER>
-# 예시: ./scripts/apply-pr-review.sh https://github.com/FLYLIKEB/ChaLog/pull/73
+# 예시: ./scripts/apply-pr-review.sh https://github.com/FLYLIKEB/chamung/pull/73
 # 예시: ./scripts/apply-pr-review.sh 73
 
 PR_URL_OR_NUMBER=${1:-}
 if [ -z "$PR_URL_OR_NUMBER" ]; then
   echo "❌ Usage: $0 <PR_URL_OR_NUMBER>"
-  echo "   예시: $0 https://github.com/FLYLIKEB/ChaLog/pull/73"
+  echo "   예시: $0 https://github.com/FLYLIKEB/chamung/pull/73"
   echo "   예시: $0 73"
   exit 1
 fi
@@ -45,7 +45,7 @@ fi
 # 리뷰 스레드 가져오기
 echo "🔍 Fetching review threads..."
 REPO_OWNER="FLYLIKEB"
-REPO_NAME="ChaLog"
+REPO_NAME="chamung"
 
 REVIEW_THREADS=$(gh api graphql -f query="
 query {
