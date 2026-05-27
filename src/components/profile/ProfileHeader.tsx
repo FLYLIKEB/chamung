@@ -3,6 +3,15 @@ import { User } from '@/types';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/button';
 
+const safeUrl = (u?: string | null): string | undefined => {
+  try {
+    const p = new URL(u ?? '');
+    return p.protocol === 'http:' || p.protocol === 'https:' ? p.href : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 interface ProfileHeaderProps {
   user: User;
   isOwnProfile: boolean;
@@ -78,13 +87,13 @@ export function ProfileHeader({
             )}
             {(user.instagramUrl || user.blogUrl) && (
               <div className="flex items-center gap-2">
-                {user.instagramUrl && (
-                  <a href={user.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="인스타그램">
+                {safeUrl(user.instagramUrl) && (
+                  <a href={safeUrl(user.instagramUrl)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="인스타그램">
                     <Instagram className="w-4 h-4" />
                   </a>
                 )}
-                {user.blogUrl && (
-                  <a href={user.blogUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="블로그">
+                {safeUrl(user.blogUrl) && (
+                  <a href={safeUrl(user.blogUrl)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="블로그">
                     <Globe className="w-4 h-4" />
                   </a>
                 )}
@@ -136,13 +145,13 @@ export function ProfileHeader({
           )}
           {(user.instagramUrl || user.blogUrl) && (
             <div className="flex items-center gap-1.5">
-              {user.instagramUrl && (
-                <a href={user.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="인스타그램">
+              {safeUrl(user.instagramUrl) && (
+                <a href={safeUrl(user.instagramUrl)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="인스타그램">
                   <Instagram className="w-3.5 h-3.5" />
                 </a>
               )}
-              {user.blogUrl && (
-                <a href={user.blogUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="블로그">
+              {safeUrl(user.blogUrl) && (
+                <a href={safeUrl(user.blogUrl)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="블로그">
                   <Globe className="w-3.5 h-3.5" />
                 </a>
               )}
