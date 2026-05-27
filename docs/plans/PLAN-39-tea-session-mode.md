@@ -6,7 +6,7 @@
 
 - **번호:** #39
 - **제목:** [3단계] 다회 모드(Tea Session Mode) - 세션 생성 및 탕별 기록
-- **URL:** https://github.com/FLYLIKEB/ChaLog/issues/39
+- **URL:** https://github.com/FLYLIKEB/chamung/issues/39
 - **브랜치:** `feature/issue-39-tea-session-mode`
 
 ---
