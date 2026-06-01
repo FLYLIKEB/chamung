@@ -17,9 +17,6 @@ export interface TeaRecapSummary {
   shareText: string;
 }
 
-
-export type TeaRecapSlideTone = 'matcha' | 'roast' | 'oolong' | 'berry' | 'night';
-
 export interface TeaRecapSlide {
   id: string;
   eyebrow: string;
@@ -27,7 +24,6 @@ export interface TeaRecapSlide {
   description: string;
   metric?: string;
   detail?: string;
-  tone: TeaRecapSlideTone;
   isSummary?: boolean;
 }
 
@@ -118,7 +114,6 @@ export function buildTeaRecapSlides(summary: TeaRecapSummary): TeaRecapSlide[] {
       description: `${summary.periodLabel} 동안 쌓인 차록을 카드로 정리했어요.`,
       metric: `${summary.totalCount}개의 차록`,
       detail: '좌우 버튼으로 한 장씩 넘겨보세요.',
-      tone: 'matcha',
     },
     {
       id: 'type',
@@ -129,7 +124,6 @@ export function buildTeaRecapSlides(summary: TeaRecapSummary): TeaRecapSlide[] {
         : '차록을 더 남기면 대표 차종을 보여드릴게요.',
       metric: summary.topTeaType ? `${summary.topTeaTypeCount}건` : '—',
       detail: '차종 분포 기준',
-      tone: 'oolong',
     },
     {
       id: 'tea',
@@ -140,7 +134,6 @@ export function buildTeaRecapSlides(summary: TeaRecapSummary): TeaRecapSlide[] {
         : '같은 차를 여러 번 기록하면 이 카드가 채워져요.',
       metric: summary.topTeaName ? `${summary.topTeaCount}번` : '—',
       detail: '자주 마신 차 기준',
-      tone: 'roast',
     },
     {
       id: 'flavor',
@@ -151,7 +144,6 @@ export function buildTeaRecapSlides(summary: TeaRecapSummary): TeaRecapSlide[] {
         : '향미 태그를 남기면 취향이 더 선명해져요.',
       metric: summary.topTag ? `${summary.topTagCount}회` : '—',
       detail: `평균 별점 ${ratingText}`,
-      tone: 'berry',
     },
     {
       id: 'summary',
@@ -164,7 +156,6 @@ export function buildTeaRecapSlides(summary: TeaRecapSummary): TeaRecapSlide[] {
         summary.topTeaName ? `최다 기록 ${summary.topTeaName}` : null,
         summary.topTag ? `향미 #${summary.topTag}` : null,
       ].filter(Boolean).join(' · '),
-      tone: 'night',
       isSummary: true,
     },
   ];
@@ -177,53 +168,40 @@ export function createTeaRecapSvg(summary: TeaRecapSummary): string {
   const rating = summary.averageRating ? `★ ${summary.averageRating}` : '—';
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-label="${escapeXml(summary.title)}">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#151c16"/>
-      <stop offset="52%" stop-color="#334827"/>
-      <stop offset="100%" stop-color="#c8d8a6"/>
-    </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#30452f" flood-opacity="0.18"/>
-    </filter>
-  </defs>
-  <rect width="1080" height="1350" rx="72" fill="url(#bg)"/>
-  <circle cx="904" cy="170" r="168" fill="#ffffff" opacity="0.28"/>
-  <circle cx="154" cy="1130" r="226" fill="#ffffff" opacity="0.2"/>
-  <g filter="url(#shadow)">
-    <rect x="96" y="110" width="888" height="1130" rx="56" fill="#fffaf2" opacity="0.94"/>
-  </g>
-  <text x="144" y="198" fill="#58734d" font-size="34" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">CHALOG RECAP</text>
-  <text x="144" y="280" fill="#24331f" font-size="64" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="800">${escapeXml(summary.profileName)}님의</text>
-  <text x="144" y="356" fill="#24331f" font-size="64" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="800">차록 리캡</text>
-  <text x="144" y="430" fill="#6d7d64" font-size="30" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">${escapeXml(summary.periodLabel)}</text>
+  <rect width="1080" height="1350" rx="72" fill="#f2f2f2"/>
+  <rect x="96" y="110" width="888" height="1130" rx="56" fill="#ffffff" stroke="#d7d7d7" stroke-width="2"/>
+  <line x1="144" y1="470" x2="936" y2="470" stroke="#e5e5e5" stroke-width="2"/>
+  <text x="144" y="198" fill="#6b6b6b" font-size="34" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">CHALOG RECAP</text>
+  <text x="144" y="280" fill="#1a1a1a" font-size="64" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="800">${escapeXml(summary.profileName)}님의</text>
+  <text x="144" y="356" fill="#1a1a1a" font-size="64" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="800">차록 리캡</text>
+  <text x="144" y="430" fill="#6b6b6b" font-size="30" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">${escapeXml(summary.periodLabel)}</text>
 
-  <rect x="144" y="508" width="792" height="184" rx="34" fill="#eff6e9"/>
-  <text x="190" y="585" fill="#2d4128" font-size="34" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">${escapeXml(summary.headline)}</text>
-  <text x="190" y="644" fill="#60745a" font-size="28" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">차 기록을 한 장의 이미지로 공유해요.</text>
+  <rect x="144" y="508" width="792" height="184" rx="34" fill="#f7f7f7" stroke="#e5e5e5" stroke-width="2"/>
+  <text x="190" y="585" fill="#1a1a1a" font-size="34" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">${escapeXml(summary.headline)}</text>
+  <text x="190" y="644" fill="#6b6b6b" font-size="28" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">차 기록을 한 장의 이미지로 공유해요.</text>
 
   <g font-family="Pretendard, Apple SD Gothic Neo, sans-serif">
-    <rect x="144" y="750" width="236" height="164" rx="32" fill="#ffffff"/>
-    <text x="174" y="816" fill="#708066" font-size="26">차록</text>
-    <text x="174" y="878" fill="#24331f" font-size="54" font-weight="800">${summary.totalCount}</text>
+    <rect x="144" y="750" width="236" height="164" rx="32" fill="#f7f7f7" stroke="#e5e5e5" stroke-width="2"/>
+    <text x="174" y="816" fill="#6b6b6b" font-size="26">차록</text>
+    <text x="174" y="878" fill="#1a1a1a" font-size="54" font-weight="800">${summary.totalCount}</text>
 
-    <rect x="422" y="750" width="236" height="164" rx="32" fill="#ffffff"/>
-    <text x="452" y="816" fill="#708066" font-size="26">평균 별점</text>
-    <text x="452" y="878" fill="#24331f" font-size="54" font-weight="800">${escapeXml(rating)}</text>
+    <rect x="422" y="750" width="236" height="164" rx="32" fill="#f7f7f7" stroke="#e5e5e5" stroke-width="2"/>
+    <text x="452" y="816" fill="#6b6b6b" font-size="26">평균 별점</text>
+    <text x="452" y="878" fill="#1a1a1a" font-size="54" font-weight="800">${escapeXml(rating)}</text>
 
-    <rect x="700" y="750" width="236" height="164" rx="32" fill="#ffffff"/>
-    <text x="730" y="816" fill="#708066" font-size="26">대표 차종</text>
-    <text x="730" y="878" fill="#24331f" font-size="42" font-weight="800">${escapeXml(summary.topTeaType ?? '—')}</text>
+    <rect x="700" y="750" width="236" height="164" rx="32" fill="#f7f7f7" stroke="#e5e5e5" stroke-width="2"/>
+    <text x="730" y="816" fill="#6b6b6b" font-size="26">대표 차종</text>
+    <text x="730" y="878" fill="#1a1a1a" font-size="42" font-weight="800">${escapeXml(summary.topTeaType ?? '—')}</text>
   </g>
 
-  <g font-family="Pretendard, Apple SD Gothic Neo, sans-serif" fill="#24331f">
+  <g font-family="Pretendard, Apple SD Gothic Neo, sans-serif" fill="#1a1a1a">
     <text x="144" y="1010" font-size="30" font-weight="700">가장 자주 마신 차</text>
     <text x="144" y="1062" font-size="42" font-weight="800">${escapeXml(topTea)}</text>
     <text x="144" y="1146" font-size="30" font-weight="700">대표 차종 · 향미</text>
     <text x="144" y="1198" font-size="38" font-weight="800">${escapeXml(topType)} / ${escapeXml(topTag)}</text>
   </g>
 
-  <text x="144" y="1270" fill="#7a8a70" font-size="28" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">chalog.app</text>
+  <text x="144" y="1270" fill="#6b6b6b" font-size="28" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">chalog.app</text>
 </svg>`;
 }
 
