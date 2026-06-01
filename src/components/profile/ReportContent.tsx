@@ -10,9 +10,10 @@ import { Note } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Loader2, Share2, Download } from 'lucide-react';
 import { cn } from '@/components/ui/utils';
 import { useReportData, getAvailableMonths, formatMonthLabel } from '@/hooks/useReportData';
+import { buildTeaRecapSummary, createSvgDataUrl, createSvgFile, createTeaRecapSvg } from '@/utils/recap';
 
 const TEA_TYPE_CHART_COLORS: Record<string, string> = {
   '녹차': '#4ade80',
@@ -29,20 +30,38 @@ function getTypeColor(type: string): string {
   return TEA_TYPE_CHART_COLORS[type] ?? '#94a3b8';
 }
 
-export function ReportContent() {
+interface ReportContentProps {
+  userId?: number;
+  profileName?: string;
+  isOwnProfile?: boolean;
+}
+
+interface NotesPageResponse {
+  data?: Note[];
+  notes?: Note[];
+}
+
+function toNotesArray(data: Note[] | NotesPageResponse): Note[] {
+  return Array.isArray(data) ? data : data.data ?? data.notes ?? [];
+}
+
+export function ReportContent({ userId, profileName, isOwnProfile = true }: ReportContentProps) {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const targetUserId = userId ?? user?.id;
+  const displayName = profileName ?? user?.name ?? '차 애호가';
 
   useEffect(() => {
-    if (authLoading || !user) return;
+    if (authLoading || !targetUserId) return;
     const fetchNotes = async () => {
       try {
         setIsLoading(true);
-        const data = await notesApi.getAll(user.id, undefined, undefined, undefined, undefined, 'latest', 1, 500);
-        setNotes(Array.isArray(data) ? data : (data as Record<string, unknown>)?.data as Note[] ?? []);
+        const publicOnly = isOwnProfile ? undefined : true;
+        const data = await notesApi.getAll(targetUserId, publicOnly, undefined, undefined, undefined, 'latest', 1, 500);
+        setNotes(toNotesArray(data));
       } catch (error) {
         logger.error('Failed to fetch notes for report:', error);
         toast.error('차록 데이터를 불러오는데 실패했습니다.');
@@ -51,10 +70,24 @@ export function ReportContent() {
       }
     };
     fetchNotes();
-  }, [user, authLoading]);
+  }, [targetUserId, isOwnProfile, authLoading]);
 
   const availableMonths = useMemo(() => getAvailableMonths(notes), [notes]);
   const report = useReportData(notes, selectedMonth);
+  const filteredNotes = useMemo(
+    () => selectedMonth
+      ? notes.filter((note) => {
+        const createdAt = new Date(note.createdAt);
+        const monthKey = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
+        return monthKey === selectedMonth;
+      })
+      : notes,
+    [notes, selectedMonth],
+  );
+  const recapSummary = useMemo(
+    () => buildTeaRecapSummary(report, filteredNotes, selectedMonth, displayName),
+    [report, filteredNotes, selectedMonth, displayName],
+  );
 
   const handlePrevMonth = () => {
     if (!selectedMonth) {
@@ -73,6 +106,42 @@ export function ReportContent() {
   };
 
   const monthDiff = report.thisMonthCount - report.lastMonthCount;
+
+  const handleShareRecap = async () => {
+    const svg = createTeaRecapSvg(recapSummary);
+    const shareData = {
+      title: recapSummary.title,
+      text: recapSummary.shareText,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast.success('리캡 공유창을 열었어요.');
+        return;
+      }
+      await navigator.clipboard.writeText(`${recapSummary.shareText}\n${window.location.href}`);
+      toast.success('리캡 내용을 클립보드에 복사했어요.');
+    } catch (error) {
+      logger.error('Failed to share recap:', error);
+      const link = document.createElement('a');
+      link.href = createSvgDataUrl(svg);
+      link.download = `chalog-recap-${selectedMonth ?? 'all'}.svg`;
+      link.click();
+      toast.success('공유 이미지로 저장했어요.');
+    }
+  };
+
+  const handleDownloadRecap = () => {
+    const svg = createTeaRecapSvg(recapSummary);
+    const link = document.createElement('a');
+    link.href = createSvgDataUrl(svg);
+    link.download = `chalog-recap-${selectedMonth ?? 'all'}.svg`;
+    link.click();
+    toast.success('리캡 이미지를 저장했어요.');
+  };
+
 
   if (authLoading || isLoading) {
     return (
@@ -94,6 +163,38 @@ export function ReportContent() {
 
   return (
     <div className="p-4 md:px-8 space-y-6 max-w-2xl mx-auto">
+      <div className="overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/15 via-card to-muted p-5 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">ChaLog Recap</p>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">{recapSummary.title}</h2>
+            <p className="text-sm text-muted-foreground">{recapSummary.headline}</p>
+          </div>
+          <div className="rounded-2xl bg-background/70 px-3 py-2 text-right">
+            <p className="text-xs text-muted-foreground">{recapSummary.periodLabel}</p>
+            <p className="text-lg font-bold text-primary">{recapSummary.totalCount}건</p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <RecapMetric label="대표 차종" value={recapSummary.topTeaType ?? '—'} detail={recapSummary.topTeaType ? `${recapSummary.topTeaTypeCount}건` : '기록 없음'} />
+          <RecapMetric label="자주 마신 차" value={recapSummary.topTeaName ?? '—'} detail={recapSummary.topTeaName ? `${recapSummary.topTeaCount}번` : '기록 없음'} />
+          <RecapMetric label="대표 향미" value={recapSummary.topTag ? `#${recapSummary.topTag}` : '—'} detail={recapSummary.topTag ? `${recapSummary.topTagCount}회` : '태그 없음'} />
+          <RecapMetric label="평균 별점" value={recapSummary.averageRating ? `★${recapSummary.averageRating}` : '—'} detail="기록 기준" />
+        </div>
+
+        <div className="mt-5 flex gap-2">
+          <Button type="button" onClick={handleShareRecap} className="flex-1 gap-2" aria-label="차록 리캡 공유">
+            <Share2 className="w-4 h-4" />
+            공유하기
+          </Button>
+          <Button type="button" variant="outline" onClick={handleDownloadRecap} className="gap-2" aria-label="리캡 이미지 저장">
+            <Download className="w-4 h-4" />
+            이미지
+          </Button>
+        </div>
+      </div>
+
       {/* 월 선택기 */}
       <div className="flex items-center justify-between bg-muted rounded-xl px-4 py-2.5">
         <button
@@ -289,6 +390,16 @@ export function ReportContent() {
           <p className="text-sm text-foreground">{report.monthlyInsight}</p>
         </div>
       )}
+    </div>
+  );
+}
+
+function RecapMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className="rounded-2xl bg-background/75 p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 truncate text-base font-bold text-foreground">{value}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{detail}</p>
     </div>
   );
 }
