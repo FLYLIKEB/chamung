@@ -38,6 +38,7 @@ const NoteDetail = lazy(() => import('./pages/NoteDetail').then((m) => ({ defaul
 const MyNotes = lazy(() => import('./pages/MyNotes').then((m) => ({ default: m.MyNotes })));
 const Saved = lazy(() => import('./pages/Saved').then((m) => ({ default: m.Saved })));
 const UserProfile = lazy(() => import('./pages/UserProfile').then((m) => ({ default: m.UserProfile })));
+const UserRecap = lazy(() => import('./pages/UserRecap').then((m) => ({ default: m.UserRecap })));
 const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m.Settings })));
 const Cellar = lazy(() => import('./pages/Cellar').then((m) => ({ default: m.Cellar })));
 const NewCellarItem = lazy(() => import('./pages/NewCellarItem').then((m) => ({ default: m.NewCellarItem })));
@@ -120,6 +121,7 @@ function EmailVerificationBannerWrapper() {
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isRecapRoute = /^\/user\/[^/]+\/recap$/.test(location.pathname);
 
   if (isAdminRoute) {
     return (
@@ -153,7 +155,7 @@ function AppContent() {
 
           <OnboardingRouteGuard>
             <Suspense fallback={<PageFallback />}>
-              <main className="flex-1 overflow-y-auto max-w-2xl md:max-w-5xl lg:max-w-6xl mx-auto w-full">
+              <main className={isRecapRoute ? "flex-1 overflow-y-auto w-full" : "flex-1 overflow-y-auto max-w-2xl md:max-w-5xl lg:max-w-6xl mx-auto w-full"}>
                 <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/preview_page.html" element={<Navigate to="/" replace />} />
@@ -174,6 +176,7 @@ function AppContent() {
                 <Route path="/blind/:id/report" element={<BlindSessionReport />} />
                 <Route path="/note/:id" element={<NoteDetail />} />
                 <Route path="/user/:id" element={<UserProfile />} />
+                <Route path="/user/:id/recap" element={<UserRecap />} />
                 <Route path="/my-notes" element={<MyNotes />} />
                 <Route path="/saved" element={<Saved />} />
                 <Route path="/cellar" element={<Cellar />} />
@@ -212,8 +215,8 @@ function AppContent() {
           </OnboardingRouteGuard>
         </div>
 
-        <SpeedDialFAB />
-        <PWAInstallBanner />
+        {!isRecapRoute && <SpeedDialFAB />}
+        {!isRecapRoute && <PWAInstallBanner />}
       </div>
     </AppModeProvider>
   );

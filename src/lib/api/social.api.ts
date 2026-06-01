@@ -1,6 +1,8 @@
 import { PopularTagItem, TagDetail, TagNoteList, Comment, NotificationListResponse } from '../../types';
 import { apiClient } from './client';
 
+const tagNameParam = (name: string) => new URLSearchParams({ name }).toString();
+
 export const tagsApi = {
   getPopularTags: (limit = 20, category?: string) => {
     const params = new URLSearchParams({ limit: String(limit) });
@@ -12,15 +14,15 @@ export const tagsApi = {
   getFollowedTags: () =>
     apiClient.get<PopularTagItem[]>('/tags/followed'),
   getTagDetail: (name: string) =>
-    apiClient.get<TagDetail>(`/tags/${encodeURIComponent(name)}`),
+    apiClient.get<TagDetail>(`/tags/lookup?${tagNameParam(name)}`),
   getTagNotes: (name: string, page = 1, limit = 20) =>
-    apiClient.get<TagNoteList>(`/tags/${encodeURIComponent(name)}/notes?page=${page}&limit=${limit}`),
+    apiClient.get<TagNoteList>(`/tags/lookup/notes?${tagNameParam(name)}&page=${page}&limit=${limit}`),
   createTag: (name: string, category: 'general' | 'flavor' = 'general') =>
     apiClient.post<PopularTagItem>('/tags', { name, category }),
   followTag: (name: string) =>
-    apiClient.post<void>(`/tags/${encodeURIComponent(name)}/follow`),
+    apiClient.post<void>(`/tags/lookup/follow?${tagNameParam(name)}`),
   unfollowTag: (name: string) =>
-    apiClient.delete(`/tags/${encodeURIComponent(name)}/follow`),
+    apiClient.delete(`/tags/lookup/follow?${tagNameParam(name)}`),
 };
 
 export const commentsApi = {

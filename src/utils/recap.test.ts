@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTeaRecapSummary, createTeaRecapSvg, createSvgDataUrl, createSvgFile } from './recap';
+import { buildTeaRecapSlides, buildTeaRecapSummary, createTeaRecapSvg, createSvgDataUrl, createSvgFile, filterNotesByMonth } from './recap';
 import { ReportData } from '@/hooks/useReportData';
 import { Note } from '@/types';
 
@@ -27,6 +27,7 @@ const notes: Note[] = [
     memo: null,
     isPublic: true,
     createdAt: new Date('2026-05-01'),
+    images: ['https://example.com/tea.jpg'],
   },
   {
     id: 2,
@@ -53,7 +54,28 @@ describe('tea recap utilities', () => {
     expect(summary.topTeaName).toBe('우전');
     expect(summary.topTeaType).toBe('녹차');
     expect(summary.topTag).toBe('풀향');
+    expect(summary.photoCount).toBe(1);
+    expect(summary.heroImageUrl).toBe('https://example.com/tea.jpg');
     expect(summary.shareText).toContain('차록 5건');
+  });
+
+
+  it('유튜브 리캡처럼 넘길 수 있는 여러 장 카드와 마지막 공유 카드를 만든다', () => {
+    const summary = buildTeaRecapSummary(report, notes, '2026-05', '다인');
+    const slides = buildTeaRecapSlides(summary);
+
+    expect(slides.length).toBeGreaterThan(1);
+    expect(slides.at(-1)?.isSummary).toBe(true);
+    expect(slides.at(-1)?.title).toBe('다인님의 차록 리캡');
+    expect(slides.every((slide) => slide.visual.emoji)).toBe(true);
+    expect(slides.find((slide) => slide.id === 'photo')?.visual.imageUrl).toBe('https://example.com/tea.jpg');
+  });
+
+  it('선택 월 기준으로 리캡 계산에 사용할 차록을 거른다', () => {
+    const extraNote = { ...notes[0], id: 3, createdAt: new Date('2026-06-01') };
+
+    expect(filterNotesByMonth([...notes, extraNote], '2026-05')).toHaveLength(2);
+    expect(filterNotesByMonth([...notes, extraNote], null)).toHaveLength(3);
   });
 
   it('공유 이미지로 사용할 SVG 데이터 URL을 만든다', () => {

@@ -56,6 +56,39 @@ export class TagsController {
   }
 
   @UseGuards(OptionalJwtAuthGuard)
+  @Get('lookup')
+  async getTagDetailByQuery(@Query('name') name: string, @Request() req) {
+    const currentUserId = req.user?.userId;
+    return this.tagsService.getTagDetail(name, currentUserId);
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get('lookup/notes')
+  async getNotesByTagQuery(
+    @Query('name') name: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Request() req,
+  ) {
+    const currentUserId = req.user?.userId;
+    return this.tagsService.getNotesByTag(name, page, limit, currentUserId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('lookup/follow')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async followTagByQuery(@Query('name') name: string, @Request() req) {
+    await this.tagsService.followTag(req.user.userId, name);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('lookup/follow')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unfollowTagByQuery(@Query('name') name: string, @Request() req) {
+    await this.tagsService.unfollowTag(req.user.userId, name);
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':name')
   async getTagDetail(@Param('name') name: string, @Request() req) {
     const currentUserId = req.user?.userId;
