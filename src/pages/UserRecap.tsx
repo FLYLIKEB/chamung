@@ -249,6 +249,8 @@ function RecapStoryCard({
           <div className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-bold text-muted-foreground">{profileName}</div>
         </div>
 
+        <RecapSlideVisual slide={slide} />
+
         <div className="mt-auto space-y-4 pb-4">
           {slide.metric && <p className="text-5xl font-black leading-none tracking-tight text-foreground">{slide.metric}</p>}
           <h1 className="text-3xl font-black leading-tight tracking-tight text-foreground">{slide.title}</h1>
@@ -270,5 +272,34 @@ function RecapStoryCard({
         </div>
       </div>
     </section>
+  );
+}
+
+function RecapSlideVisual({ slide }: { slide: TeaRecapSlide }) {
+  const hasImage = Boolean(slide.visual.imageUrl);
+
+  return (
+    <div className="mt-6 overflow-hidden rounded-[1.75rem] border border-border bg-muted">
+      {hasImage ? (
+        <div className="relative aspect-[4/3]">
+          <img
+            src={slide.visual.imageUrl ?? ''}
+            alt={`${slide.visual.label} 리캡 이미지`}
+            className="h-full w-full object-cover grayscale"
+            loading="lazy"
+          />
+          <div className="absolute left-4 top-4 rounded-2xl border border-border bg-card/90 px-3 py-2 text-3xl">
+            {slide.visual.emoji}
+          </div>
+        </div>
+      ) : (
+        <div className="flex aspect-[4/3] flex-col items-center justify-center gap-3 px-6 text-center">
+          <div className="flex h-24 w-24 items-center justify-center rounded-[2rem] border border-border bg-card text-5xl">
+            {slide.visual.emoji}
+          </div>
+          <p className="text-sm font-semibold text-muted-foreground">{slide.visual.label}</p>
+        </div>
+      )}
+    </div>
   );
 }
