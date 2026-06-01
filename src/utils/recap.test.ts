@@ -27,6 +27,7 @@ const notes: Note[] = [
     memo: null,
     isPublic: true,
     createdAt: new Date('2026-05-01'),
+    images: ['https://example.com/tea.jpg'],
   },
   {
     id: 2,
@@ -53,6 +54,8 @@ describe('tea recap utilities', () => {
     expect(summary.topTeaName).toBe('우전');
     expect(summary.topTeaType).toBe('녹차');
     expect(summary.topTag).toBe('풀향');
+    expect(summary.photoCount).toBe(1);
+    expect(summary.heroImageUrl).toBe('https://example.com/tea.jpg');
     expect(summary.shareText).toContain('차록 5건');
   });
 
@@ -64,6 +67,8 @@ describe('tea recap utilities', () => {
     expect(slides.length).toBeGreaterThan(1);
     expect(slides.at(-1)?.isSummary).toBe(true);
     expect(slides.at(-1)?.title).toBe('다인님의 차록 리캡');
+    expect(slides.every((slide) => slide.visual.emoji)).toBe(true);
+    expect(slides.find((slide) => slide.id === 'photo')?.visual.imageUrl).toBe('https://example.com/tea.jpg');
   });
 
   it('선택 월 기준으로 리캡 계산에 사용할 차록을 거른다', () => {
