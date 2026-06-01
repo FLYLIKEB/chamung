@@ -4,6 +4,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
+import { cn } from './ui/utils';
 import { AddLogoIcon } from './AddLogoIcon';
 import {
   FLAVOR_TAG_GROUP_META,
