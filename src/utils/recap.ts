@@ -17,6 +17,20 @@ export interface TeaRecapSummary {
   shareText: string;
 }
 
+
+export type TeaRecapSlideTone = 'matcha' | 'roast' | 'oolong' | 'berry' | 'night';
+
+export interface TeaRecapSlide {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  metric?: string;
+  detail?: string;
+  tone: TeaRecapSlideTone;
+  isSummary?: boolean;
+}
+
 function escapeXml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -38,6 +52,17 @@ function getAverageRating(notes: Note[]): number | null {
 
 export function getRecapPeriodLabel(selectedMonth: string | null): string {
   return selectedMonth ? formatMonthLabel(selectedMonth) : '전체 기간';
+}
+
+
+export function getNoteMonthKey(note: Note): string {
+  const createdAt = new Date(note.createdAt);
+  return `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
+}
+
+export function filterNotesByMonth(notes: Note[], selectedMonth: string | null): Note[] {
+  if (!selectedMonth) return notes;
+  return notes.filter((note) => getNoteMonthKey(note) === selectedMonth);
 }
 
 export function buildTeaRecapSummary(
@@ -81,6 +106,70 @@ export function buildTeaRecapSummary(
   };
 }
 
+
+export function buildTeaRecapSlides(summary: TeaRecapSummary): TeaRecapSlide[] {
+  const ratingText = summary.averageRating ? `★ ${summary.averageRating}` : '별점 기록 없음';
+
+  return [
+    {
+      id: 'intro',
+      eyebrow: 'CHALOG RECAP',
+      title: `${summary.profileName}님의 차 취향을 넘겨볼게요`,
+      description: `${summary.periodLabel} 동안 쌓인 차록을 카드로 정리했어요.`,
+      metric: `${summary.totalCount}개의 차록`,
+      detail: '좌우 버튼으로 한 장씩 넘겨보세요.',
+      tone: 'matcha',
+    },
+    {
+      id: 'type',
+      eyebrow: '가장 많이 마신 차종',
+      title: summary.topTeaType ?? '아직 대표 차종이 없어요',
+      description: summary.topTeaType
+        ? `${summary.topTeaTypeCount}개의 차록에서 가장 자주 등장했어요.`
+        : '차록을 더 남기면 대표 차종을 보여드릴게요.',
+      metric: summary.topTeaType ? `${summary.topTeaTypeCount}건` : '—',
+      detail: '차종 분포 기준',
+      tone: 'oolong',
+    },
+    {
+      id: 'tea',
+      eyebrow: '자꾸 손이 간 차',
+      title: summary.topTeaName ?? '기록을 기다리는 중',
+      description: summary.topTeaName
+        ? `${summary.topTeaName}를 ${summary.topTeaCount}번 기록했어요.`
+        : '같은 차를 여러 번 기록하면 이 카드가 채워져요.',
+      metric: summary.topTeaName ? `${summary.topTeaCount}번` : '—',
+      detail: '자주 마신 차 기준',
+      tone: 'roast',
+    },
+    {
+      id: 'flavor',
+      eyebrow: '기억에 남은 향미',
+      title: summary.topTag ? `#${summary.topTag}` : '향미 태그 없음',
+      description: summary.topTag
+        ? `${summary.topTagCount}번 사용한 대표 향미 태그예요.`
+        : '향미 태그를 남기면 취향이 더 선명해져요.',
+      metric: summary.topTag ? `${summary.topTagCount}회` : '—',
+      detail: `평균 별점 ${ratingText}`,
+      tone: 'berry',
+    },
+    {
+      id: 'summary',
+      eyebrow: '공유 가능한 요약 카드',
+      title: summary.title,
+      description: summary.headline,
+      metric: `${summary.totalCount}건 · ${ratingText}`,
+      detail: [
+        summary.topTeaType ? `대표 차종 ${summary.topTeaType}` : null,
+        summary.topTeaName ? `최다 기록 ${summary.topTeaName}` : null,
+        summary.topTag ? `향미 #${summary.topTag}` : null,
+      ].filter(Boolean).join(' · '),
+      tone: 'night',
+      isSummary: true,
+    },
+  ];
+}
+
 export function createTeaRecapSvg(summary: TeaRecapSummary): string {
   const topTea = summary.topTeaName ? `${summary.topTeaName} · ${summary.topTeaCount}번` : '아직 데이터 없음';
   const topType = summary.topTeaType ? `${summary.topTeaType} · ${summary.topTeaTypeCount}건` : '기록을 기다리는 중';
@@ -90,9 +179,9 @@ export function createTeaRecapSvg(summary: TeaRecapSummary): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-label="${escapeXml(summary.title)}">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#f5f0e8"/>
-      <stop offset="52%" stop-color="#dfead6"/>
-      <stop offset="100%" stop-color="#b8d7b5"/>
+      <stop offset="0%" stop-color="#151c16"/>
+      <stop offset="52%" stop-color="#334827"/>
+      <stop offset="100%" stop-color="#c8d8a6"/>
     </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#30452f" flood-opacity="0.18"/>
