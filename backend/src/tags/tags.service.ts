@@ -42,7 +42,7 @@ export class TagsService {
   async getTagDetail(name: string, currentUserId?: number): Promise<TagDetailDto> {
     const tag = await this.tagsRepository.findOne({ where: { name } });
     if (!tag) {
-      throw new NotFoundException(`태그 '${name}'을 찾을 수 없습니다.`);
+      return { name, noteCount: 0, isFollowing: false, followerCount: 0 };
     }
 
     const noteCount = await this.noteTagsRepository
@@ -62,12 +62,12 @@ export class TagsService {
   }
 
   async getNotesByTag(name: string, page: number, limit: number, currentUserId?: number): Promise<TagNoteListDto> {
+    const { take, skip } = PaginationHelper.normalize(page, limit);
     const tag = await this.tagsRepository.findOne({ where: { name } });
     if (!tag) {
-      throw new NotFoundException(`태그 '${name}'을 찾을 수 없습니다.`);
+      const tagDetail = await this.getTagDetail(name, currentUserId);
+      return { tag: tagDetail, notes: [], total: 0, page: page ?? 1, limit: take };
     }
-
-    const { take, skip } = PaginationHelper.normalize(page, limit);
 
     const [noteTags, total] = await this.noteTagsRepository
       .createQueryBuilder('nt')
