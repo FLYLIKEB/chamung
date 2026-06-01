@@ -2807,8 +2807,8 @@ header :where(button, [role='button']) {
 .note-detail-tea-title {
   font-size: clamp(1.5rem, 7vw, 2.2rem) !important;
   font-weight: 720 !important;
-  line-height: 1.05 !important;
-  letter-spacing: -0.05em !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.02em !important;
 }
 
 .note-detail-tea-title span {
@@ -4033,7 +4033,7 @@ header[class*='bg-black/35'] h1 {
 }
 
 .post-detail-content :where(p, li, blockquote) {
-  margin-block: 1.05em;
+  margin-block: 0.6em;
 }
 
 .post-detail-comments {
@@ -4174,4 +4174,65 @@ header[class*='bg-black/35'] h1 {
     bottom: 0;
     left: 172px;
   }
+}
+
+/* ── Card UI Refinements ── */
+
+/* ① 차 이름 타이포그래피: line-height 확보, letter-spacing 완화 */
+.note-detail-card-deck .note-detail-tea-title {
+  line-height: 1.3 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* ⑦ 삭제 버튼: hover-only danger */
+.note-detail-owner-action--danger-hover {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  color: var(--muted-foreground);
+  transition: color 0.18s, background 0.18s;
+}
+.note-detail-owner-action--danger-hover:hover {
+  color: hsl(0 72% 51%);
+  background: hsl(0 72% 51% / 0.08) !important;
+}
+
+/* ⑧ 카드 하단 공백: 찻잎 패턴 배경 */
+.note-detail-hero-leaf-bg {
+  flex: 1;
+  min-height: 2.5rem;
+  background:
+    radial-gradient(ellipse at 30% 60%, rgba(120, 160, 100, 0.06), transparent 55%),
+    radial-gradient(ellipse at 70% 40%, rgba(180, 200, 140, 0.05), transparent 50%),
+    repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 18px,
+      rgba(100, 140, 80, 0.03) 18px,
+      rgba(100, 140, 80, 0.03) 19px
+    );
+  pointer-events: none;
+}
+
+/* ⑨ NOTE 카드: prose 배경 가독성 확보 */
+.note-detail-card-deck .note-detail-story-card .note-detail-prose {
+  background: transparent;
+  color: var(--foreground) !important;
+}
+
+/* ⑩ 5점/10점 토글: 활성 상태 pill 배경 */
+.note-detail-scale-toggle button[aria-checked='true'] {
+  background: color-mix(in srgb, var(--foreground) 10%, transparent) !important;
+  border-radius: 0.4rem !important;
+  padding-left: 0.6rem !important;
+  padding-right: 0.6rem !important;
+}
+
+/* ⑪ 레이더 차트 라벨: 진한 회색, 미니멀 */
+.note-detail-card-deck .recharts-polar-angle-axis-tick text {
+  fill: rgba(30, 30, 30, 0.8) !important;
+  font-size: 11px !important;
+  font-weight: 500;
 }

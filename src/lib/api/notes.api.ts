@@ -40,7 +40,10 @@ export interface CreateNoteRequest {
   images?: string[] | null;
   imageThumbnails?: string[] | null;
   tags?: string[];
+  drinkDate?: string;
   isPublic: boolean;
+  weatherTemp?: number | null;
+  weatherHumidity?: number | null;
 }
 
 export interface UpdateNoteRequest extends Partial<CreateNoteRequest> {}

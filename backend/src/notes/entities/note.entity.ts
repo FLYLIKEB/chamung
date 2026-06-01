@@ -53,6 +53,12 @@ export class Note {
   @Column({ type: 'date', nullable: true })
   drinkDate: string | null;
 
+  @Column({ type: 'decimal', precision: 4, scale: 1, nullable: true })
+  weatherTemp: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  weatherHumidity: number | null;
+
   @Column({ default: false })
   isPublic: boolean;
 

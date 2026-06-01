@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../lib/logger';
 import { RATING_DEFAULT, RATING_MIN, RATING_MAX, NAVIGATION_DELAY } from '../constants';
 import { useTeaSelector } from './useTeaSelector';
+import { fetchWeather } from '../utils/weather';
 
 const RATING_STEP = 0.5;
 
@@ -318,6 +319,9 @@ export function useNoteForm({
             : null;
 
       if (mode === 'new') {
+        const weatherDateStr = drinkDate || new Date().toISOString().slice(0, 10);
+        const weatherInfo = await fetchWeather(weatherDateStr).catch(() => null);
+
         await notesApi.create({
           teaId: selectedTea,
           schemaIds: schemaIdsToSend,
@@ -330,6 +334,8 @@ export function useNoteForm({
           tags: tags.length > 0 ? tags : undefined,
           drinkDate: drinkDate || undefined,
           isPublic,
+          weatherTemp: weatherInfo?.temperatureMax ?? null,
+          weatherHumidity: weatherInfo?.humidity ?? null,
         });
         toast.success('기록이 저장되었습니다.');
         setTimeout(() => navigate('/my-notes'), NAVIGATION_DELAY);
