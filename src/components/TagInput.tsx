@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useRef, useMemo } from 'react';
+import { Info, X } from 'lucide-react';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -19,6 +19,33 @@ interface TagInputProps {
   maxTags?: number;
 }
 
+function TagTooltip({ description }: { description: string }) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onMouseEnter={() => setVisible(true)}
+        onMouseLeave={() => setVisible(false)}
+        onFocus={() => setVisible(true)}
+        onBlur={() => setVisible(false)}
+        className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+        aria-label="향미 설명 보기"
+        tabIndex={-1}
+      >
+        <Info className="h-3 w-3" />
+      </button>
+      {visible && (
+        <span className="absolute bottom-full left-1/2 z-50 mb-1.5 w-48 -translate-x-1/2 rounded-lg border border-border bg-popover px-3 py-2 text-[11px] leading-relaxed text-popover-foreground shadow-md">
+          {description}
+          <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-border" />
+        </span>
+      )}
+    </span>
+  );
+}
+
 export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -26,24 +53,17 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 입력값에 따라 추천 태그 필터링
+  const isSearching = inputValue.trim().length > 0;
+
   const filteredSuggestions = useMemo(() => {
     const normalizedInput = inputValue.trim().replace(/\s+/g, '').toLowerCase();
     return FLAVOR_TAGS.filter((tag) => {
-      if (tags.includes(tag.tagKo)) {
-        return false;
-      }
-      if (!normalizedInput) {
-        return true;
-      }
-      const searchable = [
-        tag.tagKo,
-        tag.tagEn,
-        tag.category,
-        tag.descriptionKo,
-      ].join(' ').replace(/\s+/g, '').toLowerCase();
+      if (tags.includes(tag.tagKo)) return false;
+      if (!normalizedInput) return true;
+      const searchable = [tag.tagKo, tag.tagEn, tag.category, tag.descriptionKo]
+        .join(' ').replace(/\s+/g, '').toLowerCase();
       return searchable.includes(normalizedInput);
-    }).slice(0, 24);
+    });
   }, [inputValue, tags]);
 
   const groupedSuggestions = useMemo(() => {
@@ -57,56 +77,34 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
       group,
       meta: FLAVOR_TAG_GROUP_META[group],
       tags: byGroup.get(group) ?? [],
-    })).filter((group) => group.tags.length > 0);
+    })).filter((g) => g.tags.length > 0);
   }, [filteredSuggestions]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
+    setInputValue(e.target.value);
   };
 
-  const handleCompositionStart = () => {
-    setIsComposing(true);
-  };
-
-  const handleCompositionEnd = () => {
-    setIsComposing(false);
-  };
+  const handleCompositionStart = () => setIsComposing(true);
+  const handleCompositionEnd = () => setIsComposing(false);
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // 한글 입력 중(조합 중)일 때는 Enter 키를 무시
-    if (isComposing && e.key === 'Enter') {
-      return;
-    }
+    if (isComposing && e.key === 'Enter') return;
 
     if (e.key === 'Enter') {
       e.preventDefault();
       e.stopPropagation();
-      
-      // 중복 처리 방지
-      if (isProcessing) {
-        return;
-      }
-      
-      // 이벤트에서 직접 최신 값을 가져오기 (상태 업데이트 지연 방지)
+      if (isProcessing) return;
       const currentValue = (e.target as HTMLInputElement).value.trim();
-      
       if (currentValue) {
         setIsProcessing(true);
         addTag(currentValue);
-        // 입력 필드를 즉시 비우기
         (e.target as HTMLInputElement).value = '';
         setInputValue('');
-        
-        // 처리 완료 후 플래그 해제
-        setTimeout(() => {
-          setIsProcessing(false);
-        }, 100);
+        setTimeout(() => setIsProcessing(false), 100);
       }
     } else if (e.key === 'Backspace') {
       const currentValue = (e.target as HTMLInputElement).value;
       if (!currentValue && tags.length > 0) {
-        // 빈 입력 상태에서 Backspace 누르면 마지막 태그 제거
         e.preventDefault();
         removeTag(tags.length - 1);
       }
@@ -117,31 +115,12 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
   };
 
   const addTag = (tag: string) => {
-    // 공백 제거 및 검증
     const trimmedTag = tag.trim();
-    if (!trimmedTag || trimmedTag.length === 0) {
-      return;
-    }
-    
-    // 중복 체크
-    if (tags.includes(trimmedTag)) {
-      return;
-    }
-    
-    // 최대 개수 체크
-    if (tags.length >= maxTags) {
-      return;
-    }
-    
-    // 태그 추가
+    if (!trimmedTag || tags.includes(trimmedTag) || tags.length >= maxTags) return;
     onChange([...tags, trimmedTag]);
     setInputValue('');
-    
-    // 입력 필드 값 초기화 (포커스는 이동하지 않음)
     setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.value = '';
-      }
+      if (inputRef.current) inputRef.current.value = '';
     }, 0);
   };
 
@@ -149,18 +128,11 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
     onChange(tags.filter((_, i) => i !== index));
   };
 
-  const handleSuggestionClick = (tag: string) => {
-    addTag(tag);
-  };
-
   return (
-    <div
-      ref={containerRef}
-      className="space-y-2"
-    >
+    <div ref={containerRef} className="space-y-2">
       <Label>향미</Label>
 
-      {/* 맞춤차 향미 - 항상 위에 표시 */}
+      {/* 맞춤차 향미 */}
       <div className="rounded-lg border border-border/60 bg-muted/30 p-2">
         <div className="mb-2 px-1">
           <p className="text-xs font-medium text-foreground">맞춤차 향미</p>
@@ -168,86 +140,76 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
             향·맛·질감·여운 스키마에 맞춰 차록에 남길 감각을 고르세요.
           </p>
         </div>
+
         {groupedSuggestions.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {groupedSuggestions.map(({ group, meta, tags: suggestionTags }) => (
               <section key={group} aria-label={`${meta.labelKo} ${meta.labelEn} 향미 추천`}>
-                <div className="mb-1 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <span>{meta.labelKo}</span>
-                  <span className="font-normal">{meta.labelEn}</span>
+                <div className="mb-1.5 flex items-center gap-1.5 border-b border-border/40 pb-1 px-1">
+                  <span className="text-[11px] font-semibold text-foreground">{meta.labelKo}</span>
+                  <span className="text-[10px] font-normal text-muted-foreground">{meta.labelEn}</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {suggestionTags.map((tag) => (
-                    <Button
+                    <button
                       key={tag.tagId}
                       type="button"
-                      variant="outline"
-                      size="sm"
-                      className="min-h-[34px] h-auto max-w-full py-1 px-2 text-left text-[11px] leading-tight"
-                      onClick={() => handleSuggestionClick(tag.tagKo)}
-                      title={tag.descriptionKo}
+                      onClick={() => addTag(tag.tagKo)}
+                      className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2.5 py-1 text-[12px] font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-muted active:scale-95"
                       aria-label={`${tag.tagKo} 향미 추가`}
                     >
-                      <AddLogoIcon className="w-4 h-4 mr-1 shrink-0" />
-                      <span className="min-w-0">
-                        <span className="block font-medium">{tag.tagKo}</span>
-                        <span className="block max-w-[9rem] truncate text-[10px] font-normal text-muted-foreground">{tag.descriptionKo}</span>
-                      </span>
-                    </Button>
+                      <AddLogoIcon className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      {tag.tagKo}
+                      <TagTooltip description={tag.descriptionKo} />
+                    </button>
                   ))}
                 </div>
               </section>
             ))}
           </div>
         ) : (
-          <p className="px-1 py-2 text-xs text-muted-foreground">일치하는 스키마 향미가 없습니다. 직접 입력해 추가할 수 있어요.</p>
+          <p className="px-1 py-2 text-xs text-muted-foreground">
+            일치하는 스키마 향미가 없습니다. 직접 입력해 추가할 수 있어요.
+          </p>
         )}
       </div>
-      
-      {/* 입력된 태그 표시 */}
+
+      {/* 선택된 태그 */}
       {tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex flex-wrap gap-2">
           {tags.map((tag, index) => (
-            <Badge
-              key={index}
-              variant="secondary"
-              className="flex items-center gap-1 pr-1"
-            >
+            <Badge key={index} variant="secondary" className="flex items-center gap-1 pr-1">
               {tag}
               <button
                 type="button"
                 onClick={() => removeTag(index)}
-                className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                className="ml-1 rounded-full p-0.5 hover:bg-gray-300"
                 aria-label={`${tag} 향미 삭제`}
               >
-                <X className="w-3 h-3" />
+                <X className="h-3 w-3" />
               </button>
             </Badge>
           ))}
         </div>
       )}
 
-      {/* 태그 입력 필드 */}
-      <div className="relative">
-        <Input
-          ref={inputRef}
-          type="text"
-          placeholder="향미를 입력하거나 맞춤차 향미를 선택하세요"
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleInputKeyDown}
-          onCompositionStart={handleCompositionStart}
-          onCompositionEnd={handleCompositionEnd}
-          disabled={tags.length >= maxTags}
-        />
+      {/* 직접 입력 */}
+      <Input
+        ref={inputRef}
+        type="text"
+        placeholder="향미를 직접 입력하거나 위에서 선택하세요"
+        value={inputValue}
+        onChange={handleInputChange}
+        onKeyDown={handleInputKeyDown}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
+        disabled={tags.length >= maxTags}
+      />
 
-      </div>
-
-      {/* 도움말 텍스트 */}
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted-foreground">
         {tags.length >= maxTags
           ? `최대 ${maxTags}개까지 추가할 수 있습니다.`
-          : `Enter 키로 향미를 추가하거나 맞춤차 향미를 클릭하세요. (${tags.length}/${maxTags})`}
+          : `Enter 키로 직접 추가하거나 맞춤차 향미를 클릭하세요. (${tags.length}/${maxTags})`}
       </p>
     </div>
   );
