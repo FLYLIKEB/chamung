@@ -925,3 +925,94 @@ export const FLAVOR_TAG_LABEL_BY_ID = Object.fromEntries(
 ) as Record<string, string>;
 
 export const FLAVOR_TAG_CSV_PATH = '/data/tea_flavor_tags_v1.csv';
+
+export const FLAVOR_TAG_GROUP_ORDER = ['aroma', 'taste', 'mouthfeel', 'finish'] as const satisfies readonly FlavorTagGroup[];
+
+export type FlavorTagDisplayGroup = FlavorTagGroup | 'custom';
+
+export interface FlavorTagGroupMeta {
+  labelKo: string;
+  labelEn: string;
+  descriptionKo: string;
+}
+
+export const FLAVOR_TAG_GROUP_META = {
+  aroma: {
+    labelKo: '향',
+    labelEn: 'Aroma',
+    descriptionKo: '코로 먼저 감지되는 꽃·과일·식물·구운 향 같은 첫인상입니다.',
+  },
+  taste: {
+    labelKo: '맛',
+    labelEn: 'Taste',
+    descriptionKo: '입 안에서 느껴지는 단맛·산미·감칠맛·쓴맛의 방향입니다.',
+  },
+  mouthfeel: {
+    labelKo: '질감',
+    labelEn: 'Mouthfeel',
+    descriptionKo: '차탕의 무게감, 매끄러움, 떫음처럼 혀와 입천장에 닿는 촉감입니다.',
+  },
+  finish: {
+    labelKo: '여운',
+    labelEn: 'Finish',
+    descriptionKo: '삼킨 뒤 입과 목에 남는 길이와 마무리의 성격입니다.',
+  },
+  custom: {
+    labelKo: '직접 입력',
+    labelEn: 'Custom',
+    descriptionKo: '스키마에 없는 사용자 고유 표현입니다.',
+  },
+} satisfies Record<FlavorTagDisplayGroup, FlavorTagGroupMeta>;
+
+export interface FlavorTagDisplayItem {
+  label: string;
+  definition: FlavorTagDefinition | null;
+}
+
+export interface FlavorTagDisplayGroupSummary {
+  group: FlavorTagDisplayGroup;
+  meta: FlavorTagGroupMeta;
+  tags: FlavorTagDisplayItem[];
+}
+
+export const FLAVOR_TAGS_BY_LABEL = Object.fromEntries(
+  FLAVOR_TAGS.map((tag) => [tag.tagKo, tag]),
+) as Record<string, FlavorTagDefinition>;
+
+export function getFlavorTagByLabel(label: string) {
+  return FLAVOR_TAGS_BY_LABEL[label] ?? null;
+}
+
+export function groupFlavorTagLabels(labels: readonly string[]) {
+  const grouped = new Map<FlavorTagDisplayGroup, FlavorTagDisplayItem[]>();
+
+  labels.forEach((label) => {
+    const definition = getFlavorTagByLabel(label);
+    const group = definition?.group ?? 'custom';
+    const items = grouped.get(group) ?? [];
+    items.push({ label, definition });
+    grouped.set(group, items);
+  });
+
+  return [...FLAVOR_TAG_GROUP_ORDER, 'custom']
+    .map((group) => ({
+      group,
+      meta: FLAVOR_TAG_GROUP_META[group],
+      tags: grouped.get(group) ?? [],
+    }))
+    .filter((summary) => summary.tags.length > 0) satisfies FlavorTagDisplayGroupSummary[];
+}
+
+export function getRelatedFlavorTagsByLabel(label: string, limit = 8) {
+  const source = getFlavorTagByLabel(label);
+  if (!source) return [];
+
+  const sameCategory = FLAVOR_TAGS.filter(
+    (tag) => tag.tagKo !== label && tag.group === source.group && tag.category === source.category,
+  );
+  const sameGroup = FLAVOR_TAGS.filter(
+    (tag) => tag.tagKo !== label && tag.group === source.group && tag.category !== source.category,
+  );
+
+  return [...sameCategory, ...sameGroup].slice(0, limit);
+}

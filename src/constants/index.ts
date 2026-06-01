@@ -2,8 +2,27 @@
  * 애플리케이션 전역 상수
  */
 import { FLAVOR_TAG_LABELS, FLAVOR_TAG_LABEL_BY_ID } from './flavorTags';
-export { FLAVOR_TAGS, FLAVOR_TAGS_BY_ID, FLAVOR_TAG_LABELS, FLAVOR_TAG_LABEL_BY_ID, FLAVOR_TAG_CSV_PATH } from './flavorTags';
-export type { FlavorTagDefinition, FlavorTagGroup } from './flavorTags';
+export {
+  FLAVOR_TAGS,
+  FLAVOR_TAGS_BY_ID,
+  FLAVOR_TAGS_BY_LABEL,
+  FLAVOR_TAG_LABELS,
+  FLAVOR_TAG_LABEL_BY_ID,
+  FLAVOR_TAG_CSV_PATH,
+  FLAVOR_TAG_GROUP_META,
+  FLAVOR_TAG_GROUP_ORDER,
+  getFlavorTagByLabel,
+  getRelatedFlavorTagsByLabel,
+  groupFlavorTagLabels,
+} from './flavorTags';
+export type {
+  FlavorTagDefinition,
+  FlavorTagDisplayGroup,
+  FlavorTagDisplayGroupSummary,
+  FlavorTagDisplayItem,
+  FlavorTagGroup,
+  FlavorTagGroupMeta,
+} from './flavorTags';
 
 
 // API 관련 상수
@@ -207,4 +226,3 @@ const ONBOARDING_FLAVOR_TAG_IDS = [
 export const ONBOARDING_FLAVOR_TAGS = ONBOARDING_FLAVOR_TAG_IDS.map(
   (tagId) => FLAVOR_TAG_LABEL_BY_ID[tagId],
 );
-

@@ -146,6 +146,28 @@ describe('NoteDetail - 카드 사진 배경', () => {
     expect(within(table).getByText('더 좋음')).toBeInTheDocument();
   });
 
+  it('차록 향미를 CSV 스키마 그룹과 설명으로 표시해야 함', async () => {
+    vi.mocked(notesApi.getById).mockResolvedValue({
+      ...mockNote,
+      tags: ['자스민', '단맛', '실키함', '청량한 여운', '나만의 표현'],
+    });
+
+    render(
+      <MemoryRouter>
+        <NoteDetail />
+      </MemoryRouter>,
+    );
+
+    const flavorGroups = await screen.findByLabelText('향미 스키마 그룹');
+    expect(within(flavorGroups).getByText('Aroma')).toBeInTheDocument();
+    expect(within(flavorGroups).getByText('Taste')).toBeInTheDocument();
+    expect(within(flavorGroups).getByText('Mouthfeel')).toBeInTheDocument();
+    expect(within(flavorGroups).getByText('Finish')).toBeInTheDocument();
+    expect(within(flavorGroups).getByText('Custom')).toBeInTheDocument();
+    expect(within(flavorGroups).getByLabelText(/자스민: 자스민차에서 나는 달콤하고 관능적인 꽃향/)).toBeInTheDocument();
+    expect(within(flavorGroups).getByLabelText(/나만의 표현: 직접 입력한 향미/)).toBeInTheDocument();
+  });
+
   it('작성자 이름을 클릭하면 프로필 페이지로 이동해야 함', async () => {
     const user = userEvent.setup();
     render(
@@ -264,4 +286,3 @@ describe('NoteDetail - 수정/삭제/비공개 기능', () => {
     expect(screen.queryByRole('button', { name: '비공개로 전환' })).not.toBeInTheDocument();
   });
 });
-

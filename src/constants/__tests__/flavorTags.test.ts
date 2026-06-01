@@ -4,6 +4,9 @@ import { resolve } from 'node:path';
 import {
   FLAVOR_TAGS,
   FLAVOR_TAGS_BY_ID,
+  getFlavorTagByLabel,
+  getRelatedFlavorTagsByLabel,
+  groupFlavorTagLabels,
   ONBOARDING_FLAVOR_TAGS,
   RECOMMENDED_NOTE_TAGS,
 } from '../index';
@@ -83,6 +86,25 @@ describe('tea flavor tag v1 lexicon', () => {
     expect(RECOMMENDED_NOTE_TAGS).toHaveLength(99);
     expect(ONBOARDING_FLAVOR_TAGS).toEqual(
       expect.arrayContaining(['꽃향', '자스민', '감귤/시트러스', '매끄러움', '김']),
+    );
+  });
+
+  it('groups saved note labels into schema sections and keeps custom labels visible', () => {
+    const grouped = groupFlavorTagLabels(['자스민', '단맛', '실키함', '청량한 여운', '나만의 표현']);
+
+    expect(grouped.map((group) => group.group)).toEqual(['aroma', 'taste', 'mouthfeel', 'finish', 'custom']);
+    expect(grouped[0].tags[0].definition?.tagId).toBe('jasmine');
+    expect(grouped[4].tags[0]).toMatchObject({ label: '나만의 표현', definition: null });
+  });
+
+  it('finds schema definitions and related tags from the visible Korean label', () => {
+    expect(getFlavorTagByLabel('자스민')).toMatchObject({
+      tagId: 'jasmine',
+      group: 'aroma',
+      category: 'floral',
+    });
+    expect(getRelatedFlavorTagsByLabel('자스민').map((tag) => tag.tagKo)).toEqual(
+      expect.arrayContaining(['꽃향', '장미']),
     );
   });
 });

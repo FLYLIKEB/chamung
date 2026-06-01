@@ -12,6 +12,11 @@ import { toast } from 'sonner';
 import { logger } from '../lib/logger';
 import { TEA_TYPE_PLACEHOLDER_BG } from '../constants';
 import { cn } from '../components/ui/utils';
+import {
+  FLAVOR_TAG_GROUP_META,
+  getFlavorTagByLabel,
+  getRelatedFlavorTagsByLabel,
+} from '../constants/flavorTags';
 
 const LIMIT = 20;
 
@@ -35,6 +40,9 @@ export function TagDetail() {
   const [teasSort, setTeasSort] = useState<'match' | 'popular' | 'recent'>('match');
 
   const decodedName = name ? decodeURIComponent(name) : '';
+  const flavorDefinition = getFlavorTagByLabel(decodedName);
+  const flavorGroupMeta = flavorDefinition ? FLAVOR_TAG_GROUP_META[flavorDefinition.group] : null;
+  const schemaRelatedTags = getRelatedFlavorTagsByLabel(decodedName, 10);
 
   const loadInitialData = useCallback(async () => {
     if (!decodedName) return;
@@ -190,6 +198,19 @@ export function TagDetail() {
                 구독자 {tagDetail.followerCount.toLocaleString()}명
               </span>
             </div>
+            {flavorDefinition && flavorGroupMeta && (
+              <div className="mt-3 rounded-xl border border-border/60 bg-muted/30 p-3" aria-label="향미 스키마 설명">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="rounded-full text-xs">
+                    {flavorGroupMeta.labelKo} · {flavorGroupMeta.labelEn}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">category: {flavorDefinition.category}</span>
+                  <span className="text-xs text-muted-foreground">{flavorDefinition.tagEn}</span>
+                </div>
+                <p className="text-sm leading-relaxed text-foreground">{flavorDefinition.descriptionKo}</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{flavorGroupMeta.descriptionKo}</p>
+              </div>
+            )}
           </div>
 
           <Button
@@ -416,6 +437,28 @@ export function TagDetail() {
 
         {activeTab === 'related' && (
           <div className="px-4 py-4 space-y-6">
+            {flavorDefinition && schemaRelatedTags.length > 0 && (
+              <section>
+                <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                  같은 스키마 향미
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {schemaRelatedTags.map((tag) => (
+                    <Link
+                      key={tag.tagId}
+                      to={`/tag/${encodeURIComponent(tag.tagKo)}`}
+                      className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted/70"
+                      title={tag.descriptionKo}
+                    >
+                      <Hash className="w-3 h-3" />
+                      {tag.tagKo}
+                      <span className="text-xs text-muted-foreground">{tag.tagEn}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* 인기 태그 */}
             <section>
               <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">

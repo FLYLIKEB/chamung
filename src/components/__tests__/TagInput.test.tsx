@@ -16,6 +16,18 @@ describe('TagInput 컴포넌트', () => {
     expect(screen.getByPlaceholderText(/향미를 입력하거나 맞춤차 향미를 선택하세요/)).toBeInTheDocument();
   });
 
+  it('추천 향미를 스키마 그룹과 설명으로 보여줘야 함', () => {
+    render(<TagInput tags={[]} onChange={mockOnChange} />);
+
+    expect(screen.getByText('향')).toBeInTheDocument();
+    expect(screen.getByText('Aroma')).toBeInTheDocument();
+    expect(screen.getByText(/향·맛·질감·여운 스키마/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '풀향 향미 추가' })).toHaveAttribute(
+      'title',
+      expect.stringContaining('갓 깎은 잔디'),
+    );
+  });
+
   it('기존 태그를 표시해야 함', () => {
     const tags = ['풀향', '허브향'];
     render(<TagInput tags={tags} onChange={mockOnChange} />);
@@ -95,11 +107,11 @@ describe('TagInput 컴포넌트', () => {
 
     // 맞춤차 향미 목록이 나타날 때까지 대기
     await waitFor(() => {
-      const suggestionButton = screen.queryByRole('button', { name: /^꽃향$/ });
+      const suggestionButton = screen.queryByRole('button', { name: '꽃향 향미 추가' });
       expect(suggestionButton).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    const suggestionButton = screen.getByRole('button', { name: /^꽃향$/ });
+    const suggestionButton = screen.getByRole('button', { name: '꽃향 향미 추가' });
     await user.click(suggestionButton);
 
     await waitFor(() => {
@@ -152,4 +164,3 @@ describe('TagInput 컴포넌트', () => {
     expect(document.activeElement).not.toBe(input);
   });
 });
-
