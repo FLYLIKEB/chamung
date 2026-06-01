@@ -15,6 +15,8 @@ type TabType = 'grid' | 'report' | 'saved';
 
 interface UserNoteListProps {
   notes: Note[];
+  userId: number;
+  profileName: string;
   noteTotal: number;
   sort: SortType;
   onSortChange: (sort: SortType) => void;
@@ -33,6 +35,8 @@ export function UserNoteList({
   isLoadingMore,
   onLoadMore,
   isOwnProfile,
+  userId,
+  profileName,
 }: UserNoteListProps) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('grid');
@@ -48,21 +52,19 @@ export function UserNoteList({
             icon={<Grid3X3 className="w-4 h-4" />}
             label="차록"
           />
+          <TabButton
+            active={activeTab === 'report'}
+            onClick={() => setActiveTab('report')}
+            icon={<BarChart2 className="w-4 h-4" />}
+            label="레포트"
+          />
           {isOwnProfile && (
-            <>
-              <TabButton
-                active={activeTab === 'report'}
-                onClick={() => setActiveTab('report')}
-                icon={<BarChart2 className="w-4 h-4" />}
-                label="레포트"
-              />
-              <TabButton
-                active={activeTab === 'saved'}
-                onClick={() => setActiveTab('saved')}
-                icon={<Bookmark className="w-4 h-4" />}
-                label="저장함"
-              />
-            </>
+            <TabButton
+              active={activeTab === 'saved'}
+              onClick={() => setActiveTab('saved')}
+              icon={<Bookmark className="w-4 h-4" />}
+              label="저장함"
+            />
           )}
         </div>
       </div>
@@ -117,7 +119,9 @@ export function UserNoteList({
         </>
       )}
 
-      {activeTab === 'report' && <ReportContent />}
+      {activeTab === 'report' && (
+        <ReportContent userId={userId} profileName={profileName} isOwnProfile={isOwnProfile} />
+      )}
       {activeTab === 'saved' && <SavedContent />}
     </div>
   );

@@ -305,6 +305,8 @@ export function UserProfile() {
 
       <UserNoteList
         notes={notes}
+        userId={user.id}
+        profileName={user.name}
         noteTotal={noteTotal}
         sort={sort}
         onSortChange={setSort}
