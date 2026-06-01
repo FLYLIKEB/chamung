@@ -52,12 +52,24 @@ const CATEGORY_MAP: Record<FlavorTagGroup, string[]> = {
   finish:    ['length', 'character'],
 };
 
+const CATEGORY_TO_GROUP = Object.fromEntries(
+  FLAVOR_TAG_GROUP_ORDER.flatMap((group) => CATEGORY_MAP[group].map((category) => [category, group])),
+) as Record<string, FlavorTagGroup>;
+
+const CATEGORY_EMOJIS: Record<string, string> = {
+  vegetal:   '🌿', floral:    '🌸', fruity:    '🍊',
+  sweet:     '🍯', roasted:   '☕', spicy:     '🌶',
+  earthy:    '🪵', cooling:   '❄️', basic:     '👅',
+  direction: '🧭', defect:    '⚠️', body:      '💧',
+  texture:   '🫧', sensation: '✨', length:    '⏱',
+  character: '🎶',
+};
+
 function TagTooltip({ description }: { description: string }) {
   const [visible, setVisible] = useState(false);
   return (
     <span className="relative inline-flex">
-      <button
-        type="button"
+      <span
         onMouseEnter={() => setVisible(true)}
         onMouseLeave={() => setVisible(false)}
         onFocus={() => setVisible(true)}
@@ -67,7 +79,7 @@ function TagTooltip({ description }: { description: string }) {
         tabIndex={-1}
       >
         <Info className="h-3 w-3" />
-      </button>
+      </span>
       {visible && (
         <span className="absolute bottom-full left-1/2 z-50 mb-1.5 w-48 -translate-x-1/2 rounded-lg border border-border bg-popover px-3 py-2 text-[11px] leading-relaxed text-popover-foreground shadow-md pointer-events-none">
           {description}
@@ -80,18 +92,24 @@ function TagTooltip({ description }: { description: string }) {
 
 function FlavorWheel({
   activeGroup,
+  activeCategory,
   onGroupClick,
+  onCategoryClick,
   selectedTags,
 }: {
   activeGroup: FlavorTagGroup | null;
+  activeCategory: string | null;
   onGroupClick: (group: FlavorTagGroup) => void;
+  onCategoryClick: (cat: string) => void;
   selectedTags: string[];
 }) {
-  const size = 220;
+  const size = 240;
   const cx = size / 2;
   const cy = size / 2;
-  const outerR = 96;
+  const outerR = 90;
   const innerR = 36;
+  const rimInner = outerR;
+  const rimOuter = outerR + 22;
   const groups: FlavorTagGroup[] = ['aroma', 'taste', 'mouthfeel', 'finish'];
 
   function polarToXY(angleDeg: number, r: number) {
@@ -121,42 +139,84 @@ function FlavorWheel({
         const endDeg = startDeg + 90;
         const cats = CATEGORY_MAP[group];
         const catSlice = 90 / cats.length;
-        const isActive = activeGroup === group;
+        const isGroupActive = activeGroup === group;
         const gc = GROUP_COLORS[group];
 
         return (
           <g key={group}>
+            {/* 바깥 카테고리 링 — 클릭 가능 */}
             {cats.map((cat, ci) => {
               const cs = startDeg + ci * catSlice;
               const ce = cs + catSlice;
               const hex = CATEGORY_COLORS_HEX[cat] ?? gc.fill;
+              const isCatActive = activeCategory === cat;
+              const midDeg = cs + catSlice / 2;
+              const emojiPos = polarToXY(midDeg, (rimInner + rimOuter) / 2);
+              const emoji = CATEGORY_EMOJIS[cat] ?? '•';
+
               return (
-                <path
+                <g
                   key={cat}
-                  d={sectorPath(cs, ce, outerR, outerR + 16)}
-                  fill={hex}
-                  stroke="white"
-                  strokeWidth="1.5"
-                  opacity={isActive ? 1 : 0.65}
-                />
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${CATEGORY_LABELS_KO[cat] ?? cat} 향미 카테고리 보기`}
+                  className="cursor-pointer"
+                  onClick={() => onCategoryClick(cat)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      onCategoryClick(cat);
+                    }
+                  }}
+                >
+                  <path
+                    d={sectorPath(cs, ce, rimInner, rimOuter)}
+                    fill={hex}
+                    stroke="white"
+                    strokeWidth="1.5"
+                    opacity={isCatActive ? 1 : isGroupActive ? 0.85 : 0.55}
+                  />
+                  {isCatActive && (
+                    <path
+                      d={sectorPath(cs, ce, rimInner, rimOuter)}
+                      fill="none"
+                      stroke="#374151"
+                      strokeWidth="2"
+                      opacity={0.5}
+                      pointerEvents="none"
+                    />
+                  )}
+                  <text
+                    x={emojiPos.x}
+                    y={emojiPos.y}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize="10"
+                    className="select-none pointer-events-none"
+                  >
+                    {emoji}
+                  </text>
+                </g>
               );
             })}
+
+            {/* 내부 그룹 섹터 — 클릭 가능 */}
             <path
               d={sectorPath(startDeg, endDeg, innerR, outerR)}
               fill={gc.fill}
               stroke="white"
               strokeWidth="2"
-              opacity={isActive ? 1 : 0.72}
+              opacity={isGroupActive ? 1 : 0.72}
               className="cursor-pointer transition-opacity"
               onClick={() => onGroupClick(group)}
             />
-            {isActive && (
+            {isGroupActive && (
               <path
                 d={sectorPath(startDeg, endDeg, innerR, outerR)}
                 fill="none"
                 stroke={gc.text}
                 strokeWidth="2.5"
-                opacity={0.6}
+                opacity={0.5}
                 pointerEvents="none"
               />
             )}
@@ -166,9 +226,9 @@ function FlavorWheel({
                 <text
                   x={pos.x} y={pos.y}
                   textAnchor="middle" dominantBaseline="middle"
-                  fontSize="11" fontWeight={isActive ? '700' : '600'}
+                  fontSize="11" fontWeight={isGroupActive ? '700' : '600'}
                   fill={gc.text}
-                  className="cursor-pointer select-none pointer-events-none"
+                  className="select-none pointer-events-none"
                 >
                   {gc.label}
                 </text>
@@ -177,6 +237,8 @@ function FlavorWheel({
           </g>
         );
       })}
+
+      {/* 중앙 */}
       <circle cx={cx} cy={cy} r={innerR} fill="white" stroke="#e5e7eb" strokeWidth="1.5" />
       <text x={cx} y={cy - 7} textAnchor="middle" fontSize="10" fill="#6b7280" fontWeight="600">풍미</text>
       <text x={cx} y={cy + 7} textAnchor="middle" fontSize="9" fill="#9ca3af">Flavor</text>
@@ -284,7 +346,10 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
   };
 
   const handleCategoryClick = (cat: string) => {
-    setActiveCategory((prev) => (prev === cat ? null : cat));
+    const group = CATEGORY_TO_GROUP[cat];
+    if (group) setActiveGroup(group);
+    setActiveCategory((prev) => (prev === cat && activeGroup === group ? null : cat));
+    setInputValue('');
   };
 
   const categoriesForActiveGroup = activeGroup ? CATEGORY_MAP[activeGroup] : [];
@@ -322,7 +387,13 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
 
       {/* 플레이버 휠 + 선택 패널 */}
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
-        <FlavorWheel activeGroup={activeGroup} onGroupClick={handleGroupClick} selectedTags={tags} />
+        <FlavorWheel
+          activeGroup={activeGroup}
+          activeCategory={activeCategory}
+          onGroupClick={handleGroupClick}
+          onCategoryClick={handleCategoryClick}
+          selectedTags={tags}
+        />
 
         {/* 카테고리 필터 탭 (그룹 선택 시) */}
         {activeGroup && !isSearching && (

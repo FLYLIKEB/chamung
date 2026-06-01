@@ -13,19 +13,30 @@ describe('TagInput 컴포넌트', () => {
   it('초기 상태에서 태그 입력 필드를 렌더링해야 함', () => {
     render(<TagInput tags={[]} onChange={mockOnChange} />);
 
-    expect(screen.getByPlaceholderText(/향미를 입력하거나 맞춤차 향미를 선택하세요/)).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toHaveAttribute('placeholder', '향 검색 또는 직접 입력…');
   });
 
   it('추천 향미를 스키마 그룹과 설명으로 보여줘야 함', () => {
     render(<TagInput tags={[]} onChange={mockOnChange} />);
 
     expect(screen.getByText('향')).toBeInTheDocument();
-    expect(screen.getByText('Aroma')).toBeInTheDocument();
-    expect(screen.getByText(/향·맛·질감·여운 스키마/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '풀향 향미 추가' })).toHaveAttribute(
-      'title',
-      expect.stringContaining('갓 깎은 잔디'),
-    );
+    expect(screen.getByLabelText('풍미 휠')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '식물 향미 카테고리 보기' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '풀향 향미 추가' })).toBeInTheDocument();
+  });
+
+  it('휠의 여운-길이 이모지 카테고리를 누르면 길이 태그를 바로 보여줘야 함', async () => {
+    const user = userEvent.setup();
+    render(<TagInput tags={[]} onChange={mockOnChange} />);
+
+    expect(screen.queryByRole('button', { name: '짧음 향미 추가' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '길이 향미 카테고리 보기' }));
+
+    expect(screen.getByRole('button', { name: '짧음 향미 추가' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '중간 향미 추가' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '김 향미 추가' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toHaveAttribute('placeholder', '길이 검색…');
   });
 
   it('기존 태그를 표시해야 함', () => {
@@ -40,7 +51,7 @@ describe('TagInput 컴포넌트', () => {
     const user = userEvent.setup();
     render(<TagInput tags={[]} onChange={mockOnChange} />);
 
-    const input = screen.getByPlaceholderText(/향미를 입력하거나 맞춤차 향미를 선택하세요/);
+    const input = screen.getByRole('textbox');
     await user.type(input, '새태그');
     await user.keyboard('{Enter}');
 
@@ -53,7 +64,7 @@ describe('TagInput 컴포넌트', () => {
     const user = userEvent.setup();
     render(<TagInput tags={['기존태그']} onChange={mockOnChange} />);
 
-    const input = screen.getByPlaceholderText(/향미를 입력하거나 맞춤차 향미를 선택하세요/);
+    const input = screen.getByRole('textbox');
     await user.type(input, '기존태그');
     await user.keyboard('{Enter}');
 
@@ -66,7 +77,7 @@ describe('TagInput 컴포넌트', () => {
     const user = userEvent.setup();
     render(<TagInput tags={[]} onChange={mockOnChange} />);
 
-    const input = screen.getByPlaceholderText(/향미를 입력하거나 맞춤차 향미를 선택하세요/);
+    const input = screen.getByRole('textbox');
     await user.type(input, '   '); // 공백만 입력
     await user.keyboard('{Enter}');
 
@@ -94,7 +105,7 @@ describe('TagInput 컴포넌트', () => {
     const tags = Array.from({ length: 10 }, (_, i) => `태그${i + 1}`);
     render(<TagInput tags={tags} onChange={mockOnChange} maxTags={10} />);
 
-    const input = screen.getByPlaceholderText(/향미를 입력하거나 맞춤차 향미를 선택하세요/);
+    const input = screen.getByRole('textbox');
     expect(input).toBeDisabled();
   });
 
@@ -102,7 +113,7 @@ describe('TagInput 컴포넌트', () => {
     const user = userEvent.setup();
     render(<TagInput tags={[]} onChange={mockOnChange} />);
 
-    const input = screen.getByPlaceholderText(/향미를 입력하거나 맞춤차 향미를 선택하세요/);
+    const input = screen.getByRole('textbox');
     await user.type(input, '꽃');
 
     // 맞춤차 향미 목록이 나타날 때까지 대기
@@ -123,7 +134,7 @@ describe('TagInput 컴포넌트', () => {
     const user = userEvent.setup();
     render(<TagInput tags={[]} onChange={mockOnChange} />);
 
-    const input = screen.getByPlaceholderText(/향미를 입력하거나 맞춤차 향미를 선택하세요/);
+    const input = screen.getByRole('textbox');
     
     // 한글 입력 시뮬레이션
     await user.type(input, '귀여워');
@@ -145,7 +156,7 @@ describe('TagInput 컴포넌트', () => {
     const user = userEvent.setup();
     render(<TagInput tags={['태그1', '태그2']} onChange={mockOnChange} />);
 
-    const input = screen.getByPlaceholderText(/향미를 입력하거나 맞춤차 향미를 선택하세요/);
+    const input = screen.getByRole('textbox');
     await user.click(input);
     await user.keyboard('{Backspace}');
 
@@ -156,7 +167,7 @@ describe('TagInput 컴포넌트', () => {
     const user = userEvent.setup();
     render(<TagInput tags={[]} onChange={mockOnChange} />);
 
-    const input = screen.getByPlaceholderText(/향미를 입력하거나 맞춤차 향미를 선택하세요/);
+    const input = screen.getByRole('textbox');
     await user.click(input);
     expect(document.activeElement).toBe(input);
 
