@@ -60,10 +60,9 @@ export function RatingVisualization({ axisValues, use10Scale = false, variant = 
   const fullMark = use10Scale ? FULL_MARK_10 : FULL_MARK_5;
   const toScore = use10Scale ? toScore10 : toScore5;
   const isPoster = variant === 'poster';
-  const chartColor = isPoster ? 'rgba(255, 255, 255, 0.55)' : CHART_COLOR;
-  const chartFill = isPoster ? 'rgba(255, 255, 255, 0.12)' : CHART_COLOR;
-  const gridColor = isPoster ? 'rgba(255, 255, 255, 0.15)' : GRID_COLOR;
-  const tickColor = isPoster ? 'rgba(30, 30, 30, 0.75)' : 'rgb(107 114 128)';
+  const chartColor = isPoster ? 'rgba(31, 41, 55, 0.42)' : CHART_COLOR;
+  const chartFill = isPoster ? 'rgba(31, 41, 55, 0.14)' : CHART_COLOR;
+  const gridColor = isPoster ? 'rgba(31, 41, 55, 0.18)' : GRID_COLOR;
 
   const radarData = sortedAxisValues.map((av) => {
     const rawNum = Number(av.valueNumeric) || 0;
@@ -83,6 +82,44 @@ export function RatingVisualization({ axisValues, use10Scale = false, variant = 
   });
 
   if (radarData.length === 0) return null;
+
+  const radarDataBySubject = new Map(radarData.map((item) => [item.subject, item]));
+
+  const renderAngleTick = ({ x, y, cx, payload }: { x?: number; y?: number; cx?: number; payload?: { value?: string | number } }) => {
+    const subject = String(payload?.value ?? '');
+    const item = radarDataBySubject.get(subject);
+    if (!item) return null;
+
+    const displayScore = `${Number(item.displayValue).toFixed(1)}/${item.displayMax}`;
+    const hasDescription = !!item.description?.trim();
+    const centerX = cx ?? 150;
+    const textAnchor = (x ?? centerX) > centerX + 8 ? 'start' : (x ?? centerX) < centerX - 8 ? 'end' : 'middle';
+    const scoreIconX = textAnchor === 'end' ? -4 : textAnchor === 'middle' ? displayScore.length * 2.6 + 5 : displayScore.length * 5.2 + 5;
+
+    return (
+      <g transform={`translate(${x ?? 0},${y ?? 0})`} className="rating-visualization-axis-label">
+        {hasDescription && <title>{item.description}</title>}
+        <text textAnchor={textAnchor} dominantBaseline="central">
+          <tspan x={0} dy={isPoster ? -7 : -6} className="rating-visualization-axis-name">
+            {subject}
+          </tspan>
+          <tspan x={0} dy={isPoster ? 15 : 14} className="rating-visualization-axis-score">
+            {displayScore}
+          </tspan>
+        </text>
+        {hasDescription && (
+          <g
+            className="rating-visualization-axis-info-icon"
+            transform={`translate(${scoreIconX},${isPoster ? 8 : 8})`}
+            aria-hidden="true"
+          >
+            <circle cx="0" cy="0" r="4.2" />
+            <text x="0" y="0.2" textAnchor="middle" dominantBaseline="central">i</text>
+          </g>
+        )}
+      </g>
+    );
+  };
 
   // 축이 1~2개면 바형 유지 (레이더는 3개 이상에서 의미 있음)
   if (radarData.length < 3) {
@@ -143,7 +180,7 @@ export function RatingVisualization({ axisValues, use10Scale = false, variant = 
             <PolarGrid stroke={gridColor} strokeOpacity={isPoster ? 0.55 : 0.8} />
             <PolarAngleAxis
               dataKey="subject"
-              tick={{ fill: tickColor, fontSize: isPoster ? 11 : 12, fontWeight: isPoster ? 500 : 400 }}
+              tick={renderAngleTick}
               tickLine={false}
             />
             <PolarRadiusAxis
@@ -160,8 +197,8 @@ export function RatingVisualization({ axisValues, use10Scale = false, variant = 
               stroke={chartColor}
               fill={chartFill}
               fillOpacity={isPoster ? 0.18 : 0.15}
-              strokeWidth={isPoster ? 1 : 1.5}
-              dot={isPoster ? false : { r: 3.5, fill: 'rgb(5 46 22)', stroke: 'none' }}
+              strokeWidth={isPoster ? 1.15 : 1.5}
+              dot={isPoster ? { r: 2.4, fill: 'rgba(17, 24, 39, 0.86)', stroke: 'none' } : { r: 3.5, fill: 'rgb(5 46 22)', stroke: 'none' }}
             />
             <Tooltip
               content={({ active, payload }) => {
@@ -179,33 +216,6 @@ export function RatingVisualization({ axisValues, use10Scale = false, variant = 
             />
           </RadarChart>
         </ResponsiveContainer>
-      </div>
-      <div className={isPoster ? "flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs tracking-wide text-foreground/70" : "flex flex-wrap gap-x-4 gap-y-2 justify-center text-sm text-gray-600 dark:text-gray-400"}>
-        {radarData.map((item) => (
-          <span key={item.subject} className="flex items-center gap-1.5">
-            <span className={isPoster ? "h-px w-4 shrink-0 rounded-full" : "w-1.5 h-1.5 rounded-full shrink-0"} style={{ background: isPoster ? "rgba(0,0,0,0.25)" : chartColor }} />
-            {item.subject}
-            <span className={isPoster ? "tabular-nums text-foreground/55" : "font-medium tabular-nums text-gray-800 dark:text-gray-200"}>
-              {Number(item.displayValue).toFixed(1)}/{item.displayMax}
-            </span>
-            {item.description?.trim() && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className="rounded p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
-                    aria-label={`${item.subject} 설명`}
-                  >
-                    <Info className="h-3 w-3" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="center" side="top" className="max-w-[240px] text-sm">
-                  <p className="text-muted-foreground">{item.description}</p>
-                </PopoverContent>
-              </Popover>
-            )}
-          </span>
-        ))}
       </div>
     </div>
   );

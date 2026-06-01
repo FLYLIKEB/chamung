@@ -93,8 +93,9 @@ export function FlavorWheel({
                   <path
                     d={sectorPath(categoryStart, categoryEnd, rimInner, rimOuter)}
                     fill={hex}
-                    stroke="white"
-                    strokeWidth="1.5"
+                    stroke="#e5e7eb"
+                    strokeWidth="0.55"
+                    strokeOpacity="0.32"
                     opacity={isCategoryActive ? 1 : isGroupActive ? 0.85 : 0.55}
                   />
                   {isCategoryActive && (
@@ -124,8 +125,9 @@ export function FlavorWheel({
             <path
               d={sectorPath(startDeg, endDeg, innerR, outerR)}
               fill={groupColor.fill}
-              stroke="white"
-              strokeWidth="2"
+              stroke="#e5e7eb"
+              strokeWidth="0.8"
+              strokeOpacity="0.45"
               opacity={isGroupActive ? 1 : 0.72}
               className="cursor-pointer transition-opacity"
               onClick={() => onGroupClick(group)}

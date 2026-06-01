@@ -1779,8 +1779,9 @@ header :where(button, [role='button']) {
 
 
 .note-detail-template-panel {
-  background: rgba(255, 255, 255, 0.74) !important;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(243, 244, 246, 0.58) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
 }
 
 .note-detail-template-panel p {
@@ -2794,6 +2795,7 @@ header :where(button, [role='button']) {
 .note-detail-exhibition-label,
 .note-detail-primary-memo > p,
 .note-detail-story-card > div:first-child p,
+.note-detail-flavor-card p[class*='tracking'],
 .note-detail-profile-card p[class*='tracking'] {
   color: var(--muted-foreground) !important;
   letter-spacing: 0.18em !important;
@@ -3004,6 +3006,7 @@ header[class*='bg-black/35'] button {
 .note-detail-exhibition-label,
 .note-detail-primary-memo > p,
 .note-detail-story-card > div:first-child p,
+.note-detail-flavor-card p[class*='tracking'],
 .note-detail-profile-card p[class*='tracking'] {
   color: rgba(0,0,0,0.62) !important;
   letter-spacing: 0.18em !important;
@@ -3228,13 +3231,44 @@ header[class*='bg-black/35'] button {
 .rating-visualization-poster .recharts-polar-grid-angle line,
 .rating-visualization-poster .recharts-polar-grid-concentric path,
 .rating-visualization-poster .recharts-polar-radius-axis line {
-  opacity: 0.28;
-  filter: blur(0.55px);
+  opacity: 0.34;
+  filter: blur(0.15px);
 }
 
 .rating-visualization-poster .recharts-radar-polygon {
-  filter: blur(4px);
+  filter: none;
   mix-blend-mode: multiply;
+}
+
+.rating-visualization-poster .rating-visualization-axis-label text {
+  fill: rgba(30, 30, 30, 0.72) !important;
+  font-family: 'Pretendard', 'Helvetica Neue', system-ui, sans-serif !important;
+}
+
+.rating-visualization-poster .rating-visualization-axis-name {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.rating-visualization-poster .rating-visualization-axis-score {
+  fill: rgba(30, 30, 30, 0.52) !important;
+  font-size: 9.5px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.rating-visualization-poster .rating-visualization-axis-info-icon circle {
+  fill: none;
+  stroke: rgba(30, 30, 30, 0.5);
+  stroke-width: 1;
+}
+
+.rating-visualization-poster .rating-visualization-axis-info-icon text {
+  fill: rgba(30, 30, 30, 0.58) !important;
+  font-family: 'Pretendard', 'Helvetica Neue', system-ui, sans-serif !important;
+  font-size: 6.5px;
+  font-weight: 600;
 }
 
 .rating-visualization-poster .recharts-text,
@@ -3262,10 +3296,8 @@ header[class*='bg-black/35'] button {
 
 header[class*='bg-black/35'] h1 {
   font-family:
-    'Helvetica Neue',
-    'Arial Narrow',
-    'Avenir Next Condensed',
     'Pretendard',
+    'Helvetica Neue',
     system-ui,
     sans-serif !important;
   font-size: 0.86rem !important;
@@ -3280,15 +3312,13 @@ header[class*='bg-black/35'] h1 {
 .note-detail-card-deck .note-detail-hero > .note-detail-enter:first-of-type > div:last-child,
 .note-detail-primary-memo > p,
 .note-detail-story-card > div:first-child p,
+.note-detail-flavor-card p[class*='tracking'],
 .note-detail-profile-card p[class*='tracking'],
 .note-detail-scale-toggle button,
 .rating-visualization-poster {
   font-family:
-    'Arial Narrow',
-    'Helvetica Neue',
-    'Avenir Next Condensed',
-    'DIN Condensed',
     'Pretendard',
+    'Helvetica Neue',
     system-ui,
     sans-serif !important;
   font-weight: 300 !important;
@@ -3297,8 +3327,8 @@ header[class*='bg-black/35'] h1 {
 
 .note-detail-tea-title {
   font-family:
-    'Helvetica Neue',
     'Pretendard',
+    'Helvetica Neue',
     -apple-system,
     BlinkMacSystemFont,
     system-ui,
@@ -3309,8 +3339,8 @@ header[class*='bg-black/35'] h1 {
 
 .note-detail-quote blockquote {
   font-family:
-    'Helvetica Neue',
     'Pretendard',
+    'Helvetica Neue',
     -apple-system,
     BlinkMacSystemFont,
     system-ui,
@@ -3333,9 +3363,8 @@ header[class*='bg-black/35'] h1 {
 
 .note-detail-card-deck .note-detail-score-orb strong {
   font-family:
+    'Pretendard',
     'Helvetica Neue',
-    'Arial Narrow',
-    'Avenir Next Condensed',
     system-ui,
     sans-serif !important;
   font-weight: 180 !important;
@@ -3344,11 +3373,12 @@ header[class*='bg-black/35'] h1 {
 
 .note-detail-card-deck .note-detail-score-orb span,
 .note-detail-card-deck .note-detail-meta-chip,
-.note-detail-card-deck .note-detail-section-tags .cursor-pointer {
+.note-detail-card-deck .note-detail-section-tags .cursor-pointer,
+.note-detail-flavor-card [aria-label='향미 프로필 카드'],
+.note-detail-flavor-card [aria-label='향미 프로필 카드'] * {
   font-family:
-    'Arial Narrow',
-    'Helvetica Neue',
     'Pretendard',
+    'Helvetica Neue',
     system-ui,
     sans-serif !important;
   font-weight: 300 !important;
@@ -3358,9 +3388,8 @@ header[class*='bg-black/35'] h1 {
 .rating-visualization-poster .recharts-label,
 .rating-visualization-poster .recharts-legend-item-text {
   font-family:
-    'Arial Narrow',
-    'Helvetica Neue',
     'Pretendard',
+    'Helvetica Neue',
     system-ui,
     sans-serif !important;
   font-weight: 300 !important;
@@ -4232,7 +4261,7 @@ header[class*='bg-black/35'] h1 {
 
 /* ⑪ 레이더 차트 라벨: 진한 회색, 미니멀 */
 .note-detail-card-deck .recharts-polar-angle-axis-tick text {
-  fill: rgba(30, 30, 30, 0.8) !important;
+  fill: rgba(30, 30, 30, 0.72) !important;
   font-size: 11px !important;
   font-weight: 500;
 }

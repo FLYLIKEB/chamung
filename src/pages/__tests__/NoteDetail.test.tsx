@@ -146,7 +146,8 @@ describe('NoteDetail - 카드 사진 배경', () => {
     expect(within(table).getByText('더 좋음')).toBeInTheDocument();
   });
 
-  it('차록 향미를 CSV 스키마 그룹과 설명으로 표시해야 함', async () => {
+  it('차록 향미를 플레이버휠 기준 카드와 설명으로 표시해야 함', async () => {
+    const user = userEvent.setup();
     vi.mocked(notesApi.getById).mockResolvedValue({
       ...mockNote,
       tags: ['자스민', '단맛', '실키함', '청량한 여운', '나만의 표현'],
@@ -158,7 +159,26 @@ describe('NoteDetail - 카드 사진 배경', () => {
       </MemoryRouter>,
     );
 
-    const flavorGroups = await screen.findByLabelText('향미 스키마 그룹');
+    const flavorCard = await screen.findByLabelText('향미 프로필 카드');
+    const flavorPage = flavorCard.closest('.note-detail-flavor-card');
+    expect(flavorPage).toBeInTheDocument();
+    expect(document.querySelectorAll('.note-detail-photo-card')[1]).toHaveClass('note-detail-flavor-card');
+    expect(within(flavorPage as HTMLElement).getByText('향미 프로필')).toBeInTheDocument();
+    expect(within(flavorPage as HTMLElement).getByText('PROFILE')).toBeInTheDocument();
+    expect(within(flavorCard).getByLabelText('선택 향미 원형 인포그래픽')).toBeInTheDocument();
+    expect(within(flavorCard).getAllByText('자스민').length).toBeGreaterThan(0);
+    expect(within(flavorCard).getAllByText('단맛').length).toBeGreaterThan(0);
+    expect(within(flavorCard).getAllByText('실키함').length).toBeGreaterThan(0);
+    expect(within(flavorCard).getAllByText('청량한 여운').length).toBeGreaterThan(0);
+
+    const flavorGroups = within(flavorCard).getByLabelText('향미 스키마 그룹');
+    const tagListToggle = within(flavorGroups).getByRole('button', { name: /선택 태그 전체.*펼치기/ });
+    expect(tagListToggle).toHaveAttribute('aria-expanded', 'false');
+    expect(within(flavorGroups).queryByText('Aroma')).not.toBeInTheDocument();
+
+    await user.click(tagListToggle);
+
+    expect(tagListToggle).toHaveAttribute('aria-expanded', 'true');
     expect(within(flavorGroups).getByText('Aroma')).toBeInTheDocument();
     expect(within(flavorGroups).getByText('Taste')).toBeInTheDocument();
     expect(within(flavorGroups).getByText('Mouthfeel')).toBeInTheDocument();

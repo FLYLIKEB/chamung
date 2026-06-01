@@ -27,7 +27,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../lib/logger';
 import { useShare } from '../hooks/useShare';
 import { TeaTypeBadge } from '../components/TeaTypeBadge';
-import { FlavorTagGroups } from '../components/flavor/FlavorTagGroups';
+import { FlavorProfileCard } from '../components/flavor/FlavorProfileCard';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { fetchWeather, type WeatherInfo } from '../utils/weather';
@@ -301,9 +301,11 @@ export function NoteDetail() {
 
   const brewColor = note.appearance ? BREW_COLORS.find((c) => c.value === note.appearance) : null;
   const hasStoryCard = !!(note.images && note.images.length > 0);
-  const hasProfileCard = !!((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0));
+  const hasFlavorProfileCard = !!(note.tags && note.tags.length > 0);
+  const hasProfileCard = !!(note.axisValues && note.axisValues.length > 0);
   const cardMeta = [
     { id: 'hero' as const, show: true },
+    { id: 'flavor' as const, show: hasFlavorProfileCard },
     { id: 'story' as const, show: hasStoryCard },
     { id: 'profile' as const, show: hasProfileCard },
   ].filter((c) => c.show);
@@ -491,7 +493,26 @@ export function NoteDetail() {
 
           </section>
 
-          {/* ── 카드 2: NOTE (메모 + 이미지) ── */}
+          {/* ── 카드 2: FLAVOR (향미 플레이버휠) ── */}
+          {hasFlavorProfileCard && (
+            <section
+              className="note-detail-flavor-card note-detail-section note-detail-photo-card px-5 pt-4 pb-5"
+              {...getPhotoCardProps(cardMeta.findIndex((c) => c.id === 'flavor'))}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">PROFILE</p>
+                  <p className="mt-0.5 text-sm font-medium text-foreground">향미 프로필</p>
+                </div>
+                <span className="shrink-0 rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                  {note.tags.length} tags
+                </span>
+              </div>
+              <FlavorProfileCard tags={note.tags ?? []} className="border-0 bg-transparent p-0 shadow-none" showHeader={false} />
+            </section>
+          )}
+
+          {/* ── 카드 3: NOTE (메모 + 이미지) ── */}
           {hasStoryCard && (
             <section
               className="note-detail-story-card note-detail-photo-card px-5 pt-4 pb-5"
@@ -558,7 +579,8 @@ export function NoteDetail() {
             </section>
           )}
 
-          {/* ── 카드 3: PROFILE (향미 그래프 + 태그) ── */}
+
+          {/* ── 카드 4: PROFILE (감각 그래프) ── */}
           {hasProfileCard && (
             <section
               className="note-detail-profile-card note-detail-section note-detail-section-axis note-detail-photo-card space-y-3 px-5 pt-4 pb-5"
@@ -614,13 +636,6 @@ export function NoteDetail() {
                   })()}
                   <RatingVisualization axisValues={note.axisValues} use10Scale={use10Scale} variant="poster" />
                 </>
-              )}
-
-              {note.tags && note.tags.length > 0 && (
-                <div className="note-detail-section-tags pt-1">
-                  <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">FLAVOR TRACE</p>
-                  <FlavorTagGroups tags={note.tags} />
-                </div>
               )}
 
             </section>
