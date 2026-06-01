@@ -9,19 +9,10 @@ import { useUserRecapData } from '@/hooks/useUserRecapData';
 import { logger } from '@/lib/logger';
 import {
   TeaRecapSlide,
-  TeaRecapSlideTone,
   createSvgDataUrl,
   createSvgFile,
   createTeaRecapSvg,
 } from '@/utils/recap';
-
-const SLIDE_TONE_CLASSES: Record<TeaRecapSlideTone, string> = {
-  matcha: 'from-[#172516] via-[#406b36] to-[#d9e8b2] text-white',
-  roast: 'from-[#24150f] via-[#855a37] to-[#f3d6a1] text-white',
-  oolong: 'from-[#10222b] via-[#2e7780] to-[#bde8df] text-white',
-  berry: 'from-[#2b1024] via-[#8b3f63] to-[#f2bdd4] text-white',
-  night: 'from-[#0c1010] via-[#1f3324] to-[#dbe8c2] text-white',
-};
 
 export function UserRecap() {
   const navigate = useNavigate();
@@ -122,7 +113,7 @@ export function UserRecap() {
   }
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#050806] text-white">
+    <div className="min-h-screen overflow-hidden bg-background text-foreground">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-5 pt-[calc(1rem+env(safe-area-inset-top,0px))]">
         <RecapTopBar onClose={() => navigate(-1)} />
 
@@ -132,10 +123,10 @@ export function UserRecap() {
               key={slide.id}
               type="button"
               onClick={() => setActiveIndex(index)}
-              className="h-1 flex-1 overflow-hidden rounded-full bg-white/20"
+              className="h-1 flex-1 overflow-hidden rounded-full bg-muted"
               aria-label={`${index + 1}번째 카드로 이동`}
             >
-              <span className={cn('block h-full rounded-full bg-white transition-all', index <= activeIndex ? 'w-full' : 'w-0')} />
+              <span className={cn('block h-full rounded-full bg-foreground transition-all', index <= activeIndex ? 'w-full' : 'w-0')} />
             </button>
           ))}
         </div>
@@ -146,7 +137,7 @@ export function UserRecap() {
             onClick={() => setSelectedMonth(null)}
             className={cn(
               'shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
-              selectedMonth === null ? 'bg-white text-[#172516]' : 'bg-white/10 text-white/75',
+              selectedMonth === null ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground',
             )}
           >
             전체 기간
@@ -158,7 +149,7 @@ export function UserRecap() {
               onClick={() => setSelectedMonth(month)}
               className={cn(
                 'shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
-                selectedMonth === month ? 'bg-white text-[#172516]' : 'bg-white/10 text-white/75',
+                selectedMonth === month ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground',
               )}
             >
               {formatMonthLabel(month)}
@@ -171,7 +162,7 @@ export function UserRecap() {
             type="button"
             onClick={goPrev}
             disabled={isFirst}
-            className="absolute left-2 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur disabled:opacity-20"
+            className="absolute left-2 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-foreground disabled:opacity-20"
             aria-label="이전 리캡 카드"
           >
             <ChevronLeft className="h-6 w-6" />
@@ -189,7 +180,7 @@ export function UserRecap() {
             type="button"
             onClick={goNext}
             disabled={isLast}
-            className="absolute right-2 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur disabled:opacity-20"
+            className="absolute right-2 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-foreground disabled:opacity-20"
             aria-label="다음 리캡 카드"
           >
             <ChevronRight className="h-6 w-6" />
@@ -197,12 +188,12 @@ export function UserRecap() {
         </main>
 
         <div className="mt-4 flex items-center justify-between gap-3">
-          <p className="text-xs font-medium text-white/55">{activeIndex + 1} / {slides.length}</p>
+          <p className="text-xs font-medium text-muted-foreground">{activeIndex + 1} / {slides.length}</p>
           <Button
             type="button"
             variant="secondary"
             onClick={isLast ? handleShareRecap : goNext}
-            className="rounded-full bg-white text-[#172516] hover:bg-white/90"
+            className="rounded-full"
           >
             {isLast ? '공유하기' : '다음 카드'}
           </Button>
@@ -216,13 +207,13 @@ function RecapTopBar({ onClose }: { onClose: () => void }) {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/50">ChaLog</p>
-        <p className="text-lg font-black tracking-tight text-white">Recap</p>
+        <p className="text-xs font-bold uppercase tracking-[0.24em] text-muted-foreground">ChaLog</p>
+        <p className="text-lg font-black tracking-tight text-foreground">Recap</p>
       </div>
       <button
         type="button"
         onClick={onClose}
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground"
         aria-label="리캡 닫기"
       >
         <X className="h-5 w-5" />
@@ -246,36 +237,31 @@ function RecapStoryCard({
 }) {
   return (
     <section
-      className={cn(
-        'relative mx-auto flex aspect-[9/16] max-h-[70vh] w-full flex-col overflow-hidden rounded-[2rem] bg-gradient-to-br p-6 shadow-2xl shadow-black/40',
-        SLIDE_TONE_CLASSES[slide.tone],
-      )}
+      className="relative mx-auto flex aspect-[9/16] max-h-[70vh] w-full flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-6 text-card-foreground"
       aria-label={slide.title}
     >
-      <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-white/20 blur-2xl" />
-      <div className="absolute -bottom-24 left-8 h-56 w-56 rounded-full bg-white/14 blur-3xl" />
-      <div className="relative z-10 flex h-full flex-col">
-        <div className="flex items-start justify-between gap-4">
+      <div className="flex h-full flex-col">
+        <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-white/65">{slide.eyebrow}</p>
-            <p className="mt-2 text-sm font-semibold text-white/70">{periodLabel}</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">{slide.eyebrow}</p>
+            <p className="mt-2 text-sm font-semibold text-muted-foreground">{periodLabel}</p>
           </div>
-          <div className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white/80">{profileName}</div>
+          <div className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-bold text-muted-foreground">{profileName}</div>
         </div>
 
         <div className="mt-auto space-y-4 pb-4">
-          {slide.metric && <p className="text-5xl font-black leading-none tracking-tight drop-shadow-sm">{slide.metric}</p>}
-          <h1 className="text-3xl font-black leading-tight tracking-tight">{slide.title}</h1>
-          <p className="text-base font-medium leading-7 text-white/78">{slide.description}</p>
-          {slide.detail && <p className="rounded-2xl bg-white/14 px-4 py-3 text-sm font-semibold text-white/82 backdrop-blur">{slide.detail}</p>}
+          {slide.metric && <p className="text-5xl font-black leading-none tracking-tight text-foreground">{slide.metric}</p>}
+          <h1 className="text-3xl font-black leading-tight tracking-tight text-foreground">{slide.title}</h1>
+          <p className="text-base font-medium leading-7 text-muted-foreground">{slide.description}</p>
+          {slide.detail && <p className="rounded-2xl border border-border bg-muted px-4 py-3 text-sm font-semibold text-muted-foreground">{slide.detail}</p>}
 
           {slide.isSummary && (
             <div className="grid grid-cols-2 gap-2 pt-2">
-              <Button type="button" onClick={onShare} className="gap-2 rounded-2xl bg-white text-[#172516] hover:bg-white/90">
+              <Button type="button" onClick={onShare} className="gap-2 rounded-2xl">
                 <Share2 className="h-4 w-4" />
                 공유
               </Button>
-              <Button type="button" onClick={onDownload} variant="outline" className="gap-2 rounded-2xl border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+              <Button type="button" onClick={onDownload} variant="outline" className="gap-2 rounded-2xl">
                 <Download className="h-4 w-4" />
                 저장
               </Button>
