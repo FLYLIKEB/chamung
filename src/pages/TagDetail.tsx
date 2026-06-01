@@ -27,6 +27,7 @@ export function TagDetail() {
 
   const [tagDetail, setTagDetail] = useState<TagDetailType | null>(null);
   const [noteList, setNoteList] = useState<TagNoteList | null>(null);
+  const [isSchemaFallback, setIsSchemaFallback] = useState(false);
   const [popularTags, setPopularTags] = useState<PopularTagItem[]>([]);
   const [recentTags, setRecentTags] = useState<PopularTagItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,12 +49,15 @@ export function TagDetail() {
     if (!decodedName) return;
     setIsLoading(true);
     try {
-      const [detail, notes, popular, recent] = await Promise.all([
+      setIsSchemaFallback(false);
+      const [detailResult, notesResult, popular, recent] = await Promise.all([
         tagsApi.getTagDetail(decodedName),
         tagsApi.getTagNotes(decodedName, 1, LIMIT),
         tagsApi.getPopularTags(10),
         tagsApi.getRecentTags(10),
       ]);
+      const detail = detailResult;
+      const notes = notesResult;
       setTagDetail(detail);
       setNoteList(notes);
       setHasMore(notes.notes.length === LIMIT && notes.total > LIMIT);
@@ -61,6 +65,36 @@ export function TagDetail() {
       setRecentTags(recent);
       setPage(1);
     } catch (error: any) {
+      if (error?.statusCode === 404 && flavorDefinition) {
+        const fallbackDetail: TagDetailType = {
+          name: decodedName,
+          noteCount: 0,
+          isFollowing: false,
+          followerCount: 0,
+        };
+        setTagDetail(fallbackDetail);
+        setNoteList({
+          tag: fallbackDetail,
+          notes: [],
+          total: 0,
+          page: 1,
+          limit: LIMIT,
+        });
+        setHasMore(false);
+        setPage(1);
+        setIsSchemaFallback(true);
+        try {
+          const [popular, recent] = await Promise.all([
+            tagsApi.getPopularTags(10),
+            tagsApi.getRecentTags(10),
+          ]);
+          setPopularTags(popular);
+          setRecentTags(recent);
+        } catch (relatedError: any) {
+          logger.error('Failed to load related tags:', relatedError);
+        }
+        return;
+      }
       logger.error('Failed to load tag detail:', error);
       if (error?.statusCode === 404) {
         toast.error('존재하지 않는 향미입니다.');
@@ -71,7 +105,7 @@ export function TagDetail() {
     } finally {
       setIsLoading(false);
     }
-  }, [decodedName, navigate]);
+  }, [decodedName, flavorDefinition, navigate]);
 
   useEffect(() => {
     loadInitialData();
@@ -217,11 +251,14 @@ export function TagDetail() {
             variant={tagDetail.isFollowing ? 'outline' : 'default'}
             size="sm"
             onClick={handleFollowToggle}
-            disabled={isFollowLoading}
+            disabled={isFollowLoading || isSchemaFallback}
+            title={isSchemaFallback ? '아직 차록에 사용되지 않은 스키마 향미입니다.' : undefined}
             className="shrink-0"
           >
             {isFollowLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isSchemaFallback ? (
+              '스키마'
             ) : tagDetail.isFollowing ? (
               <>
                 <BellOff className="w-4 h-4 mr-1.5" />
