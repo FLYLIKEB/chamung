@@ -4,8 +4,14 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
-import { RECOMMENDED_NOTE_TAGS } from '../constants';
 import { AddLogoIcon } from './AddLogoIcon';
+import {
+  FLAVOR_TAG_GROUP_META,
+  FLAVOR_TAG_GROUP_ORDER,
+  FLAVOR_TAGS,
+  type FlavorTagDefinition,
+  type FlavorTagGroup,
+} from '../constants/flavorTags';
 
 interface TagInputProps {
   tags: string[];
@@ -23,17 +29,36 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
   // 입력값에 따라 추천 태그 필터링
   const filteredSuggestions = useMemo(() => {
     const normalizedInput = inputValue.trim().replace(/\s+/g, '').toLowerCase();
-    return RECOMMENDED_NOTE_TAGS.filter((tag) => {
-      if (tags.includes(tag)) {
+    return FLAVOR_TAGS.filter((tag) => {
+      if (tags.includes(tag.tagKo)) {
         return false;
       }
       if (!normalizedInput) {
         return true;
       }
-      const normalizedTag = tag.replace(/\s+/g, '').toLowerCase();
-      return normalizedTag.includes(normalizedInput);
-    });
+      const searchable = [
+        tag.tagKo,
+        tag.tagEn,
+        tag.category,
+        tag.descriptionKo,
+      ].join(' ').replace(/\s+/g, '').toLowerCase();
+      return searchable.includes(normalizedInput);
+    }).slice(0, 24);
   }, [inputValue, tags]);
+
+  const groupedSuggestions = useMemo(() => {
+    const byGroup = new Map<FlavorTagGroup, FlavorTagDefinition[]>();
+    filteredSuggestions.forEach((tag) => {
+      const group = byGroup.get(tag.group) ?? [];
+      group.push(tag);
+      byGroup.set(tag.group, group);
+    });
+    return FLAVOR_TAG_GROUP_ORDER.map((group) => ({
+      group,
+      meta: FLAVOR_TAG_GROUP_META[group],
+      tags: byGroup.get(group) ?? [],
+    })).filter((group) => group.tags.length > 0);
+  }, [filteredSuggestions]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -137,22 +162,46 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
 
       {/* 맞춤차 향미 - 항상 위에 표시 */}
       <div className="rounded-lg border border-border/60 bg-muted/30 p-2">
-        <p className="text-xs text-muted-foreground mb-2 px-1">맞춤차 향미</p>
-        <div className="flex flex-wrap gap-2">
-          {filteredSuggestions.slice(0, 20).map((tag) => (
-            <Button
-              key={tag}
-              type="button"
-              variant="outline"
-              size="sm"
-              className="min-h-[32px] h-auto py-1 px-2 text-[11px] leading-none"
-              onClick={() => handleSuggestionClick(tag)}
-            >
-              <AddLogoIcon className="w-4 h-4 mr-1" />
-              {tag}
-            </Button>
-          ))}
+        <div className="mb-2 px-1">
+          <p className="text-xs font-medium text-foreground">맞춤차 향미</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            향·맛·질감·여운 스키마에 맞춰 차록에 남길 감각을 고르세요.
+          </p>
         </div>
+        {groupedSuggestions.length > 0 ? (
+          <div className="space-y-2">
+            {groupedSuggestions.map(({ group, meta, tags: suggestionTags }) => (
+              <section key={group} aria-label={`${meta.labelKo} ${meta.labelEn} 향미 추천`}>
+                <div className="mb-1 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span>{meta.labelKo}</span>
+                  <span className="font-normal">{meta.labelEn}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {suggestionTags.map((tag) => (
+                    <Button
+                      key={tag.tagId}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="min-h-[34px] h-auto max-w-full py-1 px-2 text-left text-[11px] leading-tight"
+                      onClick={() => handleSuggestionClick(tag.tagKo)}
+                      title={tag.descriptionKo}
+                      aria-label={`${tag.tagKo} 향미 추가`}
+                    >
+                      <AddLogoIcon className="w-4 h-4 mr-1 shrink-0" />
+                      <span className="min-w-0">
+                        <span className="block font-medium">{tag.tagKo}</span>
+                        <span className="block max-w-[9rem] truncate text-[10px] font-normal text-muted-foreground">{tag.descriptionKo}</span>
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <p className="px-1 py-2 text-xs text-muted-foreground">일치하는 스키마 향미가 없습니다. 직접 입력해 추가할 수 있어요.</p>
+        )}
       </div>
       
       {/* 입력된 태그 표시 */}
@@ -203,4 +252,3 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
     </div>
   );
 }
-

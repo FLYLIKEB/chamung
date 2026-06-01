@@ -6,7 +6,6 @@ import { DetailFallback } from '../components/DetailFallback';
 import { RatingVisualization } from '../components/RatingVisualization';
 import { ImageCarousel } from '../components/ImageCarousel';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
 import { ReportModal } from '../components/ReportModal';
 import { BottomNav } from '../components/BottomNav';
 import {
@@ -28,6 +27,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../lib/logger';
 import { useShare } from '../hooks/useShare';
 import { TeaTypeBadge } from '../components/TeaTypeBadge';
+import { FlavorTagGroups } from '../components/flavor/FlavorTagGroups';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { fetchWeather, type WeatherInfo } from '../utils/weather';
@@ -619,21 +619,7 @@ export function NoteDetail() {
               {note.tags && note.tags.length > 0 && (
                 <div className="note-detail-section-tags pt-1">
                   <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">FLAVOR TRACE</p>
-                  <div className="flex flex-wrap gap-2">
-                    {note.tags.map((tag, index) => (
-                      <Link key={index} to={`/tag/${encodeURIComponent(tag)}`}>
-                        {index < 2 ? (
-                          <Badge variant="outline" className="cursor-pointer text-xs font-medium">
-                            {tag}
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="cursor-pointer text-xs">
-                            {tag}
-                          </Badge>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
+                  <FlavorTagGroups tags={note.tags} />
                 </div>
               )}
 
