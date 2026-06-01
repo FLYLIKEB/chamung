@@ -1,34 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-} from 'recharts';
-import { Section } from '@/components/ui/Section';
+import { BarChart2, ChevronRight, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { notesApi } from '@/lib/api';
-import { Note } from '@/types';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { logger } from '@/lib/logger';
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Loader2, Share2, Download } from 'lucide-react';
-import { cn } from '@/components/ui/utils';
-import { useReportData, getAvailableMonths, formatMonthLabel } from '@/hooks/useReportData';
-import { buildTeaRecapSummary, createSvgDataUrl, createSvgFile, createTeaRecapSvg } from '@/utils/recap';
-
-const TEA_TYPE_CHART_COLORS: Record<string, string> = {
-  '녹차': '#4ade80',
-  '백차': '#fde68a',
-  '황차': '#fbbf24',
-  '청차/우롱차': '#38bdf8',
-  '홍차': '#f87171',
-  '흑차/보이차': '#a78bfa',
-  '대용차': '#fb923c',
-  '기타': '#94a3b8',
-};
-
-function getTypeColor(type: string): string {
-  return TEA_TYPE_CHART_COLORS[type] ?? '#94a3b8';
-}
+import { useUserRecapData } from '@/hooks/useUserRecapData';
 
 interface ReportContentProps {
   userId?: number;
@@ -36,114 +9,11 @@ interface ReportContentProps {
   isOwnProfile?: boolean;
 }
 
-interface NotesPageResponse {
-  data?: Note[];
-  notes?: Note[];
-}
-
-function toNotesArray(data: Note[] | NotesPageResponse): Note[] {
-  return Array.isArray(data) ? data : data.data ?? data.notes ?? [];
-}
-
-export function ReportContent({ userId, profileName, isOwnProfile = true }: ReportContentProps) {
+export function ReportContent({ userId, profileName = '차 애호가', isOwnProfile = true }: ReportContentProps) {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading } = useAuth();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-  const targetUserId = userId ?? user?.id;
-  const displayName = profileName ?? user?.name ?? '차 애호가';
+  const { isLoading, notes, summary } = useUserRecapData(userId ?? null);
 
-  useEffect(() => {
-    if (authLoading || !targetUserId) return;
-    const fetchNotes = async () => {
-      try {
-        setIsLoading(true);
-        const publicOnly = isOwnProfile ? undefined : true;
-        const data = await notesApi.getAll(targetUserId, publicOnly, undefined, undefined, undefined, 'latest', 1, 500);
-        setNotes(toNotesArray(data));
-      } catch (error) {
-        logger.error('Failed to fetch notes for report:', error);
-        toast.error('차록 데이터를 불러오는데 실패했습니다.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchNotes();
-  }, [targetUserId, isOwnProfile, authLoading]);
-
-  const availableMonths = useMemo(() => getAvailableMonths(notes), [notes]);
-  const report = useReportData(notes, selectedMonth);
-  const filteredNotes = useMemo(
-    () => selectedMonth
-      ? notes.filter((note) => {
-        const createdAt = new Date(note.createdAt);
-        const monthKey = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
-        return monthKey === selectedMonth;
-      })
-      : notes,
-    [notes, selectedMonth],
-  );
-  const recapSummary = useMemo(
-    () => buildTeaRecapSummary(report, filteredNotes, selectedMonth, displayName),
-    [report, filteredNotes, selectedMonth, displayName],
-  );
-
-  const handlePrevMonth = () => {
-    if (!selectedMonth) {
-      setSelectedMonth(availableMonths[0] ?? null);
-      return;
-    }
-    const idx = availableMonths.indexOf(selectedMonth);
-    if (idx < availableMonths.length - 1) setSelectedMonth(availableMonths[idx + 1]);
-  };
-
-  const handleNextMonth = () => {
-    if (!selectedMonth) return;
-    const idx = availableMonths.indexOf(selectedMonth);
-    if (idx > 0) setSelectedMonth(availableMonths[idx - 1]);
-    else setSelectedMonth(null);
-  };
-
-  const monthDiff = report.thisMonthCount - report.lastMonthCount;
-
-  const handleShareRecap = async () => {
-    const svg = createTeaRecapSvg(recapSummary);
-    const shareData = {
-      title: recapSummary.title,
-      text: recapSummary.shareText,
-      url: window.location.href,
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-        toast.success('리캡 공유창을 열었어요.');
-        return;
-      }
-      await navigator.clipboard.writeText(`${recapSummary.shareText}\n${window.location.href}`);
-      toast.success('리캡 내용을 클립보드에 복사했어요.');
-    } catch (error) {
-      logger.error('Failed to share recap:', error);
-      const link = document.createElement('a');
-      link.href = createSvgDataUrl(svg);
-      link.download = `chalog-recap-${selectedMonth ?? 'all'}.svg`;
-      link.click();
-      toast.success('공유 이미지로 저장했어요.');
-    }
-  };
-
-  const handleDownloadRecap = () => {
-    const svg = createTeaRecapSvg(recapSummary);
-    const link = document.createElement('a');
-    link.href = createSvgDataUrl(svg);
-    link.download = `chalog-recap-${selectedMonth ?? 'all'}.svg`;
-    link.click();
-    toast.success('리캡 이미지를 저장했어요.');
-  };
-
-
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -153,253 +23,67 @@ export function ReportContent({ userId, profileName, isOwnProfile = true }: Repo
 
   if (notes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 text-center px-6 py-12">
-        <p className="text-base font-medium text-foreground">아직 차록이 없어요</p>
-        <p className="text-sm text-muted-foreground">차록을 작성하면 나만의 통계를 볼 수 있어요.</p>
-        <Button onClick={() => navigate('/note/new')} className="mt-2">첫 차록 쓰기</Button>
+      <div className="px-4 py-12 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-2xl">🍵</div>
+        <p className="mt-4 text-base font-semibold text-foreground">아직 리캡을 만들 차록이 없어요</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {isOwnProfile ? '차록을 작성하면 카드형 리캡을 볼 수 있어요.' : '공개 차록이 생기면 리캡을 볼 수 있어요.'}
+        </p>
+        {isOwnProfile && (
+          <Button onClick={() => navigate('/note/new')} className="mt-4">
+            첫 차록 쓰기
+          </Button>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:px-8 space-y-6 max-w-2xl mx-auto">
-      <div className="overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/15 via-card to-muted p-5 shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">ChaLog Recap</p>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">{recapSummary.title}</h2>
-            <p className="text-sm text-muted-foreground">{recapSummary.headline}</p>
-          </div>
-          <div className="rounded-2xl bg-background/70 px-3 py-2 text-right">
-            <p className="text-xs text-muted-foreground">{recapSummary.periodLabel}</p>
-            <p className="text-lg font-bold text-primary">{recapSummary.totalCount}건</p>
-          </div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <RecapMetric label="대표 차종" value={recapSummary.topTeaType ?? '—'} detail={recapSummary.topTeaType ? `${recapSummary.topTeaTypeCount}건` : '기록 없음'} />
-          <RecapMetric label="자주 마신 차" value={recapSummary.topTeaName ?? '—'} detail={recapSummary.topTeaName ? `${recapSummary.topTeaCount}번` : '기록 없음'} />
-          <RecapMetric label="대표 향미" value={recapSummary.topTag ? `#${recapSummary.topTag}` : '—'} detail={recapSummary.topTag ? `${recapSummary.topTagCount}회` : '태그 없음'} />
-          <RecapMetric label="평균 별점" value={recapSummary.averageRating ? `★${recapSummary.averageRating}` : '—'} detail="기록 기준" />
-        </div>
-
-        <div className="mt-5 flex gap-2">
-          <Button type="button" onClick={handleShareRecap} className="flex-1 gap-2" aria-label="차록 리캡 공유">
-            <Share2 className="w-4 h-4" />
-            공유하기
-          </Button>
-          <Button type="button" variant="outline" onClick={handleDownloadRecap} className="gap-2" aria-label="리캡 이미지 저장">
-            <Download className="w-4 h-4" />
-            이미지
-          </Button>
-        </div>
-      </div>
-
-      {/* 월 선택기 */}
-      <div className="flex items-center justify-between bg-muted rounded-xl px-4 py-2.5">
-        <button
-          type="button"
-          onClick={handlePrevMonth}
-          disabled={availableMonths.length === 0 || selectedMonth === availableMonths[availableMonths.length - 1]}
-          className="p-1 rounded-full hover:bg-background/60 disabled:opacity-30 transition-colors"
-          aria-label="이전 달"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <span className="text-sm font-medium">
-          {selectedMonth ? formatMonthLabel(selectedMonth) : '전체 기간'}
-        </span>
-        <button
-          type="button"
-          onClick={handleNextMonth}
-          disabled={!selectedMonth}
-          className="p-1 rounded-full hover:bg-background/60 disabled:opacity-30 transition-colors"
-          aria-label="다음 달"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* 요약 카드 */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="bg-card rounded-xl p-3 text-center">
-          <p className="text-xs text-muted-foreground mb-1">{selectedMonth ? formatMonthLabel(selectedMonth) : '이번 달'}</p>
-          <p className="text-xl font-bold text-primary">{report.thisMonthCount}</p>
-          <p className="text-xs text-muted-foreground">건</p>
-        </div>
-        <div className="bg-card rounded-xl p-3 text-center">
-          <p className="text-xs text-muted-foreground mb-1">전월 대비</p>
-          <div className="flex items-center justify-center gap-0.5">
-            {monthDiff > 0 ? (
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
-            ) : monthDiff < 0 ? (
-              <TrendingDown className="w-4 h-4 text-red-400" />
-            ) : (
-              <Minus className="w-4 h-4 text-muted-foreground" />
-            )}
-            <p className={cn(
-              'text-xl font-bold',
-              monthDiff > 0 ? 'text-emerald-500' : monthDiff < 0 ? 'text-red-400' : 'text-muted-foreground',
-            )}>
-              {monthDiff > 0 ? `+${monthDiff}` : monthDiff}
-            </p>
-          </div>
-          <p className="text-xs text-muted-foreground">건</p>
-        </div>
-        <div className="bg-card rounded-xl p-3 text-center">
-          <p className="text-xs text-muted-foreground mb-1">총 차록</p>
-          <p className="text-xl font-bold text-foreground">{report.totalCount}</p>
-          <p className="text-xs text-muted-foreground">건</p>
-        </div>
-      </div>
-
-      {/* 차 종류별 비율 */}
-      {report.teaTypeDistribution.length > 0 && (
-        <Section title="차 종류별 비율" spacing="sm">
-          <div className="bg-card rounded-xl p-4">
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={report.teaTypeDistribution}
-                  dataKey="count"
-                  nameKey="type"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={({ type, percentage }) => `${type} ${percentage}%`}
-                  labelLine={false}
-                >
-                  {report.teaTypeDistribution.map((entry) => (
-                    <Cell key={entry.type} fill={getTypeColor(entry.type)} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number, name: string) => [`${value}건`, name]} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 justify-center">
-              {report.teaTypeDistribution.map((entry) => (
-                <div key={entry.type} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: getTypeColor(entry.type) }}
-                  />
-                  {entry.type} ({entry.count}건)
-                </div>
-              ))}
+    <div className="px-4 py-8">
+      <button
+        type="button"
+        onClick={() => navigate(`/user/${userId}/recap`)}
+        className="group w-full overflow-hidden rounded-3xl bg-gradient-to-br from-[#121a13] via-[#2f472b] to-[#d7e2b6] p-1 text-left shadow-lg shadow-primary/10"
+        aria-label={`${profileName}님의 차록 리캡 열기`}
+      >
+        <div className="rounded-[1.3rem] border border-white/15 bg-black/10 p-5 text-white backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/14 px-3 py-1 text-xs font-semibold text-white/90">
+              <Sparkles className="h-3.5 w-3.5" />
+              YouTube Recap 스타일
             </div>
+            <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
           </div>
-        </Section>
-      )}
 
-      {/* 평점 분포 */}
-      <Section title="평점 분포" spacing="sm">
-        <div className="bg-card rounded-xl p-4">
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={report.ratingDistribution} margin={{ top: 4, right: 4, bottom: 4, left: -20 }}>
-              <XAxis dataKey="rating" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-              <Tooltip formatter={(value: number) => [`${value}건`, '차록 수']} />
-              <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="mt-14 space-y-3">
+            <p className="text-sm font-medium text-white/70">{summary.periodLabel}</p>
+            <h2 className="text-3xl font-black leading-tight tracking-tight">
+              {profileName}님의<br />차록 리캡
+            </h2>
+            <p className="max-w-xs text-sm leading-6 text-white/78">프로필 안의 차트 대신, 한 장씩 넘기는 별도 리캡 페이지로 감상해요.</p>
+          </div>
+
+          <div className="mt-10 grid grid-cols-3 gap-2">
+            <MiniStat label="차록" value={`${summary.totalCount}`} />
+            <MiniStat label="차종" value={summary.topTeaType ?? '—'} />
+            <MiniStat label="향미" value={summary.topTag ? `#${summary.topTag}` : '—'} />
+          </div>
+
+          <div className="mt-5 flex items-center gap-2 text-sm font-semibold text-white">
+            <BarChart2 className="h-4 w-4" />
+            리캡 보러가기
+          </div>
         </div>
-      </Section>
-
-      {/* 자주 마신 차 Top 5 */}
-      {report.topTeas.length > 0 && (
-        <Section title="자주 마신 차 Top 5" spacing="sm">
-          <div className="bg-card rounded-xl overflow-hidden">
-            {report.topTeas.map((tea, index) => {
-              const isClickable = !!tea.teaId;
-              const content = (
-                <>
-                  <span className={cn(
-                    'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
-                    index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                    index === 1 ? 'bg-gray-300 text-gray-700' :
-                    index === 2 ? 'bg-orange-300 text-orange-800' :
-                    'bg-muted text-muted-foreground',
-                  )}>
-                    {index + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{tea.teaName}</p>
-                    {(tea.teaYear || tea.teaSeller) && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {[tea.teaYear ? `${tea.teaYear}년` : null, tea.teaSeller].filter(Boolean).join(' · ')}
-                      </p>
-                    )}
-                  </div>
-                  <span className="text-sm text-muted-foreground shrink-0">{tea.count}번</span>
-                </>
-              );
-              return isClickable ? (
-                <button
-                  key={tea.teaName}
-                  type="button"
-                  onClick={() => navigate(`/tea/${tea.teaId}`)}
-                  className="w-full flex items-center gap-3 px-4 py-3 border-b border-border/40 last:border-0 hover:bg-muted/40 transition-colors text-left"
-                >
-                  {content}
-                </button>
-              ) : (
-                <div
-                  key={tea.teaName}
-                  className="flex items-center gap-3 px-4 py-3 border-b border-border/40 last:border-0"
-                >
-                  {content}
-                </div>
-              );
-            })}
-          </div>
-        </Section>
-      )}
-
-      {/* 자주 쓴 태그 */}
-      {report.topTags.length > 0 && (
-        <Section title="자주 쓴 향미 태그" spacing="sm">
-          <div className="bg-card rounded-xl p-4">
-            <div className="flex flex-wrap gap-2">
-              {report.topTags.map((tag, index) => {
-                const maxCount = report.topTags[0].count;
-                const ratio = tag.count / maxCount;
-                return (
-                  <span
-                    key={tag.tag}
-                    className={cn(
-                      'inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-border/60 transition-colors',
-                      index === 0 ? 'bg-primary/15 text-primary font-semibold' :
-                      ratio >= 0.6 ? 'bg-primary/8 text-foreground font-medium' :
-                      'bg-muted/60 text-muted-foreground text-sm',
-                    )}
-                  >
-                    #{tag.tag}
-                    <span className="text-xs opacity-60">({tag.count})</span>
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        </Section>
-      )}
-
-      {/* 월간 인사이트 */}
-      {report.monthlyInsight && (
-        <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
-          <p className="text-xs font-medium text-primary mb-1">이번 달 인사이트</p>
-          <p className="text-sm text-foreground">{report.monthlyInsight}</p>
-        </div>
-      )}
+      </button>
     </div>
   );
 }
 
-function RecapMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
+function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-background/75 p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 truncate text-base font-bold text-foreground">{value}</p>
-      <p className="mt-0.5 text-xs text-muted-foreground">{detail}</p>
+    <div className="rounded-2xl bg-white/14 px-3 py-2 backdrop-blur-sm">
+      <p className="text-[10px] font-medium text-white/60">{label}</p>
+      <p className="mt-0.5 truncate text-sm font-bold text-white">{value}</p>
     </div>
   );
 }
