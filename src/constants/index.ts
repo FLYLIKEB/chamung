@@ -1,6 +1,10 @@
 /**
  * 애플리케이션 전역 상수
  */
+import { FLAVOR_TAG_LABELS, FLAVOR_TAG_LABEL_BY_ID } from './flavorTags';
+export { FLAVOR_TAGS, FLAVOR_TAGS_BY_ID, FLAVOR_TAG_LABELS, FLAVOR_TAG_LABEL_BY_ID, FLAVOR_TAG_CSV_PATH } from './flavorTags';
+export type { FlavorTagDefinition, FlavorTagGroup } from './flavorTags';
+
 
 // API 관련 상수
 export const API_TIMEOUT = 30000; // 30초
@@ -44,17 +48,8 @@ export const MIN_REVIEWS_FOR_TAGS = 3;
 // 기본 태그 (차 상세 페이지용 - 평점 기반 계산)
 export const DEFAULT_TEA_TAGS = ['깨끗함', '부드러움', '복합적'] as const;
 
-// 노트 작성 시 추천 태그 목록
-export const RECOMMENDED_NOTE_TAGS = [
-  // 향미 관련
-  '꽃향', '과일향', '허브향', '스모키', '꿀향', '견과향', '초콜릿향', '바닐라향',
-  // 맛 관련
-  '단맛', '쓴맛', '떫은맛', '신맛', '고소한맛', '부드러운맛',
-  // 느낌/특성 관련
-  '깔끔함', '부드러움', '진함', '가벼움', '풍부함', '복합적', '깨끗함', '강함',
-  // 기타
-  '온화함', '상쾌함', '따뜻함', '시원함', '은은함', '강렬함'
-] as const;
+// 노트 작성 시 추천 태그 목록: issue #311의 향미 태그 CSV v1 전체 라벨
+export const RECOMMENDED_NOTE_TAGS = FLAVOR_TAG_LABELS;
 
 // 차 종류 (산화도 낮은 순: 녹→백→황→청/우롱→홍→흑/보이, + 대용차)
 export const TEA_TYPES = ['녹차', '백차', '황차', '청차/우롱차', '홍차', '흑차/보이차', '대용차'] as const;
@@ -190,14 +185,26 @@ export function guessTeaTypeFromName(name: string): TeaType | null {
 
 export const ONBOARDING_TEA_TYPES = TEA_TYPES;
 
-export const ONBOARDING_FLAVOR_TAGS = [
-  '꽃향',
-  '과일향',
-  '허브향',
-  '스모키',
-  '꿀향',
-  '견과향',
-  '초콜릿향',
-  '바닐라향',
+const ONBOARDING_FLAVOR_TAG_IDS = [
+  'general_floral',
+  'jasmine',
+  'citrus',
+  'peach_apricot',
+  'honey',
+  'roasted_nut',
+  'roasted',
+  'smoky',
+  'earthy',
+  'mint',
+  'sweet',
+  'bitter',
+  'sour',
+  'umami',
+  'smooth',
+  'long',
 ] as const;
+
+export const ONBOARDING_FLAVOR_TAGS = ONBOARDING_FLAVOR_TAG_IDS.map(
+  (tagId) => FLAVOR_TAG_LABEL_BY_ID[tagId],
+);
 

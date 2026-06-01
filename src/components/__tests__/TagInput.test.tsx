@@ -95,11 +95,11 @@ describe('TagInput 컴포넌트', () => {
 
     // 맞춤차 향미 목록이 나타날 때까지 대기
     await waitFor(() => {
-      const suggestionButton = screen.queryByRole('button', { name: /꽃향/ });
+      const suggestionButton = screen.queryByRole('button', { name: /^꽃향$/ });
       expect(suggestionButton).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    const suggestionButton = screen.getByRole('button', { name: /꽃향/ });
+    const suggestionButton = screen.getByRole('button', { name: /^꽃향$/ });
     await user.click(suggestionButton);
 
     await waitFor(() => {
