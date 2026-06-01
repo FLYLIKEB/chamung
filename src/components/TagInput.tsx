@@ -9,6 +9,7 @@ import {
   FLAVOR_TAG_GROUP_META,
   FLAVOR_TAG_GROUP_ORDER,
   FLAVOR_TAGS,
+  getFlavorTagColor,
   type FlavorTagDefinition,
   type FlavorTagGroup,
 } from '../constants/flavorTags';
@@ -150,19 +151,25 @@ export function TagInput({ tags, onChange, maxTags = 10 }: TagInputProps) {
                   <span className="text-[10px] font-normal text-muted-foreground">{meta.labelEn}</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {suggestionTags.map((tag) => (
+                  {suggestionTags.map((tag) => {
+                    const color = getFlavorTagColor(tag);
+                    return (
                     <button
                       key={tag.tagId}
                       type="button"
                       onClick={() => addTag(tag.tagKo)}
-                      className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2.5 py-1 text-[12px] font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-muted active:scale-95"
+                      className={cn(
+                        'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] font-medium transition-all active:scale-95',
+                        color.bg, color.text, color.border,
+                      )}
                       aria-label={`${tag.tagKo} 향미 추가`}
                     >
-                      <AddLogoIcon className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      <AddLogoIcon className="h-3 w-3 shrink-0 opacity-60" />
                       {tag.tagKo}
                       <TagTooltip description={tag.descriptionKo} />
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             ))}

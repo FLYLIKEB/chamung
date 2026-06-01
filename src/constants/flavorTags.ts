@@ -1003,6 +1003,58 @@ export function groupFlavorTagLabels(labels: readonly string[]) {
     .filter((summary) => summary.tags.length > 0) satisfies FlavorTagDisplayGroupSummary[];
 }
 
+/** 풍미룬 기반 카테고리별 색상 (Tailwind classes: bg, text, border) */
+export interface FlavorTagColorSet {
+  bg: string;
+  text: string;
+  border: string;
+  dot: string;
+}
+
+export const FLAVOR_CATEGORY_COLORS: Record<string, FlavorTagColorSet> = {
+  // Aroma - vegetal: 초록
+  vegetal:   { bg: 'bg-green-100 dark:bg-green-950/40',   text: 'text-green-800 dark:text-green-200',   border: 'border-green-300 dark:border-green-700',   dot: '#4ade80' },
+  // Aroma - floral: 분홍
+  floral:    { bg: 'bg-pink-100 dark:bg-pink-950/40',     text: 'text-pink-800 dark:text-pink-200',     border: 'border-pink-300 dark:border-pink-700',     dot: '#f472b6' },
+  // Aroma - fruity: 주황
+  fruity:    { bg: 'bg-orange-100 dark:bg-orange-950/40', text: 'text-orange-800 dark:text-orange-200', border: 'border-orange-300 dark:border-orange-700', dot: '#fb923c' },
+  // Aroma - sweet: 노랑
+  sweet:     { bg: 'bg-yellow-100 dark:bg-yellow-950/40', text: 'text-yellow-800 dark:text-yellow-200', border: 'border-yellow-300 dark:border-yellow-700', dot: '#facc15' },
+  // Aroma - roasted: 갈색
+  roasted:   { bg: 'bg-amber-100 dark:bg-amber-950/40',   text: 'text-amber-800 dark:text-amber-200',   border: 'border-amber-400 dark:border-amber-700',   dot: '#d97706' },
+  // Aroma - spicy: 적갈색
+  spicy:     { bg: 'bg-red-100 dark:bg-red-950/40',       text: 'text-red-800 dark:text-red-200',       border: 'border-red-300 dark:border-red-700',       dot: '#f87171' },
+  // Aroma - earthy: 올리브
+  earthy:    { bg: 'bg-lime-100 dark:bg-lime-950/40',     text: 'text-lime-800 dark:text-lime-200',     border: 'border-lime-400 dark:border-lime-700',     dot: '#84cc16' },
+  // Aroma - cooling: 청록
+  cooling:   { bg: 'bg-teal-100 dark:bg-teal-950/40',     text: 'text-teal-800 dark:text-teal-200',     border: 'border-teal-300 dark:border-teal-700',     dot: '#2dd4bf' },
+  // Taste - basic: 황금
+  basic:     { bg: 'bg-amber-50 dark:bg-amber-950/30',    text: 'text-amber-900 dark:text-amber-100',   border: 'border-amber-200 dark:border-amber-800',   dot: '#fbbf24' },
+  // Taste - direction: 연한 주황
+  direction: { bg: 'bg-orange-50 dark:bg-orange-950/30',  text: 'text-orange-800 dark:text-orange-200', border: 'border-orange-200 dark:border-orange-800', dot: '#fdba74' },
+  // Taste - defect: 회색 적색
+  defect:    { bg: 'bg-rose-100 dark:bg-rose-950/40',     text: 'text-rose-800 dark:text-rose-200',     border: 'border-rose-300 dark:border-rose-700',     dot: '#fb7185' },
+  // Mouthfeel - body: 하늘
+  body:      { bg: 'bg-sky-100 dark:bg-sky-950/40',       text: 'text-sky-800 dark:text-sky-200',       border: 'border-sky-300 dark:border-sky-700',       dot: '#38bdf8' },
+  // Mouthfeel - texture: 청색
+  texture:   { bg: 'bg-blue-100 dark:bg-blue-950/40',     text: 'text-blue-800 dark:text-blue-200',     border: 'border-blue-300 dark:border-blue-700',     dot: '#60a5fa' },
+  // Mouthfeel - sensation: 인디고
+  sensation: { bg: 'bg-indigo-100 dark:bg-indigo-950/40', text: 'text-indigo-800 dark:text-indigo-200', border: 'border-indigo-300 dark:border-indigo-700', dot: '#818cf8' },
+  // Finish - length: 연보라
+  length:    { bg: 'bg-violet-100 dark:bg-violet-950/40', text: 'text-violet-800 dark:text-violet-200', border: 'border-violet-300 dark:border-violet-700', dot: '#a78bfa' },
+  // Finish - character: 자주
+  character: { bg: 'bg-purple-100 dark:bg-purple-950/40', text: 'text-purple-800 dark:text-purple-200', border: 'border-purple-300 dark:border-purple-700', dot: '#c084fc' },
+};
+
+const FALLBACK_COLOR: FlavorTagColorSet = {
+  bg: 'bg-muted/60', text: 'text-foreground', border: 'border-border', dot: '#94a3b8',
+};
+
+export function getFlavorTagColor(tag: FlavorTagDefinition | null | undefined): FlavorTagColorSet {
+  if (!tag) return FALLBACK_COLOR;
+  return FLAVOR_CATEGORY_COLORS[tag.category] ?? FALLBACK_COLOR;
+}
+
 export function getRelatedFlavorTagsByLabel(label: string, limit = 8) {
   const source = getFlavorTagByLabel(label);
   if (!source) return [];
