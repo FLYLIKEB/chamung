@@ -300,8 +300,8 @@ export function NoteDetail() {
   const dateWeekday = ['일', '월', '화', '수', '목', '금', '토'][displayDate.getDay()];
 
   const brewColor = note.appearance ? BREW_COLORS.find((c) => c.value === note.appearance) : null;
-  const hasStoryCard = !!(note.memo || (note.images && note.images.length > 0));
-  const hasProfileCard = !!((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0) || weather?.teaComment);
+  const hasStoryCard = !!(note.images && note.images.length > 0);
+  const hasProfileCard = !!((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0));
   const cardMeta = [
     { id: 'hero' as const, show: true },
     { id: 'story' as const, show: hasStoryCard },
@@ -373,8 +373,8 @@ export function NoteDetail() {
               >
                 {note.userName}
               </button>
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                <span>{dateYear}.{String(dateMonth).padStart(2, '0')}.{String(dateDay).padStart(2, '0')}</span>
+              <div className="flex items-center gap-4 text-[12px] tracking-wide text-muted-foreground">
+                <span>{dateYear} · {String(dateMonth).padStart(2, '0')} · {String(dateDay).padStart(2, '0')}</span>
                 <button
                   type="button"
                   onClick={isMyNote ? handleTogglePublic : undefined}
@@ -415,15 +415,15 @@ export function NoteDetail() {
                 <div className="shrink-0 flex items-center gap-1 text-foreground">
                   <Star className="h-4 w-4 fill-rating text-rating" />
                   <span className="text-lg font-bold">{Number(note.overallRating).toFixed(1)}</span>
-                  <span className="text-xs text-muted-foreground">/ 5</span>
+                  <span className="text-xs opacity-40">/ 5</span>
                 </div>
               )}
             </div>
 
             {/* 차 메타 */}
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-              {tea?.type && <TeaTypeBadge type={tea.type} />}
-              {tea?.year && <span>{tea.year}년</span>}
+              {tea?.type && <TeaTypeBadge type={tea.type} variant="pill" className="border border-emerald-200 bg-emerald-50" />}
+              {tea?.year && <span>{tea.year}</span>}
               {tea?.seller && (
                 <Link to={`/teahouse/${encodeURIComponent(tea.seller)}`} className="text-primary/80 hover:underline underline-offset-4">
                   {tea.seller}
@@ -433,16 +433,17 @@ export function NoteDetail() {
 
             {/* 한줄 메모 */}
             {memoQuote && (
-              <p className="mt-3 text-sm text-foreground/80 leading-snug">"{memoQuote}"</p>
+              <p className="mt-3 border-l-2 border-stone-300 pl-3 text-sm italic text-foreground/80 leading-snug">&ldquo;{memoQuote}&rdquo;</p>
             )}
 
             {/* 칩 레일: 날씨 / 수색 / 가격 / 무게 */}
             <div className="mt-3 flex flex-wrap gap-1.5">
               {weather && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">
-                  {weather.emoji} {weather.label}
+                <span className="inline-flex items-center leading-none gap-1 rounded-full px-2 py-0.5 text-[10px] opacity-40 text-muted-foreground">
+                  <span className="flex items-center">{weather.emoji}</span>
+                  <span>{weather.label}</span>
                   {weather.temperatureMin != null && weather.temperatureMax != null && (
-                    <span className="ml-0.5">{weather.temperatureMin}°~{weather.temperatureMax}°</span>
+                    <span className="ml-0.5">{weather.temperatureMin}° – {weather.temperatureMax}°</span>
                   )}
                 </span>
               )}
@@ -460,8 +461,13 @@ export function NoteDetail() {
               )}
             </div>
 
+            {weather?.teaComment && (
+              <p className="mt-3 font-serif text-xs italic leading-relaxed text-foreground/50">&ldquo;{weather.teaComment}&rdquo;</p>
+            )}
+
+            <div className="note-detail-hero-leaf-bg mt-auto" aria-hidden />
             {isMyNote && !isAuthLoading && (
-              <div className="note-detail-owner-actions mt-auto flex justify-end gap-2 pt-4">
+              <div className="note-detail-owner-actions flex justify-end gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => navigate(`/note/${noteId}/edit`)}
@@ -474,7 +480,7 @@ export function NoteDetail() {
                 <button
                   type="button"
                   onClick={() => setShowDeleteDialog(true)}
-                  className="note-detail-owner-action note-detail-owner-action--danger"
+                  className="note-detail-owner-action note-detail-owner-action--danger-hover"
                   aria-label="삭제"
                   title="삭제"
                 >
@@ -507,7 +513,7 @@ export function NoteDetail() {
               </div>
               {displayMemo && (
                 <div className="note-detail-prose text-[0.92rem] leading-[1.75] text-foreground
-                  [&_p]:my-1 [&_p]:whitespace-pre-wrap
+                  [&_p]:my-0.5 [&_p]:whitespace-pre-wrap
                   [&_h1]:mt-3 [&_h1]:mb-1.5 [&_h1]:text-lg [&_h1]:font-bold
                   [&_h2]:mt-2.5 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold
                   [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5
@@ -613,21 +619,24 @@ export function NoteDetail() {
               {note.tags && note.tags.length > 0 && (
                 <div className="note-detail-section-tags pt-1">
                   <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">FLAVOR TRACE</p>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {note.tags.map((tag, index) => (
                       <Link key={index} to={`/tag/${encodeURIComponent(tag)}`}>
-                        <Badge variant="secondary" className="cursor-pointer text-xs">
-                          {tag}
-                        </Badge>
+                        {index < 2 ? (
+                          <Badge variant="outline" className="cursor-pointer text-xs font-medium">
+                            {tag}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="cursor-pointer text-xs">
+                            {tag}
+                          </Badge>
+                        )}
                       </Link>
                     ))}
                   </div>
                 </div>
               )}
 
-              {weather?.teaComment && (
-                <p className="pt-1 text-xs italic leading-relaxed text-muted-foreground">&ldquo;{weather.teaComment}&rdquo;</p>
-              )}
             </section>
           )}
         </div>
@@ -648,12 +657,12 @@ export function NoteDetail() {
 
         {/* 액션 독 */}
         {user && (
-          <div className="note-detail-action-dock mx-3 mb-3 mt-1 flex items-center justify-center gap-2 px-3 py-2">
+          <div className="note-detail-action-dock mx-3 mb-3 mt-1 flex items-center justify-center gap-2 px-8 py-3">
             <button
               type="button"
               onClick={handleLikeClick}
               disabled={isTogglingLike}
-              className={`min-h-[40px] flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 ${isLiked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`min-h-[48px] min-w-[48px] flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 ${isLiked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <Heart className={`w-[18px] h-[18px] transition-all ${isLiked ? 'fill-primary text-primary' : ''}`} />
               {likeCount > 0 && <span className="text-xs font-medium">{likeCount}</span>}
@@ -662,14 +671,14 @@ export function NoteDetail() {
               type="button"
               onClick={handleBookmarkClick}
               disabled={isTogglingBookmark}
-              className={`min-h-[40px] min-w-[40px] flex items-center justify-center px-4 py-2 rounded-lg transition-colors disabled:opacity-50 ${isBookmarked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`min-h-[48px] min-w-[48px] flex items-center justify-center px-4 py-2 rounded-lg transition-colors disabled:opacity-50 ${isBookmarked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <Bookmark className={`w-[18px] h-[18px] transition-all ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
             </button>
             <button
               type="button"
               onClick={() => share(tea?.name ?? '차록', window.location.href)}
-              className="flex min-h-[40px] min-w-[40px] items-center justify-center px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+              className="flex min-h-[48px] min-w-[48px] items-center justify-center px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
             >
               <Share2 className="w-[18px] h-[18px]" />
             </button>

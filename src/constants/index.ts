@@ -54,15 +54,15 @@ export const RECOMMENDED_NOTE_TAGS = FLAVOR_TAG_LABELS;
 // 차 종류 (산화도 낮은 순: 녹→백→황→청/우롱→홍→흑/보이, + 대용차)
 export const TEA_TYPES = ['녹차', '백차', '황차', '청차/우롱차', '홍차', '흑차/보이차', '대용차'] as const;
 
-/** 차 종류별 색상 (칩/배지용) - 파스텔 톤, 차 색감 연상 */
+/** 차 종류별 색상 (칩/배지용) - 무채색, 백차(밝음)→흑차(어두움) 점점 진해짐 */
 export const TEA_TYPE_COLORS: Record<(typeof TEA_TYPES)[number], string> = {
-  녹차: 'bg-emerald-300 dark:bg-emerald-400',
-  백차: 'bg-stone-200 dark:bg-stone-400',
-  황차: 'bg-amber-300 dark:bg-amber-400',
-  '청차/우롱차': 'bg-blue-400 dark:bg-blue-500',
-  홍차: 'bg-rose-300 dark:bg-rose-400',
-  '흑차/보이차': 'bg-neutral-800 dark:bg-neutral-600',
-  대용차: 'bg-slate-300 dark:bg-slate-500',
+  백차: 'bg-neutral-200 dark:bg-neutral-600',
+  녹차: 'bg-neutral-300 dark:bg-neutral-500',
+  황차: 'bg-neutral-400 dark:bg-neutral-500',
+  '청차/우롱차': 'bg-neutral-500 dark:bg-neutral-400',
+  홍차: 'bg-neutral-600 dark:bg-neutral-400',
+  '흑차/보이차': 'bg-neutral-800 dark:bg-neutral-300',
+  대용차: 'bg-neutral-400 dark:bg-neutral-500',
 };
 
 /** 차 종류별 이미지 없을 때 플레이스홀더 배경 (차록 카드용) */
@@ -76,15 +76,15 @@ export const TEA_TYPE_PLACEHOLDER_BG: Record<(typeof TEA_TYPES)[number], string>
   대용차: 'bg-slate-200/40 dark:bg-slate-500/20',
 };
 
-/** 차 종류별 글자 색 (배지 텍스트용) */
+/** 차 종류별 글자 색 (배지 텍스트용) - 무채색 */
 export const TEA_TYPE_TEXT_COLORS: Record<(typeof TEA_TYPES)[number], string> = {
-  녹차: 'text-emerald-700 dark:text-emerald-400',
-  백차: 'text-stone-600 dark:text-stone-400',
-  황차: 'text-amber-700 dark:text-amber-400',
-  '청차/우롱차': 'text-blue-600 dark:text-blue-400',
-  홍차: 'text-rose-700 dark:text-rose-400',
-  '흑차/보이차': 'text-neutral-900 dark:text-neutral-400',
-  대용차: 'text-slate-600 dark:text-slate-400',
+  백차: 'text-neutral-500 dark:text-neutral-400',
+  녹차: 'text-neutral-600 dark:text-neutral-400',
+  황차: 'text-neutral-600 dark:text-neutral-400',
+  '청차/우롱차': 'text-neutral-700 dark:text-neutral-300',
+  홍차: 'text-neutral-700 dark:text-neutral-300',
+  '흑차/보이차': 'text-neutral-900 dark:text-neutral-200',
+  대용차: 'text-neutral-600 dark:text-neutral-400',
 };
 
 // 새 차 등록 - 연도 선택 (현재년 ~ 1990)

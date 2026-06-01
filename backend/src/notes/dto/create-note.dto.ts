@@ -57,6 +57,14 @@ export class CreateNoteDto {
   @IsBoolean()
   isRatingIncluded?: boolean;
 
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 1 })
+  weatherTemp?: number | null;
+
+  @IsOptional()
+  @IsNumber()
+  weatherHumidity?: number | null;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => AxisValueDto)
