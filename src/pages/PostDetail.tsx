@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeSlug from 'rehype-slug';
+import type { Components } from 'react-markdown';
 import {
   Loader2,
   Heart,
@@ -56,6 +58,40 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
+
+function scrollToAnchor(href: string) {
+  const id = decodeURIComponent(href.slice(1));
+  const target = document.getElementById(id);
+  if (!target) return;
+  const scrollRoot = target.closest('.overflow-y-auto') as HTMLElement | null;
+  if (scrollRoot) {
+    const headerOffset = 64;
+    scrollRoot.scrollTo({ top: target.offsetTop - headerOffset, behavior: 'smooth' });
+  } else {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+const MARKDOWN_COMPONENTS: Components = {
+  a({ href, children }) {
+    if (href?.startsWith('#')) {
+      return (
+        <a
+          href={href}
+          className="text-primary underline"
+          onClick={(e) => { e.preventDefault(); scrollToAnchor(href); }}
+        >
+          {children}
+        </a>
+      );
+    }
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+        {children}
+      </a>
+    );
+  },
+};
 
 export function PostDetail() {
   const { id } = useParams<{ id: string }>();
@@ -289,7 +325,13 @@ export function PostDetail() {
         {/* 본문 */}
         <div className="post-detail-body space-y-3">
           <div className="post-detail-content">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeSlug]}
+              components={MARKDOWN_COMPONENTS}
+            >
+              {post.content}
+            </ReactMarkdown>
           </div>
 
           {/* 이미지 */}
