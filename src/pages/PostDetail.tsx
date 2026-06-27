@@ -29,6 +29,17 @@ const CATEGORY_TO_BOARD: Record<PostCategory, string> = {
   announcement: '공지',
   bug_report: '제보',
 };
+
+const CATEGORY_TO_GROUP: Record<PostCategory, string> = {
+  brewing_question: 'qna',
+  recommendation: 'qna',
+  discussion: 'qna',
+  tea_review: 'review',
+  tool_review: 'review',
+  tea_room_review: 'review',
+  announcement: 'announcement',
+  bug_report: 'report',
+};
 import { postsApi, commentsApi } from '../lib/api';
 import { Header } from '../components/Header';
 import { ImageCarousel } from '../components/ImageCarousel';
@@ -208,9 +219,17 @@ export function PostDetail() {
   const authorName = post.isAnonymous ? '익명' : (post.user?.name ?? '알 수 없음');
   const authorImage = post.isAnonymous ? null : post.user?.profileImageUrl;
 
+  const boardPath = `/chadam?group=${CATEGORY_TO_GROUP[post.category] ?? 'qna'}`;
+
   return (
     <div className="post-detail-page min-h-screen">
-      <Header showBack title={CATEGORY_TO_BOARD[post.category] ?? '차담'} showProfile />
+      <Header
+        showBack
+        onBack={() => navigate(boardPath)}
+        title={CATEGORY_TO_BOARD[post.category] ?? '차담'}
+        onTitleClick={() => navigate(boardPath)}
+        showProfile
+      />
 
       {/* 게시글 영역 */}
       <div ref={articleRef} className="post-detail-paper px-5 pt-4 pb-3">

@@ -12,6 +12,8 @@ interface HeaderProps {
   showBack?: boolean;
   /** 커스텀 뒤로가기 동작 (미제공 시 navigate(-1)) */
   onBack?: () => void;
+  /** 제목 클릭 핸들러 (제공 시 제목이 버튼으로 렌더링됨) */
+  onTitleClick?: () => void;
   showProfile?: boolean;
   /** 차멍 로고 표시 (메인 탭 등에서 브랜딩용, 클릭 시 홈으로) */
   showLogo?: boolean;
@@ -40,7 +42,7 @@ function headerIconButtonClass(isGlassDark: boolean, className?: string) {
   );
 }
 
-export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 'default', hideWhenCollapsed = false }: HeaderProps) {
+export function Header({ title, showBack, onBack, onTitleClick, showProfile, showLogo, tone = 'default', hideWhenCollapsed = false }: HeaderProps) {
   const headerRef = useRef<HTMLElement | null>(null);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -173,14 +175,27 @@ export function Header({ title, showBack, onBack, showProfile, showLogo, tone = 
                 <span className="-mt-1 font-['Nanum_Myeongjo'] text-[10px] font-bold leading-none tracking-[-0.04em]">차멍</span>
               </button>
             ) : title ? (
-              <h1
-                className={cn(
-                  "min-w-0 truncate pt-0.5 font-['Nanum_Myeongjo'] text-xl font-bold tracking-[-0.04em]",
-                  isGlassDark ? 'text-white/90' : 'text-foreground',
-                )}
-              >
-                {title}
-              </h1>
+              onTitleClick ? (
+                <button
+                  type="button"
+                  onClick={onTitleClick}
+                  className={cn(
+                    "min-w-0 truncate pt-0.5 font-['Nanum_Myeongjo'] text-xl font-bold tracking-[-0.04em] transition-opacity hover:opacity-70 active:opacity-50",
+                    isGlassDark ? 'text-white/90' : 'text-foreground',
+                  )}
+                >
+                  {title}
+                </button>
+              ) : (
+                <h1
+                  className={cn(
+                    "min-w-0 truncate pt-0.5 font-['Nanum_Myeongjo'] text-xl font-bold tracking-[-0.04em]",
+                    isGlassDark ? 'text-white/90' : 'text-foreground',
+                  )}
+                >
+                  {title}
+                </h1>
+              )
             ) : null}
           </div>
 
