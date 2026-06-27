@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowDownUp, ChevronRight, Flame, LayoutList, PencilLine } from 'lucide-react';
 import { PostCardSkeleton } from '../components/PostCardSkeleton';
 import { Post, PostCategory, POST_CATEGORY_LABELS } from '../types';
@@ -49,8 +49,15 @@ const DESKTOP_BOARDS = CATEGORY_GROUPS;
 
 const PAGE_SIZE = 20;
 
+const VALID_GROUPS: GroupKey[] = ['all', 'popular', 'mine', 'qna', 'review', 'announcement', 'report'];
+
+function isValidGroup(value: string | null): value is GroupKey {
+  return VALID_GROUPS.includes(value as GroupKey);
+}
+
 export function Community() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const isMobileRef = useRef(isMobile);
@@ -61,7 +68,10 @@ export function Community() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [selectedGroup, setSelectedGroup] = useState<GroupKey>(isMobile ? 'qna' : 'all');
+  const groupParam = searchParams.get('group');
+  const [selectedGroup, setSelectedGroup] = useState<GroupKey>(
+    isValidGroup(groupParam) ? groupParam : isMobile ? 'qna' : 'all',
+  );
   const [sort, setSort] = useState<PostSort>('latest');
   const filterHidden = useScrollHide();
 
