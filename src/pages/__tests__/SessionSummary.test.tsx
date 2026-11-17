@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AppModeProvider } from '../../contexts/AppModeContext';
 import { SessionSummary } from '../SessionSummary';
 import { teaSessionsApi, notesApi } from '../../lib/api';
+import { TEAWARE_VARIANTS } from '../../constants/teaware';
 
 const mockNavigate = vi.fn();
 const mockUseAuth = vi.fn(() => ({
@@ -111,7 +112,8 @@ it('다회 기록 발행에 선택한 다구를 포함한다', async () => {
   vi.mocked(teaSessionsApi.publish).mockResolvedValue({ noteId: 12 });
   const user = userEvent.setup();
   renderWithRouter(1);
-  await user.click(await screen.findByRole('button', { name: '개완' }));
+  const gaiwan = TEAWARE_VARIANTS.find(item => item.kind === 'gaiwan')!;
+  await user.click(await screen.findByRole('button', { name: gaiwan.name }));
   await user.click(screen.getByRole('button', { name: '노트로 발행' }));
-  await waitFor(() => expect(teaSessionsApi.publish).toHaveBeenCalledWith(1, expect.objectContaining({ teaware: [{ kind: 'gaiwan', name: '개완' }] })));
+  await waitFor(() => expect(teaSessionsApi.publish).toHaveBeenCalledWith(1, expect.objectContaining({ teaware: [gaiwan] })));
 });

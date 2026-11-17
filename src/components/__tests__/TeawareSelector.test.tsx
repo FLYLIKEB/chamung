@@ -4,8 +4,22 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TeawareSelector } from '../TeawareSelector';
 import { teawareApi } from '../../lib/api/teaware.api';
+import { toast } from 'sonner';
 import type { TeawareItem } from '../../types';
+import { getTeawareImage } from '../../constants/teaware';
 
+vi.mock('../../constants/teaware', async () => {
+  const actual = await vi.importActual<typeof import('../../constants/teaware')>('../../constants/teaware');
+  return {
+    ...actual,
+    TEAWARE_VARIANTS: [
+      { variantId: 'white-gaiwan', kind: 'gaiwan', name: '백자 개완 그림', imagePath: '/teaware/white.png' },
+      { variantId: 'celadon-gaiwan', kind: 'gaiwan', name: '청자 개완 그림', imagePath: '/teaware/celadon.png' },
+      { variantId: 'white-cup', kind: 'cup', name: '백자 찻잔 그림', imagePath: '/teaware/cup.png' },
+    ],
+    teawareKey: (item: TeawareItem) => item.id ? `custom-${item.id}` : `preset-${item.variantId || item.kind}`,
+  };
+});
 vi.mock('../../lib/api/teaware.api', () => ({ teawareApi: { getAll: vi.fn(), create: vi.fn(), delete: vi.fn() } }));
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: true, user: { id: 1 } }) }));
 vi.mock('../ImageUploader', () => ({ ImageUploader: ({ onChange }: { onChange: (images: string[]) => void }) => <button type="button" onClick={() => onChange(['https://images.example.com/gaiwan.webp'])}>사진 업로드</button> }));
@@ -20,15 +34,54 @@ function Harness({ initial = [] }: { initial?: TeawareItem[] }) {
 beforeEach(() => { vi.mocked(teawareApi.getAll).mockResolvedValue([]); });
 
 describe('TeawareSelector', () => {
-  it('기본 다구 여러 개를 선택하고 모두 해제한다', async () => {
+  it('종류를 바꿔도 선택한 그림을 유지하고 선택 목록에서 해제한다', async () => {
     const user = userEvent.setup();
     render(<Harness />);
-    await user.click(screen.getByRole('button', { name: '개완' }));
-    await user.click(screen.getByRole('button', { name: '찻잔' }));
-    expect(screen.getByRole('button', { name: '개완' })).toHaveAttribute('aria-pressed', 'true');
-    expect(JSON.parse(screen.getByLabelText('선택 결과').textContent || '[]')).toHaveLength(2);
+    expect(screen.getByRole('tab', { name: '개완 2종' })).toHaveAttribute('aria-selected', 'true');
+    await user.click(screen.getByRole('button', { name: '백자 개완 그림' }));
+    await user.click(screen.getByRole('tab', { name: '찻잔 1종' }));
+    expect(screen.queryByRole('button', { name: '백자 개완 그림' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '백자 찻잔 그림' }));
+    expect(JSON.parse(screen.getByLabelText('선택 결과').textContent || '[]')).toEqual([
+      { variantId: 'white-gaiwan', kind: 'gaiwan', name: '백자 개완 그림' },
+      { variantId: 'white-cup', kind: 'cup', name: '백자 찻잔 그림' },
+    ]);
+    await user.click(screen.getByRole('button', { name: '백자 개완 그림 선택 해제' }));
+    expect(JSON.parse(screen.getByLabelText('선택 결과').textContent || '[]')).toHaveLength(1);
     await user.click(screen.getByRole('button', { name: '선택 해제' }));
     expect(screen.getByLabelText('선택 결과')).toHaveTextContent('[]');
+  });
+
+  it('같은 종류의 서로 다른 그림을 각각 선택하고 이름으로 검색한다', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole('button', { name: '백자 개완 그림' }));
+    await user.type(screen.getByLabelText('다구 이름 검색'), '청자');
+    expect(screen.queryByRole('button', { name: '백자 개완 그림' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '청자 개완 그림' }));
+    expect(JSON.parse(screen.getByLabelText('선택 결과').textContent || '[]')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: '청자 개완 그림' }).querySelector('img')).toHaveAttribute('loading', 'lazy');
+    await user.clear(screen.getByLabelText('다구 이름 검색'));
+    await user.type(screen.getByLabelText('다구 이름 검색'), '없는 그림');
+    expect(screen.getByText('찾는 다구가 없습니다.')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: '찻잔 1종' }));
+    expect(screen.getByLabelText('다구 이름 검색')).toHaveValue('');
+  });
+
+  it('기존 기본 다구도 선택 목록에서 유지하고 제거할 수 있다', async () => {
+    const user = userEvent.setup();
+    render(<Harness initial={[{ kind: 'gaiwan', name: '개완' }]} />);
+    await user.click(screen.getByRole('button', { name: '개완 선택 해제' }));
+    expect(screen.getByLabelText('선택 결과')).toHaveTextContent('[]');
+  });
+
+  it('이미 12개를 선택한 경우 새 그림을 추가하지 않는다', async () => {
+    const user = userEvent.setup();
+    const selected: TeawareItem[] = Array.from({ length: 12 }, (_, index) => ({ ...custom, id: index + 1, name: `내 다구 ${index + 1}` }));
+    render(<Harness initial={selected} />);
+    await user.click(screen.getByRole('button', { name: '백자 개완 그림' }));
+    expect(JSON.parse(screen.getByLabelText('선택 결과').textContent || '[]')).toEqual(selected);
+    expect(toast.error).toHaveBeenCalledWith('다구는 최대 12개까지 선택할 수 있습니다.');
   });
 
   it('사진과 이름을 등록하고 서버 항목을 선택하며 불필요한 서버 속성은 저장하지 않는다', async () => {
@@ -96,7 +149,7 @@ describe('TeawareSelector', () => {
     const image = (await screen.findByRole('button', { name: '백자 개완' })).querySelector('img')!;
     fireEvent.error(image);
     expect(screen.getByText('사진을 불러오지 못했어요')).toBeInTheDocument();
-    expect(image).toHaveAttribute('src', '/teaware/gaiwan.svg');
+    expect(image).toHaveAttribute('src', getTeawareImage({ kind: 'gaiwan', name: '개완' }));
     const next = { ...custom, imageUrl: 'https://images.example.com/new-gaiwan.webp' };
     rerender(<TeawareSelector value={[next]} onChange={onChange} />);
     expect(screen.queryByText('사진을 불러오지 못했어요')).not.toBeInTheDocument();

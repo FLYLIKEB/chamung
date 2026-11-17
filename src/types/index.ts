@@ -108,10 +108,11 @@ export interface AxisValue {
   value: number;
 }
 
-export type TeawareKind = 'gaiwan' | 'yixing' | 'cup' | 'pitcher' | 'kettle' | 'strainer';
+export type TeawareKind = 'gaiwan' | 'yixing' | 'cup' | 'pitcher' | 'kettle' | 'strainer' | 'teapot' | 'accessory' | 'tray';
 
 export interface TeawareItem {
   id?: number;
+  variantId?: string;
   kind: TeawareKind;
   name: string;
   imageUrl?: string;

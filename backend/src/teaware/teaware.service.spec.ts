@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { TeawareService } from './teaware.service';
 import { Teaware } from './entities/teaware.entity';
+import { TEAWARE_VARIANTS } from './teaware-presets';
 
 const imageUrl = 'https://tea-bucket.s3.ap-northeast-2.amazonaws.com/notes/photo.png';
 const own = { id: 7, userId: 1, kind: 'gaiwan' as const, name: '백자 개완', imageUrl };
@@ -55,6 +56,36 @@ describe('TeawareService', () => {
     await expect(service.snapshots(1, [{ ...own, id: 99 }])).rejects.toThrow(BadRequestException);
     await expect(service.snapshots(1, [{ kind: 'cup', name: '잔', imageUrl }])).rejects.toThrow(BadRequestException);
     await expect(service.snapshots(1, [{ kind: 'cup', name: '잔' }, { kind: 'cup', name: '잔' }])).rejects.toThrow(BadRequestException);
+  });
+
+  it('canonicalizes registered variants and permits distinct images of the same kind', async () => {
+    const first = TEAWARE_VARIANTS.find(item => TEAWARE_VARIANTS.some(other => other.kind === item.kind && other.variantId !== item.variantId))!;
+    expect(first).toBeDefined();
+    const second = TEAWARE_VARIANTS.find(item => item.kind === first.kind && item.variantId !== first.variantId)!;
+    expect(second).toBeDefined();
+    const expected = [first, second].map(({ variantId, kind, name }) => ({ variantId, kind, name }));
+    await expect(service.snapshots(1, expected.map(item => ({ ...item, name: '변조된 이름' })))).resolves.toEqual(expected);
+    expect(repository.find).not.toHaveBeenCalled();
+    await expect(service.snapshots(1, [expected[0], expected[0]])).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects unknown or mismatched variants and personal IDs mixed with variants', async () => {
+    const variant = TEAWARE_VARIANTS[0];
+    const selection = { variantId: variant.variantId, kind: variant.kind, name: variant.name };
+    await expect(service.snapshots(1, [{ ...selection, variantId: 'missing-variant' }])).rejects.toThrow(BadRequestException);
+    await expect(service.snapshots(1, [{ ...selection, kind: variant.kind === 'cup' ? 'gaiwan' : 'cup' }])).rejects.toThrow(BadRequestException);
+    await expect(service.snapshots(1, [{ ...selection, id: own.id }])).rejects.toThrow(BadRequestException);
+    await expect(service.snapshots(1, [{ ...selection, imageUrl }])).rejects.toThrow(BadRequestException);
+  });
+
+  it('retains legacy preset and personal-photo behavior beside variants', async () => {
+    const variant = TEAWARE_VARIANTS[0];
+    const selection = { variantId: variant.variantId, kind: variant.kind, name: variant.name };
+    const previous = { id: own.id, kind: own.kind, name: own.name, imageUrl };
+    await expect(service.snapshots(1, [selection, { kind: 'cup', name: '찻잔' }, previous], [previous])).resolves.toEqual([
+      selection, { kind: 'cup', name: '찻잔' }, previous,
+    ]);
+    await expect(service.snapshots(1, [selection], [selection])).resolves.toEqual([selection]);
   });
 
   it('preserves exact prior snapshots after library removal but rejects altered stale data', async () => {

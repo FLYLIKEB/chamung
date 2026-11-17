@@ -1,0 +1,303 @@
+{
+  "sourceProject": "deep-colony",
+  "generator": "scripts/import-teaware-assets.py",
+  "sources": [
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolWhiteBowl.png",
+      "baseId": "white-bowl",
+      "sha256": "af8f069887af30d94e04b4166bcd8c5755e2b33b306e17e60085d426574dea2f",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolCeladonBowl.png",
+      "baseId": "celadon-bowl",
+      "sha256": "9dac56d2f8c50306b999137465818f5dae6a129e5f8d36f8e8951b910cb39961",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolBlackBowl.png",
+      "baseId": "black-bowl",
+      "sha256": "31fd69f8007d7c8dc636fbcc3fb96f712ec23169e97fe6b52a6df9e184d58027",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolBuncheongBowl.png",
+      "baseId": "buncheong-bowl",
+      "sha256": "0cec5522e73cc29861f771836f6065aba6518242df110e90b399166791470653",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolWoodCup.png",
+      "baseId": "wood-cup",
+      "sha256": "c577ac1260a470e8714d9c8e4aa4c48c3207fdeb631f8905d0f1685cd3e0ca01",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolScentCup.png",
+      "baseId": "scent-cup",
+      "sha256": "1899a4e8c1e346c25032152ef479e2bf6f3a1eda372d051a82abf287d204bddd",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolPurplePot.png",
+      "baseId": "purple-pot",
+      "sha256": "3ace5d314a6476ace946b0cf600046fdb7b9a7bae8cf924ed2929583d71c8e2f",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolRedClayPot.png",
+      "baseId": "red-clay-pot",
+      "sha256": "7c1bb53768233225a0911ff3b904086117a343b2b3c79cf787a51d204d28e605",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolStonewarePot.png",
+      "baseId": "stoneware-pot",
+      "sha256": "313b9dafb23f5be99f354a4d4383b849bde5f4f034b2e21cea7d7bd4d60fdfa6",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolCeladonPot.png",
+      "baseId": "celadon-pot",
+      "sha256": "54dae46220744e63cabb00e807fe65953535f884f8574f160a532af86a58dee1",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolIronKettle.png",
+      "baseId": "iron-kettle",
+      "sha256": "96894cf4d5b13020bb448ff5606f784e7ee6b48436b74a60e5a3945cf252aaa1",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolGaiwan.png",
+      "baseId": "gaiwan",
+      "sha256": "3b6ac4816215f92a917e8ed9acdd76fb1a31a41a6973c152655a7dff50c15d94",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolBambooScoop.png",
+      "baseId": "bamboo-scoop",
+      "sha256": "26e1679335f34f1787a2511d2354a0f688d1476a0ac1c0692268679a88d405d7",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolWoodScoop.png",
+      "baseId": "wood-scoop",
+      "sha256": "181c4fde440a070db10a90e3a225201223fd93f3601387b4123d3aa22da62b98",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolTeaWhisk.png",
+      "baseId": "tea-whisk",
+      "sha256": "b91afed0fda4c482ae28079f38b0a10c528765921a74c42d6ab4e7044be5485e",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolTeaTongs.png",
+      "baseId": "tea-tongs",
+      "sha256": "611cca835370e2ef8330bb185f900ea15f6a8f980001508d1b040422a13a30e9",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolTeaNeedle.png",
+      "baseId": "tea-needle",
+      "sha256": "4a32898c24ca84e4889cbb6c52d951fbde6306d816801321f8da992330fcf997",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolTeaStrainer.png",
+      "baseId": "tea-strainer",
+      "sha256": "34f705bc304d3374412f2e63d683890524065bb4a95cfe0f09ef710688507ab9",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolWaterJar.png",
+      "baseId": "water-jar",
+      "sha256": "3295019cef2ac0a71a3c6e2aacbbf36e976a6fce428b1719938ab60ecaa415e2",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolWaterPitcher.png",
+      "baseId": "water-pitcher",
+      "sha256": "d4ce3cf0bab05fc9005dba6224dbb6c8ba473e16f180e78af49d6b80bef267cd",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolBambooLadle.png",
+      "baseId": "bamboo-ladle",
+      "sha256": "8b942c6a0c7ec188dd601d91390bd54f42c7cf6ea7eef7dedb192934853df422",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolCopperKettle.png",
+      "baseId": "copper-kettle",
+      "sha256": "84698d547fede414820097596f33ee4df359822b0d7ee212c16e6459f9445c6a",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolStoneBrazier.png",
+      "baseId": "stone-brazier",
+      "sha256": "87f7bfd7af3cafa1c5c4629972682e41edd21185004cd47e5872e7cc0901548f",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolClayStove.png",
+      "baseId": "clay-stove",
+      "sha256": "d2c3c2e281a5fc5b6fec2be32345937a8d814118ad097b2a4c52cce55198974a",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolWoodTray.png",
+      "baseId": "wood-tray",
+      "sha256": "f1d4d49eb8748403f2ef6ffc2c95715c7048430d00d5ae4eaa786746a8ae2555",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolBambooTray.png",
+      "baseId": "bamboo-tray",
+      "sha256": "f7c068ea7481236a042ef444d849a5a9e70fc1f1649f9543c0afd9e588ad8ea1",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolTeaCaddy.png",
+      "baseId": "tea-caddy",
+      "sha256": "f8a62da241c3f8bc1da948dfa7ebe5b0ff041b28993de21d7ebc33e5533d4289",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolTeaCloth.png",
+      "baseId": "tea-cloth",
+      "sha256": "b39232a29f487824d287933ff82e0d6a3350a10719a4ed7511328e4cae11a4f8",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolTeaPet.png",
+      "baseId": "tea-pet",
+      "sha256": "fb92deec91cd1683c0560012673ca4e5986f9600a68cafc1a40caefd7137a92b",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/world/buildings/base/TeaToolFairnessCup.png",
+      "baseId": "fairness-cup",
+      "sha256": "8b9b34773603cae8af06e54c441f9149262c213b2937295bfc4077e8fda77cc5",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/characters/crew/tools/pot.png",
+      "baseId": "crew-pot",
+      "sha256": "b777a33e9271d7894983433f6513df45fb965c7de8844395e8102c9c61446266",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/characters/crew/tools/cup.png",
+      "baseId": "crew-cup",
+      "sha256": "f52447c384bd867930b2e5af4c91db0e623520dd2ef9ba4cf3a53acd87af21cb",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "source": "dist/assets/characters/crew/tools/kettle.png",
+      "baseId": "crew-kettle",
+      "sha256": "f67af103e70f5c52175d4dedafbf7c6b3f14aae37cee5c2858b48ff904668696",
+      "size": [
+        32,
+        32
+      ]
+    }
+  ]
+}
