@@ -69,6 +69,27 @@ describe('NoteDetail - 카드 사진 배경', () => {
     vi.mocked(notesApi.getById).mockResolvedValue(mockNote);
   });
 
+  it('차 정보와 전체 노트를 첫 페이지에 통합하고 프로필만 별도로 표시한다', async () => {
+    const memo = '첫 향은 은은합니다.\n' + '긴 여운이 남습니다. '.repeat(15);
+    vi.mocked(notesApi.getById).mockResolvedValue({ ...mockNote, memo });
+    const { container } = render(<MemoryRouter><NoteDetail /></MemoryRouter>);
+    await screen.findByRole('button', { name: /사진/i });
+    const deck = screen.getByLabelText('차록 상세 콘텐츠');
+    expect(deck.children).toHaveLength(2);
+    const first = deck.children[0] as HTMLElement;
+    expect(first.querySelector('.note-detail-prose')?.textContent).toBe(memo.trim());
+    expect(within(first).getByText('테스트 사용자')).toBeInTheDocument();
+    expect(within(first).getByRole('button', { name: /사진/i })).toBeInTheDocument();
+    expect(container.querySelector('.note-detail-story-card')).toBeNull();
+  });
+
+  it('감각 프로필이 없는 차록은 노트를 포함한 한 페이지로 표시한다', async () => {
+    vi.mocked(notesApi.getById).mockResolvedValue({ ...mockNote, tags: [], axisValues: [] });
+    render(<MemoryRouter><NoteDetail /></MemoryRouter>);
+    await screen.findByText('테스트 메모');
+    expect(screen.getByLabelText('차록 상세 콘텐츠').children).toHaveLength(1);
+  });
+
   it('사진이 여러 장이면 카드 순서대로 사진 배경을 배정해야 함', async () => {
     render(
       <MemoryRouter>
@@ -140,6 +161,7 @@ describe('NoteDetail - 카드 사진 배경', () => {
     expect(screen.queryByText('### 다회모드로 작성됨 🔄')).not.toBeInTheDocument();
 
     const table = screen.getByRole('table', { name: '다회모드 탕 기록' });
+    expect(table.closest('section')).toHaveClass('note-detail-hero');
     expect(within(table).getByRole('columnheader', { name: '탕' })).toBeInTheDocument();
     expect(within(table).getByText('1탕')).toBeInTheDocument();
     expect(within(table).getByText('2탕')).toBeInTheDocument();

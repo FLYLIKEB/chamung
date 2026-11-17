@@ -193,13 +193,13 @@
 .note-privacy-lock.is-public .note-privacy-lock__icon--locked,
 .note-privacy-lock.is-private .note-privacy-lock__icon--unlocked { display: none; }
 
-/* Note detail keeps its horizontal deck and independent vertical card scrolling. */
+/* Note detail combines the overview and memo, with natural-height reading. */
 .note-detail-scene { background: var(--background); color: var(--foreground); }
 .note-detail-glass-card { overflow: hidden; }
 .note-detail-card-deck {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: min(88vw, 380px);
+  grid-auto-columns: min(92vw, 560px);
   gap: 1rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -211,9 +211,9 @@
 .note-detail-card-deck > * {
   position: relative;
   scroll-snap-align: center;
-  aspect-ratio: 9 / 16;
-  min-height: 0;
-  overflow-y: auto;
+  min-height: 22rem;
+  min-width: 0;
+  align-self: start;
   border: 1px solid var(--border);
   border-radius: var(--card-radius);
   background: var(--card);
@@ -286,7 +286,7 @@
 .post-detail-reading-action:hover, .post-detail-reading-action.is-active, .post-detail-comment-jump { color: var(--foreground); }
 
 @media (min-width: 768px) {
-  .note-detail-card-deck { grid-auto-columns: 23rem; }
+  .note-detail-card-deck { grid-auto-columns: minmax(0, 1fr); }
   .post-detail-reading-dock { left: 160px; }
   .post-detail-page { padding-bottom: 4rem; }
 }
