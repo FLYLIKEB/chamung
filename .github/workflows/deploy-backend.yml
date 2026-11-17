@@ -7,6 +7,8 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/deploy-backend.yml'
+      - 'scripts/deploy-backend-artifact.sh'
+      - 'scripts/test-backend-artifact.sh'
   workflow_dispatch: # 수동 실행 가능
 
 concurrency:
@@ -16,7 +18,8 @@ concurrency:
 jobs:
   deploy:
     name: Deploy to Lightsail
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
     
     steps:
       - name: Checkout code
@@ -79,15 +82,24 @@ jobs:
           fi
           npm run build
 
+      - name: Validate deployment activation
+        run: bash scripts/test-backend-artifact.sh
+
       - name: Create deployment package
         working-directory: ./backend
+        env:
+          NPM_CONFIG_WORKSPACES: "false"
         run: |
+          # Build dependencies on the runner, never on the 2 GB production instance.
+          npm prune --omit=dev --legacy-peer-deps --no-workspaces --no-audit --no-fund
+          node -e 'for (const p of ["typeorm","@nestjs/core","mysql2","sharp","bcrypt"]) require(p)'
           mkdir -p deploy-package
-          cp -r dist deploy-package/
+          cp -r dist node_modules deploy-package/
           test -f dist/src/database/data-source.js
           test -d dist/migrations
           cp -r dist/migrations deploy-package/migrations
           cp package.json package-lock.json ecosystem.config.js deploy-package/
+          printf '%s\n' "$GITHUB_SHA" > deploy-package/RELEASE
           tar -czf deploy.tar.gz -C deploy-package .
 
       - name: Configure SSH
@@ -214,251 +226,24 @@ jobs:
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_DATABASE_URL: ${{ secrets.EC2_DATABASE_URL }}
-          EC2_JWT_SECRET: ${{ secrets.EC2_JWT_SECRET }}
-          EC2_FRONTEND_URL: ${{ secrets.EC2_FRONTEND_URL }}
-          EC2_FRONTEND_URLS: ${{ secrets.EC2_FRONTEND_URLS }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          if [ -z "${EC2_HOST:-}" ] || [ -z "${EC2_USER:-}" ]; then
-            echo "❌ EC2_HOST 또는 EC2_USER가 설정되지 않았습니다!"
-            exit 1
-          fi
-          
-          echo "🔍 배포 대상: $EC2_USER@$EC2_HOST"
-          
-          # 배포 파일 전송
-          echo "📤 배포 파일 전송 중..."
+          # Existing production configuration and user data are not deployment artifacts.
           scp -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=10 \
-              backend/deploy.tar.gz \
+              -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+              backend/deploy.tar.gz scripts/deploy-backend-artifact.sh \
               "$EC2_USER@$EC2_HOST:/tmp/"
 
-          # .env 파일 생성 및 업로드 (특수문자 안전 처리)
-          echo "📤 .env 파일 생성 중..."
-          
-          if [ -z "${EC2_DATABASE_URL:-}" ]; then
-            echo "⚠️ EC2_DATABASE_URL이 설정되지 않았습니다. GitHub Secrets에 설정하세요."
-            exit 1
-          fi
-          
-          if [ -z "${EC2_JWT_SECRET:-}" ]; then
-            echo "⚠️ EC2_JWT_SECRET이 설정되지 않았습니다. GitHub Secrets에 설정하세요."
-            exit 1
-          fi
-          
-          mkdir -p /tmp/deploy_env
-          {
-            printf 'DATABASE_URL=%s\n' "$EC2_DATABASE_URL"
-            printf 'DB_SYNCHRONIZE=false\n'
-            printf 'DB_SSL_ENABLED=false\n'
-            printf 'DB_SSL_REJECT_UNAUTHORIZED=false\n'
-            printf 'JWT_SECRET=%s\n' "$EC2_JWT_SECRET"
-            printf 'JWT_EXPIRES_IN=7d\n'
-            printf 'PORT=3000\n'
-            printf 'NODE_ENV=production\n'
-            printf 'FRONTEND_URL=%s\n' "${EC2_FRONTEND_URL:-https://cha-log-gilt.vercel.app}"
-            printf 'FRONTEND_URLS=%s\n' "${EC2_FRONTEND_URLS:-https://cha-log-gilt.vercel.app,http://localhost:5173,http://localhost:5174}"
-            if [ -n "${AWS_REGION:-}" ]; then printf 'AWS_REGION=%s\n' "$AWS_REGION"; fi
-            if [ -n "${AWS_S3_BUCKET_NAME:-}" ]; then printf 'AWS_S3_BUCKET_NAME=%s\n' "$AWS_S3_BUCKET_NAME"; fi
-            if [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then printf 'AWS_ACCESS_KEY_ID=%s\n' "$AWS_ACCESS_KEY_ID"; fi
-            if [ -n "${AWS_SECRET_ACCESS_KEY:-}" ]; then printf 'AWS_SECRET_ACCESS_KEY=%s\n' "$AWS_SECRET_ACCESS_KEY"; fi
-          } > /tmp/deploy_env/.env
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" "mkdir -p /home/ubuntu/chalog-backend"
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no /tmp/deploy_env/.env "$EC2_USER@$EC2_HOST:/home/ubuntu/chalog-backend/.env"
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" "chmod 600 /home/ubuntu/chalog-backend/.env"
-          rm -rf /tmp/deploy_env
-          echo "✅ .env 파일 업로드 완료"
-
       - name: Run deployment on server
+        timeout-minutes: 5
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
           ssh -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              "$EC2_USER@$EC2_HOST" << 'ENDSSH'
-            set -e
-            
-            BACKEND_DIR="/home/ubuntu/chalog-backend"
-            
-            # curl 설치 확인
-            if ! command -v curl &> /dev/null; then
-              echo "📦 curl 설치 중..."
-              sudo apt-get update
-              sudo apt-get install -y curl
-            fi
-            
-            # ChaLog 전용 런타임: 다른 서비스의 시스템 Node는 변경하지 않는다.
-            NODE_RUNTIME="/home/ubuntu/.local/chalog-node22"
-            export PATH="$NODE_RUNTIME/bin:$PATH"
-            NODE_CMD="$NODE_RUNTIME/bin/node"
-            NPM_CMD="$NODE_RUNTIME/bin/npm"
-            if [ ! -x "$NODE_CMD" ] || [ ! -x "$NPM_CMD" ] ||
-              [ "$("$NODE_CMD" -p 'process.versions.node.split(".")[0]')" != "22" ]; then
-              echo "ChaLog Node.js 22 runtime must be installed at $NODE_RUNTIME before deployment."
-              exit 1
-            fi
-            echo "Node.js: $("$NODE_CMD" --version)"
-            echo "npm: $("$NPM_CMD" --version)"
-
-            # 디렉토리 생성
-            mkdir -p $BACKEND_DIR
-            cd $BACKEND_DIR
-            
-            # 기존 파일 백업
-            if [ -d "dist" ]; then
-              echo "💾 기존 파일 백업 중..."
-              BACKUP_DIR="/home/ubuntu/backups"
-              mkdir -p $BACKUP_DIR
-              tar -czf $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).tar.gz \
-                  dist/ package.json package-lock.json ecosystem.config.js migrations/
-            fi
-            
-            # 배포 파일 압축 해제
-            echo "📦 배포 파일 압축 해제 중..."
-            # Remove backed-up source migrations so the CLI cannot also load stale .ts files.
-            rm -rf "$BACKEND_DIR/migrations"
-            tar -xzf /tmp/deploy.tar.gz -C $BACKEND_DIR
-            
-            # 의존성 설치
-            echo "📥 의존성 설치 중..."
-            if [ "$(node -p 'process.versions.node.split(".")[0]')" != "22" ]; then
-              echo "Node.js 22 is required. Upgrade the server runtime before deploying."
-              exit 1
-            fi
-
-            # npm 경로 확인 후 사용
-            NPM_CMD=$(command -v npm || echo "/usr/bin/npm")
-            if [ ! -f "$NPM_CMD" ]; then
-              echo "❌ npm을 찾을 수 없습니다: $NPM_CMD"
-              exit 1
-            fi
-            
-            # 기존 node_modules 정리 (필요시)
-            if [ -d "node_modules" ]; then
-              echo "🧹 기존 node_modules 정리 중..."
-              rm -rf node_modules
-            fi
-            
-            # package-lock.json 확인
-            if [ ! -f "package-lock.json" ]; then
-              echo "⚠️ package-lock.json이 없습니다. 최신 backend/package-lock.json을 커밋하세요."
-              exit 1
-            fi
-            
-            echo "📦 npm ci 실행 중..."
-            if ! $NPM_CMD ci --legacy-peer-deps --no-audit --no-fund; then
-              echo "❌ npm ci 실패! package-lock.json을 확인하세요."
-              exit 1
-            fi
-            
-            echo "🧹 devDependencies 제거 중..."
-            $NPM_CMD prune --production
-            
-            echo "🔍 필수 패키지 확인 중..."
-            REQUIRED_PACKAGES=("class-transformer" "class-validator" "rxjs" "typeorm" "@nestjs/common" "@nestjs/core" "mysql2")
-            for pkg in "${REQUIRED_PACKAGES[@]}"; do
-              if [ -d "node_modules/$pkg" ]; then
-                echo "✅ $pkg 확인됨"
-              else
-                echo "❌ $pkg 누락됨! package.json을 업데이트한 뒤 다시 배포하세요."
-                exit 1
-              fi
-            done
-            
-            # PM2 설치 확인 및 설치
-            NPM_CMD=$(command -v npm || echo "/usr/bin/npm")
-            if ! command -v pm2 &> /dev/null; then
-              echo "📦 PM2가 설치되지 않았습니다. 설치 중..."
-              sudo $NPM_CMD install -g pm2
-              hash -r
-              PM2_CMD=$(command -v pm2 || echo "/usr/local/bin/pm2")
-              if [ -f "$PM2_CMD" ]; then
-                echo "✅ PM2 설치 완료: $($PM2_CMD --version)"
-                
-                # PM2 부팅 시 자동 시작 설정
-                echo "⚙️ PM2 부팅 시 자동 시작 설정 중..."
-                $PM2_CMD startup systemd -u ubuntu --hp /home/ubuntu || echo "PM2 startup 설정은 수동으로 실행해야 할 수 있습니다."
-              else
-                echo "⚠️ PM2 설치 후 경로를 찾을 수 없습니다."
-                exit 1
-              fi
-            else
-              PM2_CMD=$(command -v pm2)
-              echo "✅ PM2 이미 설치됨: $($PM2_CMD --version)"
-            fi
-            
-            # Compiled datasource loads .env and compiled migrations from cwd/migrations.
-            DATA_SOURCE_PATH="dist/src/database/data-source.js"
-            if [ ! -f "$DATA_SOURCE_PATH" ] || [ ! -d "migrations" ]; then
-              echo "Compiled migration artifacts are missing from the deployment package."
-              exit 1
-            fi
-            "$NODE_CMD" node_modules/typeorm/cli.js migration:run -d "$DATA_SOURCE_PATH"
-            echo "✅ 마이그레이션 완료"
-
-            # PM2로 재시작
-            echo "🔄 PM2로 앱 재시작 중..."
-            $PM2_CMD delete chalog-backend 2>/dev/null || true
-            
-            # 환경 변수 파일 확인
-            if [ ! -f ".env" ]; then
-              echo "⚠️ .env 파일이 없습니다. 기본값 사용"
-            else
-              echo "✅ .env 파일 존재"
-            fi
-            
-            # PM2 시작
-            $PM2_CMD start ecosystem.config.js --interpreter "$NODE_CMD"
-            $PM2_CMD save
-            
-            # 시작 확인
-            sleep 2
-            PM2_STATUS=$($PM2_CMD status | grep chalog-backend | awk '{print $10}')
-            echo "📊 PM2 초기 상태: $PM2_STATUS"
-            
-            # Health check (최대 5회, 5초 간격 재시도)
-            echo "🏥 Health check..."
-            PM2_CMD=$(command -v pm2 || echo "/usr/local/bin/pm2")
-            echo "📊 PM2 상태:"
-            $PM2_CMD status || true
-            
-            HEALTH_OK=false
-            for i in 1 2 3 4 5; do
-              sleep 5
-              if HEALTH_RESPONSE=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 10 http://localhost:3000/health) &&
-                printf '%s' "$HEALTH_RESPONSE" | node -e 'let input=""; process.stdin.on("data", chunk => input += chunk); process.stdin.on("end", () => { try { process.exit(JSON.parse(input)?.status === "healthy" ? 0 : 1); } catch { process.exit(1); } });'; then
-                echo "✅ 배포 성공! Health check 통과"
-                HEALTH_OK=true
-                break
-              fi
-              echo "  시도 $i/5: Health check 대기 중..."
-            done
-            
-            if [ "$HEALTH_OK" != "true" ]; then
-              echo "⚠️ Health check 실패. 상세 정보 확인:"
-              echo "PM2 상태:"
-              $PM2_CMD status || true
-              echo ""
-              echo "PM2 로그 (최근 50줄):"
-              $PM2_CMD logs chalog-backend --lines 50 --nostream || true
-              echo ""
-              echo "node_modules/class-transformer 확인:"
-              ls -la node_modules/class-transformer 2>&1 || echo "class-transformer 없음"
-              echo ""
-              echo "class-transformer 패키지 정보:"
-              cat node_modules/class-transformer/package.json 2>&1 | head -10 || echo "파일 없음"
-              exit 1
-            fi
-            
-            # 정리
-            rm -f /tmp/deploy.tar.gz
-          ENDSSH
+              -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+              -o ServerAliveInterval=15 -o ServerAliveCountMax=3 \
+              "$EC2_USER@$EC2_HOST" \
+              'bash /tmp/deploy-backend-artifact.sh /tmp/deploy.tar.gz'
 
       - name: Setup Nginx
         env:
