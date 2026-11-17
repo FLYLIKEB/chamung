@@ -6,6 +6,7 @@ import { In, Repository } from 'typeorm';
 import { Teaware } from './entities/teaware.entity';
 import { CreateTeawareDto, TeawareSelectionDto, UpdateTeawareDto } from './dto/teaware.dto';
 import { TEAWARE_NAMES, TeawareSnapshot } from './teaware.types';
+import { TEAWARE_VARIANTS } from './teaware-presets';
 
 @Injectable()
 export class TeawareService {
@@ -109,11 +110,17 @@ export class TeawareService {
     const owned = ids.length ? await this.repository.find({ where: { userId, id: In(ids) } }) : [];
     const seen = new Set<string>();
     return selections.map(selection => {
-      const key = selection.id ? `own:${selection.id}` : `preset:${selection.kind}`;
+      if (selection.id && selection.variantId) throw new BadRequestException('내 다구와 기본 다구 이미지를 함께 지정할 수 없습니다.');
+      const key = selection.id ? `own:${selection.id}` : selection.variantId ? `variant:${selection.variantId}` : `preset:${selection.kind}`;
       if (seen.has(key)) throw new BadRequestException('같은 다구를 중복 선택할 수 없습니다.');
       seen.add(key);
       if (!selection.id) {
         if (selection.imageUrl) throw new BadRequestException('내 다구를 먼저 등록해주세요.');
+        if (selection.variantId) {
+          const variant = TEAWARE_VARIANTS.find(item => item.variantId === selection.variantId);
+          if (!variant || variant.kind !== selection.kind) throw new BadRequestException('선택한 다구 이미지를 찾을 수 없습니다.');
+          return { variantId: variant.variantId, kind: variant.kind, name: variant.name };
+        }
         return { kind: selection.kind, name: TEAWARE_NAMES[selection.kind] };
       }
       // Resubmitting an existing snapshot cannot silently rewrite history after a

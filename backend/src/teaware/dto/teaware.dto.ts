@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, IsUrl, MaxLength, Min, MinLength } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, IsUrl, Matches, MaxLength, Min, MinLength } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 import { TEAWARE_KINDS, TeawareKind } from '../teaware.types';
 
@@ -8,6 +8,12 @@ export class TeawareSelectionDto {
   @IsInt()
   @Min(1)
   id?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(96)
+  @Matches(/^[a-zA-Z0-9_-]+$/)
+  variantId?: string;
 
   @IsIn(TEAWARE_KINDS)
   kind: TeawareKind;
