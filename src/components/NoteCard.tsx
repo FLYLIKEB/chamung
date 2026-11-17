@@ -151,7 +151,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
           </div>
 
           {memoPreview && (
-            <MarkdownPreview content={memoPreview} className="note-card-memo-preview my-3 line-clamp-2 text-[13px] leading-relaxed text-foreground/80" />
+            <MarkdownPreview content={memoPreview} className="note-card-memo-preview my-3 line-clamp-4 text-[13px] leading-relaxed text-foreground/80" />
           )}
 
           {/* 하단 미니 푸터: 날짜 + 작성자 + 북마크 */}
