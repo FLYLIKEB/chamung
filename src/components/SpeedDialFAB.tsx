@@ -57,7 +57,6 @@ const FAB_CLASS = cn(
   'minimal-fab-exception pointer-events-auto relative isolate rounded-full flex items-center justify-center',
   LOGO_FAB_BUTTON_CLASS,
   'transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 hover:scale-[1.03]',
-  LIQUID_GLASS.surface,
   LIQUID_GLASS.fab,
 );
 
@@ -193,11 +192,10 @@ export function SpeedDialFAB() {
           onClick={() => setIsOpen((prev) => !prev)}
           className={cn(FAB_CLASS, isOpen && 'scale-95')}
         >
-          <span className="absolute inset-[5px] -z-10 rounded-full border border-transparent bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.24)] dark:hidden" />
           <AddLogoIcon
             className={cn(
               LOGO_FAB_ICON_CLASS,
-              'transition-transform duration-300 drop-shadow-[0_1px_6px_rgba(0,0,0,0.16)]',
+              'transition-transform duration-300',
               isOpen ? 'rotate-45' : 'rotate-0',
             )}
           />

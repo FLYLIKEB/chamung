@@ -30,10 +30,9 @@ export function FloatingActionButton({
       aria-label={ariaLabel}
       onClick={onClick}
       className={cn(
-        'minimal-fab-exception pointer-events-auto fixed z-[70] flex items-center justify-center rounded-full text-primary shadow-[0_10px_28px_rgba(43,41,38,0.22)] transition-transform hover:scale-[1.03] focus-visible:outline-none',
+        'minimal-fab-exception pointer-events-auto fixed z-[70] flex items-center justify-center rounded-full text-primary transition-transform hover:scale-[1.03] focus-visible:outline-none',
         LOGO_FAB_BUTTON_CLASS,
         LOGO_FAB_RIGHT_CLASS,
-        LIQUID_GLASS.surface,
         LIQUID_GLASS.fab,
         positionClasses[position],
         className
