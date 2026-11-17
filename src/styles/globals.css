@@ -160,7 +160,8 @@
 .pixel-control:hover { background: var(--accent); }
 .pixel-fab { background: var(--card); color: var(--foreground); }
 .app-header, .app-bottom-nav {
-  background: var(--background);
+  background: var(--card);
+  border-radius: var(--card-radius);
   color: var(--foreground);
   border: 0;
   box-shadow: none;

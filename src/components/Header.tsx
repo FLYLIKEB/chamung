@@ -27,8 +27,8 @@ export function Header({ title, showBack, onBack, onTitleClick, showProfile, sho
 
   return (
     <>
-      <header className="app-header fixed top-0 left-0 right-0 z-100 pt-[env(safe-area-inset-top,0px)] md:left-[160px]">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:px-6">
+      <header className="app-header fixed top-[calc(0.35rem+env(safe-area-inset-top,0px))] left-4 right-4 z-100 md:left-[176px]">
+        <div className="mx-auto flex h-12 max-w-6xl items-center gap-2 px-2 sm:px-4">
           {showBack && <button type="button" onClick={() => onBack ? onBack() : navigate(-1)} className={iconButton} aria-label="뒤로"><ChevronLeft className={iconSize} /></button>}
           <div className="flex min-w-0 flex-1 items-center gap-2">
             {(showLogo || (!title && !showBack)) && (
