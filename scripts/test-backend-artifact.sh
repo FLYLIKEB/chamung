@@ -36,13 +36,13 @@ make_artifacts() {
   printf '%s\n' "$commit" > "$target/dist/src/main.js"
   touch "$target/dist/src/database/data-source.js" "$target/package-lock.json" "$target/ecosystem.config.js"
   printf '{}\n' > "$target/package.json"
-  for pkg in typeorm @nestjs/core @nestjs/common mysql2 class-transformer class-validator reflect-metadata sharp bcrypt; do
+  for pkg in typeorm @nestjs/core @nestjs/common mysql2 class-transformer class-validator reflect-metadata sharp bcrypt adminjs @adminjs/typeorm @adminjs/nestjs @adminjs/express; do
     mkdir -p "$target/node_modules/$pkg"
     printf 'module.exports = {};\n' > "$target/node_modules/$pkg/index.js"
   done
   printf 'if (process.env.FIXTURE_SCENARIO === "migration-failure") process.exit(1);\n' > "$target/node_modules/typeorm/cli.js"
 }
-for scenario in success missing-dependency missing-artifact migration-failure stop-failure restart-failure unhealthy unexpected-env; do
+for scenario in success missing-dependency missing-artifact adminjs-import-failure migration-failure stop-failure restart-failure unhealthy unexpected-env; do
   export FIXTURE_SCENARIO=$scenario
   export BACKEND_DIR="$fixture/$scenario/live" FIXTURE_PM2_LOG="$fixture/$scenario/pm2.log"
   mkdir -p "$BACKEND_DIR" "$fixture/$scenario/new"
@@ -56,6 +56,7 @@ for scenario in success missing-dependency missing-artifact migration-failure st
   case "$scenario" in
     missing-dependency) rm -rf "$fixture/$scenario/new/node_modules/sharp" ;;
     missing-artifact) rm "$fixture/$scenario/new/dist/src/main.js" ;;
+    adminjs-import-failure) printf 'throw new Error("Incompatible AdminJS dependency");\n' > "$fixture/$scenario/new/node_modules/adminjs/index.js" ;;
     unexpected-env) printf 'overwrite\n' > "$fixture/$scenario/new/.env" ;;
   esac
   tar -czf "$fixture/$scenario/artifact.tar.gz" -C "$fixture/$scenario/new" .
@@ -66,7 +67,7 @@ for scenario in success missing-dependency missing-artifact migration-failure st
     [[ "$scenario" != success ]] || { cat "$fixture/$scenario/output"; exit 1; }
     [[ "$(cat "$BACKEND_DIR/RELEASE")" == 1111111111111111111111111111111111111111 ]] || { cat "$fixture/$scenario/output"; echo 'FAIL previous release lost'; exit 1; }
     case "$scenario" in
-      missing-dependency|missing-artifact|migration-failure|unexpected-env) [[ ! -s "$FIXTURE_PM2_LOG" ]] ;;
+      missing-dependency|missing-artifact|adminjs-import-failure|migration-failure|unexpected-env) [[ ! -s "$FIXTURE_PM2_LOG" ]] ;;
       *) grep -q 'Previous application restored and healthy' "$fixture/$scenario/output" ;;
     esac
   fi

@@ -25,29 +25,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check for package-lock.json
-        id: check_lockfile
-        working-directory: ./backend
-        run: |
-          if [ -f package-lock.json ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: ${{ steps.check_lockfile.outputs.exists == 'true' && 'npm' || '' }}
-          cache-dependency-path: ${{ steps.check_lockfile.outputs.exists == 'true' && 'backend/package-lock.json' || '' }}
-
-      - name: Ensure package-lock.json exists
-        if: steps.check_lockfile.outputs.exists == 'false'
-        working-directory: ./backend
-        run: |
-          echo "⚠️ package-lock.json이 없습니다. 생성 중..."
-          npm install --package-lock-only --legacy-peer-deps --no-workspaces
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./backend
@@ -93,6 +76,7 @@ jobs:
           # Build dependencies on the runner, never on the 2 GB production instance.
           npm prune --omit=dev --legacy-peer-deps --no-workspaces --no-audit --no-fund
           node -e 'for (const p of ["typeorm","@nestjs/core","mysql2","sharp","bcrypt"]) require(p)'
+          node --input-type=module -e 'import "reflect-metadata"; for (const p of ["adminjs","@adminjs/typeorm","@adminjs/nestjs","@adminjs/express"]) await import(p)'
           mkdir -p deploy-package
           cp -r dist node_modules deploy-package/
           test -f dist/src/database/data-source.js
