@@ -4,7 +4,6 @@ import { Loader2 } from 'lucide-react';
 import { NoteCard } from '../NoteCard';
 import { EmptyState } from '../EmptyState';
 import { Button } from '../ui/button';
-import { UserAvatar } from '../ui/UserAvatar';
 import { Note, User } from '../../types';
 import { followsApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -20,13 +19,19 @@ export function FollowingFeed({ notes, isLoading, isLoggedIn, authLoading }: Fol
   const navigate = useNavigate();
   const { user } = useAuth();
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
+  const [usersError, setUsersError] = useState(false);
+  const [retryUsers, setRetryUsers] = useState(0);
 
   useEffect(() => {
     if (!user) return;
+    setUsersError(false);
     followsApi.getFollowing(user.id)
-      .then((data) => setFollowingUsers(Array.isArray(data) ? data : []))
-      .catch(() => setFollowingUsers([]));
-  }, [user]);
+      .then((data) => {
+        if (!Array.isArray(data)) throw new Error('Invalid following users response');
+        setFollowingUsers(data);
+      })
+      .catch(() => setUsersError(true));
+  }, [user, retryUsers]);
 
   if (!isLoggedIn && !authLoading) {
     return (
@@ -51,7 +56,8 @@ export function FollowingFeed({ notes, isLoading, isLoggedIn, authLoading }: Fol
 
   return (
     <div>
-      {/* Story-style following avatars */}
+      {usersError && <div role="alert" className="mb-4 flex items-center gap-3 text-sm"><p>구독한 다우 목록을 불러오지 못했습니다.</p><Button size="sm" onClick={() => setRetryUsers((value) => value + 1)}>다시 시도</Button></div>}
+      {/* Following avatars */}
       {followingUsers.length > 0 && (
         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-3 mb-3 border-b border-border/30 -mx-1 px-1">
           {followingUsers.map((u) => (

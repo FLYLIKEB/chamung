@@ -43,7 +43,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
         }}
       >
         <Pin className="w-4 h-4 text-green-600 shrink-0" />
-        <span className={cn('flex-1 min-w-0 text-sm font-medium text-foreground truncate', !post.title && 'post-card-content-preview')}>{post.title || post.content}</span>
+        <span className={cn('flex-1 min-w-0 text-sm font-medium text-foreground truncate', post.title ? 'font-title' : 'post-card-content-preview')}>{post.title || post.content}</span>
         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
       </div>
     );

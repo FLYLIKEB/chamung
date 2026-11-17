@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { LogOut, Shield, FileText, Bell, ChevronRight, Link2, Loader2, Sun, Moon, Monitor, LayoutDashboard, Lock, UserX, Mail } from 'lucide-react';
+import { LogOut, Shield, Bell, ChevronRight, Link2, Loader2, Sun, Moon, Monitor, LayoutDashboard, Lock, UserX, Mail } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useTheme } from 'next-themes';
@@ -376,9 +376,6 @@ export function Settings() {
     }
   };
 
-  const listItemClass =
-    'w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors text-left';
-
   if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen pb-20">
@@ -591,29 +588,6 @@ export function Settings() {
               onCheckedChange={handleProfilePublicToggle}
               disabled={isProfilePublicLoading}
             />
-          </div>
-        </Card>
-
-        {/* 약관 및 정책 */}
-        <Card className="p-4">
-          <h3 className="text-lg font-semibold text-foreground mb-4">약관 및 정책</h3>
-          <div className="space-y-1">
-            <button
-              className={listItemClass}
-              onClick={() => toast.info('준비 중입니다.')}
-            >
-              <Shield className="w-5 h-5 text-muted-foreground shrink-0" />
-              <span className="flex-1 text-foreground">개인정보 처리방침</span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </button>
-            <button
-              className={listItemClass}
-              onClick={() => toast.info('준비 중입니다.')}
-            >
-              <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
-              <span className="flex-1 text-foreground">서비스 이용약관</span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </button>
           </div>
         </Card>
 

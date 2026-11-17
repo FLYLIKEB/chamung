@@ -1,6 +1,6 @@
-# 배포 완료 요약
+# 배포 확인 절차
 
-Lightsail Docker MySQL 배포가 완료되었습니다. 다음 단계를 확인하세요.
+이 문서는 현재 배포가 성공했다는 증거가 아닙니다. 각 배포 후 아래 검사를 실행하고 결과를 확인합니다.
 
 ## 배포 완료 체크리스트
 
@@ -35,7 +35,7 @@ Lightsail Docker MySQL 배포가 완료되었습니다. 다음 단계를 확인�
 
 ```bash
 # 브라우저 SSH에서 실행
-./scripts/verify-deployment.sh
+./scripts/verify-deployment.sh YOUR_LIGHTSAIL_IP
 ```
 
 ### 최종 테스트
@@ -44,6 +44,10 @@ Lightsail Docker MySQL 배포가 완료되었습니다. 다음 단계를 확인�
 # 로컬에서 실행
 ./scripts/final-test.sh YOUR_LIGHTSAIL_IP
 ```
+
+헬스 검사는 HTTP 성공과 JSON `status: healthy`를 모두 요구합니다. 실패 시 스크립트도 실패로 종료됩니다.
+`/health`는 서버의 DB `SELECT 1`을 포함하지만 인증 API·실제 사용자 흐름을 검증하지는 않습니다.
+HTTPS나 프록시 주소가 다르면 `DIRECT_HEALTH_URL`/`PUBLIC_HEALTH_URL`로 실제 검사 URL을 지정합니다.
 
 ### 모니터링
 
@@ -145,8 +149,6 @@ Lightsail Docker MySQL 배포가 완료되었습니다. 다음 단계를 확인�
    - [문제 해결 가이드](./DEPLOYMENT_EXECUTION_GUIDE.md#문제-해결)
    - [SSH 연결 문제 해결](./SSH_CONNECTION_TROUBLESHOOTING.md)
 
-## 성공적인 배포!
+## 배포 완료 판정
 
-모든 단계가 완료되었습니다. 애플리케이션이 정상적으로 실행되고 있습니다.
-
-추가 도움이 필요하면 관련 문서를 참고하거나 문제 해결 가이드를 확인하세요.
+이 문서는 실행 절차이며 현재 서버의 정상 동작을 보증하지 않습니다. 배포 후 HTTP 응답과 health JSON, 실행 프로세스 및 배포 버전을 확인하고 실행 시각과 결과를 기록하세요. 검증 실패가 남아 있으면 배포 완료로 판정하지 않습니다.

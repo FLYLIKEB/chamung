@@ -1,84 +1,59 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { BottomNav } from '../BottomNav';
 import { MemoryRouter } from 'react-router-dom';
 
 const mockNavigate = vi.fn();
-
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
-
-vi.mock('../MoreMenu', () => ({
-  MoreMenu: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="more-menu">더보기 메뉴</div> : null,
+vi.mock('react-router-dom', async () => ({
+  ...await vi.importActual<typeof import('react-router-dom')>('react-router-dom'),
+  useNavigate: () => mockNavigate,
 }));
+vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: null }) }));
 
 function renderBottomNav(initialPath = '/') {
-  return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <BottomNav />
-    </MemoryRouter>,
-  );
+  render(<MemoryRouter initialEntries={[initialPath]}><BottomNav /></MemoryRouter>);
+  return screen.getAllByRole('navigation').map((nav) => within(nav));
 }
 
 describe('BottomNav', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  beforeEach(() => vi.clearAllMocks());
+
+  it('모바일과 데스크톱 메뉴에 홈·차담·찻장·내 차록을 제공한다', () => {
+    const menus = renderBottomNav();
+    expect(menus).toHaveLength(2);
+    for (const menu of menus) {
+      for (const label of ['홈', '차담', '찻장', '내 차록']) {
+        expect(menu.getByRole('button', { name: label })).toBeInTheDocument();
+      }
+    }
+    expect(screen.queryByRole('button', { name: '더보기' })).not.toBeInTheDocument();
   });
 
-  it('5개 내비게이션 버튼(홈, 차담, 내 차록, 찻장, 더보기) 렌더링', () => {
-    renderBottomNav();
-    expect(screen.getByRole('button', { name: '홈' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '차담' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '내 차록' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '찻장' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '더보기' })).toBeInTheDocument();
-  });
-
-  it('홈 버튼 클릭 → navigate 호출 안 함 (이미 / 에 있음)', () => {
-    renderBottomNav('/');
-    fireEvent.click(screen.getByRole('button', { name: '홈' }));
+  it('현재 홈을 누르면 중복 탐색하지 않는다', () => {
+    const [menu] = renderBottomNav('/');
+    fireEvent.click(menu.getByRole('button', { name: '홈' }));
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('차담 버튼 클릭 → /chadam 으로 navigate', () => {
-    renderBottomNav('/');
-    fireEvent.click(screen.getByRole('button', { name: '차담' }));
-    expect(mockNavigate).toHaveBeenCalledWith('/chadam');
+  it.each([['차담', '/chadam'], ['내 차록', '/my-notes'], ['찻장', '/cellar']])(
+    '%s 버튼은 %s로 이동한다', (label, route) => {
+      const menus = renderBottomNav('/');
+      for (const menu of menus) fireEvent.click(menu.getByRole('button', { name: label }));
+      expect(mockNavigate).toHaveBeenCalledTimes(2);
+      expect(mockNavigate).toHaveBeenLastCalledWith(route);
+    },
+  );
+
+  it('/chadam 상세 경로에서도 차담을 현재 메뉴로 표시한다', () => {
+    for (const menu of renderBottomNav('/chadam/12')) {
+      expect(menu.getByRole('button', { name: '차담' })).toHaveAttribute('aria-current', 'page');
+      expect(menu.getByRole('button', { name: '홈' })).not.toHaveAttribute('aria-current');
+    }
   });
 
-  it('내 차록 버튼 클릭 → /my-notes 로 navigate', () => {
-    renderBottomNav('/');
-    fireEvent.click(screen.getByRole('button', { name: '내 차록' }));
-    expect(mockNavigate).toHaveBeenCalledWith('/my-notes');
-  });
-
-  it('찻장 버튼 클릭 → /cellar 로 navigate', () => {
-    renderBottomNav('/');
-    fireEvent.click(screen.getByRole('button', { name: '찻장' }));
-    expect(mockNavigate).toHaveBeenCalledWith('/cellar');
-  });
-
-  it('더보기 버튼 클릭 → MoreMenu 열림', () => {
-    renderBottomNav('/');
-    fireEvent.click(screen.getByRole('button', { name: '더보기' }));
-    expect(screen.getByTestId('more-menu')).toBeInTheDocument();
-  });
-
-  it('/chadam 경로에서 차담 버튼이 활성 색상', () => {
-    renderBottomNav('/chadam');
-    const btn = screen.getByRole('button', { name: '차담' });
-    expect(btn.className).toContain('text-primary');
-  });
-
-  it('/my-notes 경로에서 내 차록 버튼이 활성', () => {
-    renderBottomNav('/my-notes');
-    const btn = screen.getByRole('button', { name: '내 차록' });
-    expect(btn.className).toContain('text-primary');
+  it('/my-notes 경로에서 내 차록을 강조한다', () => {
+    for (const menu of renderBottomNav('/my-notes')) {
+      expect(menu.getByRole('button', { name: '내 차록' })).toHaveClass('text-primary');
+    }
   });
 });

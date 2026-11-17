@@ -13,6 +13,8 @@ vi.mock('../../contexts/AuthContext', async () => {
 });
 
 vi.mock('../../lib/api', () => ({
+  authApi: { getMe: vi.fn(() => Promise.resolve({ user: null })) },
+  usersApi: { getOnboardingPreference: vi.fn(() => Promise.resolve({ hasCompletedOnboarding: true })) },
   postsApi: {
     create: vi.fn(),
     uploadImage: vi.fn(),

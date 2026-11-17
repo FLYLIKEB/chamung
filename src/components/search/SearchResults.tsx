@@ -7,6 +7,7 @@ import { NoteCard } from '../NoteCard';
 import { NoteCardSkeleton } from '../NoteCardSkeleton';
 import { EmptyState } from '../EmptyState';
 import { CtaButton } from '../ui/CtaButton';
+import { Button } from '../ui/button';
 import { cn } from '../ui/utils';
 import { Tea, Seller, Note, CellarItem } from '../../types';
 import { LucideIcon } from 'lucide-react';
@@ -48,6 +49,8 @@ interface SearchResultsProps {
   hasFilterParams: boolean;
   onGoBack: () => void;
   selectedIndex?: number;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 export function SearchResults({
@@ -63,6 +66,8 @@ export function SearchResults({
   hasFilterParams,
   onGoBack,
   selectedIndex = -1,
+  error,
+  onRetry,
 }: SearchResultsProps) {
   const navigate = useNavigate();
 
@@ -71,6 +76,9 @@ export function SearchResults({
     const el = document.querySelector<HTMLElement>(`[data-kb-idx="${selectedIndex}"]`);
     el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [selectedIndex]);
+
+  if (error) return <div role="alert" className="space-y-3 py-8 text-center"><p>{error}</p>{onRetry && <Button onClick={onRetry}>다시 시도</Button>}</div>;
+  if (isLoading || categoryLoading) return <p role="status" className="py-8 text-center text-muted-foreground">검색 결과를 불러오는 중…</p>;
 
   const teasShown = Math.min(teas.length, 5);
   const notesShown = Math.min(noteResults.length, 6);

@@ -48,6 +48,6 @@ cd backend && npm run test:e2e       # Backend E2E (Required for DB schema chang
 * **DB Schema**: `docs/infrastructure/DATABASE.md`
 * **Deployment Guide**: `docs/deployment/COMPLETE_DEPLOYMENT_SUMMARY.md`
 * **Scripts**: `docs/workflow/SCRIPTS.md`
-* **Architecture**: `docs/architecture/Architecture.md`
+* **Architecture**: `docs/architecture/SERVER_ARCHITECTURE.md`
 * **Product Overview**: `docs/product/PRODUCT_OVERVIEW.md`
 * **Logs**: `/tmp/chalog-backend.log`, `/tmp/chalog-frontend.log`

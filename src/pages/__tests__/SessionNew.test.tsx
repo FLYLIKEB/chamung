@@ -16,7 +16,8 @@ vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => mockUseAuth(),
 }));
 
-vi.mock('../../contexts/AppModeContext', () => ({
+vi.mock('../../contexts/AppModeContext', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../../contexts/AppModeContext')>(),
   useAppMode: () => ({
     setSessionActive: vi.fn(),
   }),

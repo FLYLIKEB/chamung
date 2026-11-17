@@ -7,6 +7,10 @@ import { UserOnboardingPreference } from './entities/user-onboarding-preference.
 import { UserAuthentication, AuthProvider } from './entities/user-authentication.entity';
 import { ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { UserNotificationSetting } from './entities/user-notification-setting.entity';
+import { FollowsService } from '../follows/follows.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 jest.mock('bcrypt');
 
@@ -63,6 +67,10 @@ describe('UsersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
+        { provide: getRepositoryToken(UserNotificationSetting), useValue: { findOne: jest.fn(), create: jest.fn(), save: jest.fn() } },
+        { provide: CACHE_MANAGER, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() } },
+        { provide: FollowsService, useValue: {} },
+        { provide: NotificationsService, useValue: {} },
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository,
@@ -255,7 +263,7 @@ describe('UsersService', () => {
     const email = 'kakao@example.com';
     const name = '카카오 사용자';
 
-    it('기존 카카오 사용자가 있으면 업데이트해야 함', async () => {
+    it('기존 카카오 사용자의 이름을 보존하고 새 이메일 인증만 연결해야 함', async () => {
       const mockUser = createMockUser({ name: '기존 이름' });
       const mockAuth = createMockAuth({
         provider: AuthProvider.KAKAO,
@@ -266,14 +274,18 @@ describe('UsersService', () => {
       mockAuthRepository.findOne
         .mockResolvedValueOnce(mockAuth)
         .mockResolvedValueOnce(null);
-      mockUserRepository.save.mockResolvedValue({ ...mockUser, name });
       mockAuthRepository.create.mockReturnValue({});
       mockAuthRepository.save.mockResolvedValue({});
 
       const result = await service.createOrUpdateKakaoUser(kakaoId, email, name);
 
-      expect(mockUserRepository.save).toHaveBeenCalledWith({ ...mockUser, name });
-      expect(result.name).toBe(name);
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
+      expect(result).toBe(mockUser);
+      expect(result.name).toBe('기존 이름');
+      expect(mockAuthRepository.create).toHaveBeenCalledWith({
+        userId: mockUser.id, provider: AuthProvider.EMAIL, providerId: email, credential: null,
+      });
+      expect(mockAuthRepository.save).toHaveBeenCalled();
     });
 
     it('카카오 사용자가 없으면 새로 생성해야 함', async () => {

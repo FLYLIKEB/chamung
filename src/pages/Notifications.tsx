@@ -66,15 +66,20 @@ export function Notifications() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const LIMIT = 20;
 
   const fetchNotifications = useCallback(async (pageNum: number, append = false): Promise<boolean> => {
+    setLoadError(null);
     try {
       if (pageNum === 1) setLoading(true);
       else setLoadingMore(true);
 
       const data = await notificationsApi.getAll(pageNum, LIMIT);
+      if (!Array.isArray(data?.notifications) || !Number.isFinite(data?.total)) {
+        throw new Error('Invalid notifications response');
+      }
 
       if (append) {
         setNotifications((prev) => [...prev, ...data.notifications]);
@@ -83,11 +88,15 @@ export function Notifications() {
       }
       setTotal(data.total);
 
-      const { count } = await notificationsApi.getUnreadCount();
-      setUnreadTotal(count);
+      try {
+        const { count } = await notificationsApi.getUnreadCount();
+        setUnreadTotal(count);
+      } catch {
+        toast.error('읽지 않은 알림 수를 불러오지 못했습니다.');
+      }
       return true;
     } catch {
-      toast.error('알림을 불러오지 못했습니다.');
+      setLoadError('알림을 불러오지 못했습니다.');
       return false;
     } finally {
       setLoading(false);
@@ -123,7 +132,7 @@ export function Notifications() {
         );
         setUnreadTotal((prev) => Math.max(0, prev - 1));
       } catch {
-        // 읽음 처리 실패는 조용히 무시
+        toast.error('읽음 상태를 저장하지 못했습니다.');
       }
     }
 
@@ -148,6 +157,11 @@ export function Notifications() {
         {loading ? (
           <div className="flex justify-center items-center h-48">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : loadError && notifications.length === 0 ? (
+          <div role="alert" className="space-y-3 p-8 text-center">
+            <p>{loadError}</p>
+            <Button onClick={() => fetchNotifications(1)}>다시 시도</Button>
           </div>
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">
@@ -205,6 +219,7 @@ export function Notifications() {
                 </li>
               ))}
             </ul>
+            {loadError && <p role="alert" className="px-4 pt-4 text-destructive">{loadError} 아래에서 다시 시도해 주세요.</p>}
             {hasMore && (
               <div className="flex justify-center py-4">
                 <Button

@@ -179,14 +179,10 @@ describe('Saved 페이지', () => {
       expect(screen.queryByRole('status', { name: /로딩/i })).not.toBeInTheDocument();
     }, { timeout: 3000 });
 
-    // 에러 후 빈 상태가 표시됨
-    await waitFor(() => {
-      expect(screen.getByText('아직 저장한 차록이 없어요.')).toBeInTheDocument();
-    });
+    expect(screen.getByRole('alert')).toHaveTextContent('저장한 차록을 불러오는데 실패했습니다.');
+    expect(screen.queryByText('아직 저장한 차록이 없어요.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '다시 시도' })).toBeInTheDocument();
 
-    // toast가 호출되었는지 확인 (비동기 처리 완료 후)
-    await new Promise(resolve => setTimeout(resolve, 100));
-    expect(mockToastError).toHaveBeenCalledWith('저장한 차록을 불러오는데 실패했습니다.');
   });
 
   it('인증 로딩 중에는 로딩 스피너를 표시한다', () => {

@@ -16,14 +16,11 @@ Windows에서 스크립트를 실행하려면 다음 중 하나의 방법을 사
 - WSL을 설치하고 Linux 환경에서 스크립트를 실행하세요.
 - WSL에서는 모든 스크립트가 정상적으로 작동합니다.
 
-**방법 3: npm 스크립트 사용**
-- PowerShell이나 cmd에서는 `npm run dev:local`과 `npm run dev:stop`을 사용하세요.
-- 이 명령어들은 Git Bash/WSL 없이도 작동합니다.
-- 단, SSH 터널 관련 스크립트는 Git Bash 또는 WSL이 필요합니다.
-
-**주의사항:**
-- `.sh` 파일은 Git Bash 또는 WSL에서만 실행 가능합니다.
-- PowerShell이나 cmd에서는 직접 실행할 수 없으므로 `npm run` 명령어를 사용하세요.
+**PowerShell/cmd에서 npm을 사용하는 경우**
+- `npm run dev`, `npm run build`처럼 Node 프로그램을 실행하는 명령은 사용할 수 있습니다.
+- `npm run dev:local`, `npm run dev:stop`은 `.sh`를 호출하므로 npm으로 감싸도 Bash가 필요합니다.
+- 로컬 전체 스택 및 SSH 터널 스크립트는 Git Bash 또는 WSL 터미널에서 실행하세요.
+- WSL에서는 Node.js 22, npm, SSH 등 필요한 도구를 WSL 환경에 별도로 설치해야 합니다.
 
 ## Git 워크플로우
 
@@ -69,7 +66,7 @@ GitHub 이슈 기반으로 .plan.md 파일을 생성함. Cursor Agent Plan 모�
 
 ### full-release.sh
 
-전체 릴리스 프로세스 자동화 (테스트 → 병합 → 태그 → 배포)
+릴리스 전 필수 검사 및 명시적인 커밋·푸시·병합·태그 생성 도구. 배포 성공은 별도 원격 헬스 검증으로 확인합니다.
 
 ```bash
 ./scripts/full-release.sh "<commit-message>" "<version-tag>" [feature-branch]
@@ -78,7 +75,13 @@ GitHub 이슈 기반으로 .plan.md 파일을 생성함. Cursor Agent Plan 모�
 ./scripts/full-release.sh "Release v1.2.3" "v1.2.3" feature/new-feature
 ```
 
-**동작:** 테스트/린트/타입체크 → feature 커밋 → main 병합 + 태그 생성
+**검사만 실행 (Git/원격 변경 없음):** `bash scripts/full-release.sh --check-only`
+
+**필수 검사:** 프런트 타입검사·린트·테스트·빌드, 백엔드 단위 테스트·빌드, 오프라인 배포 검사 회귀 테스트.
+누락되거나 실패한 검사는 즉시 실패로 끝납니다. DB 스키마 변경의 E2E 테스트는 별도 테스트 DB에서 실행해야 합니다.
+
+**릴리스 동작:** 필수 검사 → feature 커밋·푸시 → 확인 후 main 병합 → 병합 결과 필수 검사 → 태그·푸시.
+이 명령은 브랜치/원격을 변경하므로 로컬 검증에는 `--check-only`를 사용합니다.
 
 **요구사항:** feature 브랜치는 `feature/*` 패턴, 버전 태그는 `v1.2.3` 형식
 
@@ -218,3 +221,10 @@ chmod +x scripts/*.sh backend/scripts/*.sh
 - [`docs/security/SECURITY.md`](../security/SECURITY.md) - 보안 가이드
 - [`.cursor/rules/workflow/git.md`](../../.cursor/rules/workflow/git.md) - Git 전략 및 워크플로우
 - [`.cursor/rules/workflow/pr.md`](../../.cursor/rules/workflow/pr.md) - PR 워크플로우
+
+## 배포 상태 검증
+
+- `bash scripts/final-test.sh <host>`: 직접 접근과 공개 `/health`의 HTTP 성공 및 JSON `status: healthy`를 모두 검사합니다. 인증 API/브라우저 흐름 검사는 포함하지 않습니다.
+- `bash scripts/verify-deployment.sh <host>`: 배포 서버에서 실행하며 PM2 online, 배포 파일, 내부·공개 헬스를 검사합니다. 실패 시 0이 아닌 종료 코드를 반환합니다.
+- 프록시/HTTPS 주소가 다르면 `DIRECT_HEALTH_URL`, `PUBLIC_HEALTH_URL`로 실제 주소를 지정합니다. 배포 폴더는 `BACKEND_DIR`로 지정할 수 있습니다.
+- `bash scripts/test-deployment-checks.sh`: curl/PM2/npm을 임시 fixture로 대체하는 오프라인 회귀 테스트입니다. 실제 서버나 DB에 접근하지 않습니다.

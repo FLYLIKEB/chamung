@@ -34,6 +34,8 @@ vi.mock('../../contexts/AuthContext', async () => {
 });
 
 vi.mock('../../lib/api', () => ({
+  authApi: { getMe: vi.fn(() => Promise.resolve({ user: null })) },
+  usersApi: { getOnboardingPreference: vi.fn(() => Promise.resolve({ hasCompletedOnboarding: true })) },
   postsApi: {
     toggleLike: vi.fn(),
     toggleBookmark: vi.fn(),
@@ -81,7 +83,7 @@ describe('PostCard 컴포넌트', () => {
 
   it('카테고리 뱃지를 표시한다', () => {
     renderWithRouter(<PostCard post={mockPost} />, { route: '/chadam' });
-    expect(screen.getByText('우림 질문')).toBeInTheDocument();
+    expect(screen.getByText('#우림 질문')).toBeInTheDocument();
   });
 
   it('협찬 뱃지를 표시한다', () => {
@@ -96,33 +98,17 @@ describe('PostCard 컴포넌트', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/chadam/1');
   });
 
-  it('좋아요 버튼 클릭 시 API를 호출한다', async () => {
-    vi.mocked(postsApi.toggleLike).mockResolvedValue({ liked: true, likeCount: 4 });
-
+  it('목록 카드에 반응 수와 조회 수를 표시하고 쓰기 동작은 노출하지 않는다', () => {
     renderWithRouter(<PostCard post={mockPost} />, { route: '/chadam' });
-
-    const likeButton = screen.getByLabelText('좋아요');
-    fireEvent.click(likeButton);
-
-    await waitFor(() => {
-      expect(postsApi.toggleLike).toHaveBeenCalledWith(1);
-    });
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('10')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '좋아요' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '북마크' })).not.toBeInTheDocument();
+    expect(postsApi.toggleLike).not.toHaveBeenCalled();
+    expect(postsApi.toggleBookmark).not.toHaveBeenCalled();
   });
 
-  it('북마크 버튼 클릭 시 API를 호출한다', async () => {
-    vi.mocked(postsApi.toggleBookmark).mockResolvedValue({ bookmarked: true });
-
-    renderWithRouter(<PostCard post={mockPost} />, { route: '/chadam' });
-
-    const bookmarkButton = screen.getByLabelText('북마크');
-    fireEvent.click(bookmarkButton);
-
-    await waitFor(() => {
-      expect(postsApi.toggleBookmark).toHaveBeenCalledWith(1);
-    });
-  });
-
-  it('비로그인 상태에서 좋아요 클릭 시 에러 토스트를 표시한다', () => {
+  it('비로그인 상태에서도 공개 게시글 상세로 이동한다', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
       isAuthenticated: false,
@@ -141,9 +127,8 @@ describe('PostCard 컴포넌트', () => {
 
     renderWithRouter(<PostCard post={mockPost} />, { route: '/chadam' });
 
-    const likeButton = screen.getByLabelText('좋아요');
-    fireEvent.click(likeButton);
-
-    expect(vi.mocked(toast.error)).toHaveBeenCalledWith('로그인이 필요합니다.');
+    fireEvent.click(screen.getByText('우림 질문입니다'));
+    expect(mockNavigate).toHaveBeenCalledWith('/chadam/1');
+    expect(vi.mocked(toast.error)).not.toHaveBeenCalled();
   });
 });

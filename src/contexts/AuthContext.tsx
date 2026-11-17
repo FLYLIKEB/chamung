@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { authApi, usersApi } from '../lib/api';
 import { toast } from 'sonner';
 import { logger } from '../lib/logger';
+import type { User as ProfileUser } from '../types';
 
 // 카카오 SDK 타입 선언
 declare global {
@@ -19,10 +20,7 @@ declare global {
   }
 }
 
-interface User {
-  id: number;
-  email: string | null;
-  name: string;
+interface User extends ProfileUser {
   role?: 'user' | 'admin';
   emailVerifiedAt?: string | null;
 }

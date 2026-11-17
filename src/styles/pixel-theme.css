@@ -1,0 +1,30 @@
+/* Font assets and explicit typography roles; layout/color rules live in globals.css. */
+@font-face {
+  font-family: 'Galmuri11';
+  src: url('/fonts/Galmuri11.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Galmuri11';
+  src: url('/fonts/Galmuri11-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DungGeunMo';
+  src: url('/fonts/DungGeunMo.woff') format('woff');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+:root {
+  --font-ui: 'Galmuri11', sans-serif;
+  --font-title: 'DungGeunMo', monospace;
+}
+@theme inline {
+  --font-sans: var(--font-ui);
+  --font-title: 'DungGeunMo', monospace;
+}

@@ -319,7 +319,7 @@ export function PostDetail() {
 
         {/* 제목 */}
         {post.title && (
-          <h1 className="post-detail-title font-['Nanum_Myeongjo'] text-lg font-bold leading-snug tracking-[-0.04em] text-foreground mb-3">{post.title}</h1>
+          <h1 className="post-detail-title font-title text-lg font-bold leading-snug tracking-[-0.04em] text-foreground mb-3">{post.title}</h1>
         )}
 
         {/* 본문 */}

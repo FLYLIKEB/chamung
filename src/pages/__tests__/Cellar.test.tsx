@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
@@ -156,16 +156,12 @@ describe('Cellar 페이지', () => {
 
     renderCellar();
 
-    // CellarRow 내 더보기 버튼 클릭 → 드롭다운 열기
-    await waitFor(() => {
-      expect(screen.getByText('테스트 차')).toBeInTheDocument();
-    });
-    const moreBtn = screen.getByRole('button', { name: '더보기' });
-    await userEvent.click(moreBtn);
-
-    // 드롭다운 메뉴에서 "차록 쓰기" menuitem 클릭
-    const noteItem = await screen.findByRole('menuitem', { name: /차록 쓰기/ });
-    await userEvent.click(noteItem);
+    const teaButton = await screen.findByRole('button', { name: '테스트 차' });
+    const row = teaButton.closest('.relative.overflow-hidden');
+    expect(row).not.toBeNull();
+    fireEvent.touchStart(row!, { touches: [{ clientX: 200, clientY: 20 }] });
+    fireEvent.touchEnd(row!, { changedTouches: [{ clientX: 100, clientY: 20 }] });
+    await userEvent.click(screen.getByRole('button', { name: '차록' }));
 
     expect(mockNavigate).toHaveBeenCalledWith('/note/new?teaId=5');
   });

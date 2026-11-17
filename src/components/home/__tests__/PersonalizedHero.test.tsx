@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { PersonalizedHero } from '../PersonalizedHero';
 import { renderWithRouter } from '../../../test/renderWithRouter';
@@ -32,7 +33,7 @@ describe('PersonalizedHero - 비로그인', () => {
 
   it('일반 메시지를 표시한다', () => {
     renderWithRouter(<PersonalizedHero hasTodayNote={false} streak={0} />);
-    expect(screen.getByText('차를 마시고, 소중한 순간을 기록하세요.')).toBeInTheDocument();
+    expect(screen.getByText('차를 기록하고, 함께 나눠요.')).toBeInTheDocument();
   });
 
   it('dismiss 버튼(X)이 없다', () => {
@@ -42,7 +43,7 @@ describe('PersonalizedHero - 비로그인', () => {
 
   it('localStorage.setItem을 호출하지 않는다', () => {
     const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
-    renderWithRouter(<PersonalizedHero hasTodayNote={false} streak={0} />);
+    render(<MemoryRouter><PersonalizedHero hasTodayNote={false} streak={0} /></MemoryRouter>);
     expect(setItemSpy).not.toHaveBeenCalled();
     setItemSpy.mockRestore();
   });
@@ -70,11 +71,11 @@ describe('PersonalizedHero - 로그인', () => {
 
   it('streak > 0 → N일 연속 기록 중 표시', () => {
     renderWithRouter(<PersonalizedHero hasTodayNote={false} streak={5} />);
-    expect(screen.getByText('5일째 이어지는 조용한 취향의 기록.')).toBeInTheDocument();
+    expect(screen.getByText('5일 연속 기록 중입니다.')).toBeInTheDocument();
   });
 
   it('streak = 0 → 꾸준히 기록해보세요 표시', () => {
     renderWithRouter(<PersonalizedHero hasTodayNote={false} streak={0} />);
-    expect(screen.getByText('차 한 잔의 온도와 향을 가장 단순한 문장으로 남겨보세요.')).toBeInTheDocument();
+    expect(screen.getByText('오늘 마신 차의 향과 맛을 기록해 보세요.')).toBeInTheDocument();
   });
 });

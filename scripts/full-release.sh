@@ -2,16 +2,35 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+
+run_checks() {
+  npm run typecheck
+  npm run lint
+  npm run test:run
+  npm run build
+  npm --workspace backend test -- --runInBand
+  npm --workspace backend run build
+  bash "$SCRIPT_DIR/test-deployment-checks.sh" --health-only
+}
+
+if [[ "${1:-}" == --check-only ]]; then
+  cd "$SCRIPT_DIR/.."
+  run_checks
+  exit 0
+fi
+
 if [[ $# -lt 2 ]]; then
   cat <<'EOF'
-Usage: scripts/full-release.sh "<commit-message>" "<version-tag>" [feature-branch]
+Usage: scripts/full-release.sh --check-only
+       scripts/full-release.sh "<commit-message>" "<version-tag>" [feature-branch]
 
 - <commit-message>: 로컬 변경분을 커밋할 메시지
 - <version-tag>: 예) v1.2.3
 - [feature-branch]: 기본값은 현재 체크아웃된 브랜치이며, 반드시 feature/* 패턴을 따라야 합니다.
 
 이 스크립트는 다음을 한 번에 수행합니다.
-1) 테스트/린트/타입 체크
+1) 프런트 타입/린트/테스트/빌드 + 백엔드 테스트/빌드 + 오프라인 배포 검사
 2) feature/* 브랜치 커밋 및 push
 3) main 병합 + 태그 생성/배포
 EOF
@@ -20,14 +39,6 @@ fi
 
 log() {
   printf '\n[full-release] %s\n' "$1"
-}
-
-typecheck() {
-  if npx --no-install tsc --version >/dev/null 2>&1; then
-    npx --no-install tsc --noEmit
-  else
-    log "TypeScript 컴파일러(tsc)를 찾을 수 없어 타입 체크를 건너뜁니다."
-  fi
 }
 
 has_remote_branch() {
@@ -72,14 +83,8 @@ else
   HAS_CHANGES=0
 fi
 
-log "테스트 실행 (vitest)"
-npm run test:run
-
-log "린트 실행 (존재 시)"
-npm run lint --if-present
-
-log "타입 체크 실행"
-typecheck
+log "필수 릴리스 검사 실행"
+run_checks
 
 if [[ $HAS_CHANGES -eq 1 ]]; then
   log "변경 사항 커밋"
@@ -111,6 +116,8 @@ fi
 git checkout main
 git pull origin main --ff-only
 git merge --no-ff "$FEATURE_BRANCH" -m "Merge $FEATURE_BRANCH into main - $COMMIT_MESSAGE"
+log "병합 결과 재검증"
+run_checks
 git tag -a "$VERSION_TAG" -m "Release $VERSION_TAG"
 git push origin main
 git push origin "$VERSION_TAG"

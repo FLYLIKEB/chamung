@@ -33,8 +33,7 @@ export function useScrollRestoration(
         // sessionStorage 접근 불가 시 무시
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [pathname, scrollContainerRef]);
 
   // 라우트 진입 시 저장된 스크롤 위치 복원
   useEffect(() => {

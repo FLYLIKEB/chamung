@@ -180,7 +180,6 @@ export function SessionInProgress() {
           <section className="flex flex-col items-center text-center gap-10">
           <p
             className="text-7xl font-bold tabular-nums text-primary tracking-widest"
-            style={{ fontFamily: "'Orbitron', monospace" }}
           >
             {formatTime(elapsedSeconds)}
           </p>

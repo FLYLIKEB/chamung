@@ -201,7 +201,7 @@ export function Community() {
           </div>
         </div>
         {/* 카테고리 탭 */}
-        <FilterTabBar
+        <FilterTabBar<GroupKey>
           activeKey={selectedGroup}
           onChange={setSelectedGroup}
           tabs={CATEGORY_GROUPS.map(({ key, label }) => ({ key, label }))}

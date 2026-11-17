@@ -19,6 +19,7 @@ interface WeeklyStreakProps {
 
 export function WeeklyStreak({ onTodayNoteStatus, onStreakLoaded }: WeeklyStreakProps) {
   const { user } = useAuth();
+  const userId = user?.id;
   const navigate = useNavigate();
 
   const today = useMemo(() => new Date(), []);
@@ -36,23 +37,23 @@ export function WeeklyStreak({ onTodayNoteStatus, onStreakLoaded }: WeeklyStreak
   const [isNotesLoading, setIsNotesLoading] = useState(false);
 
   const fetchNotesByDate = useCallback(async (date: Date) => {
-    if (!user) return;
+    if (!userId) return;
     setIsNotesLoading(true);
     try {
-      const notes = await notesApi.getByDate(user.id, formatDateKey(date));
+      const notes = await notesApi.getByDate(userId, formatDateKey(date));
       setSelectedDateNotes(notes);
     } catch {
       toast.error('차록을 불러오지 못했습니다.');
     } finally {
       setIsNotesLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   const fetchCalendar = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
     setIsCalendarLoading(true);
     try {
-      const data = await notesApi.getCalendar(user.id, today.getFullYear(), today.getMonth() + 1);
+      const data = await notesApi.getCalendar(userId, today.getFullYear(), today.getMonth() + 1);
       setCalendarData(data);
       onStreakLoadedRef.current?.(data.streak.current);
       const todayKey = formatDateKey(today);
@@ -63,7 +64,7 @@ export function WeeklyStreak({ onTodayNoteStatus, onStreakLoaded }: WeeklyStreak
     } finally {
       setIsCalendarLoading(false);
     }
-  }, [user, today, fetchNotesByDate]);
+  }, [userId, today, fetchNotesByDate]);
 
   useEffect(() => {
     fetchCalendar();

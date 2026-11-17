@@ -1,6 +1,7 @@
+/** Shared surface classes. The export name is retained for existing component imports. */
 export const LIQUID_GLASS = {
-  surface: 'liquid-glass-surface overflow-visible isolate border border-transparent',
-  panel: 'liquid-glass-panel',
-  control: 'liquid-glass-control',
-  fab: 'liquid-glass-fab',
+  surface: 'pixel-surface',
+  panel: 'pixel-panel',
+  control: 'pixel-control',
+  fab: 'pixel-fab',
 } as const;

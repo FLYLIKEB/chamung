@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { MessageCircle, ChevronRight } from 'lucide-react';
 import { UserAvatar } from './ui/UserAvatar';
-import { toast } from 'sonner';
 
 interface Contributor {
   id: number;
@@ -61,14 +60,7 @@ export function HomeFooter({ recentContributors }: HomeFooterProps) {
         )}
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground/80">
           <span>차멍 v0.1</span>
-          <span className="text-border/60">·</span>
-          <button type="button" onClick={() => toast.info('준비 중입니다.')} className="text-[11px] font-normal hover:text-foreground/70 transition-colors">
-            이용약관
-          </button>
-          <span className="text-border/60">·</span>
-          <button type="button" onClick={() => toast.info('준비 중입니다.')} className="text-[11px] font-normal hover:text-foreground/70 transition-colors">
-            개인정보처리방침
-          </button>
+
         </div>
         <p className="text-center text-[10px] text-muted-foreground/60 mt-3">© 2026 차멍. All rights reserved.</p>
       </footer>

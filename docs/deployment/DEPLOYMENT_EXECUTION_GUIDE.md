@@ -32,6 +32,13 @@ cd /home/ubuntu/chalog-backend
 docker-compose up -d mysql
 ```
 
+## 서버 런타임
+
+차멍 백엔드는 `/home/ubuntu/.local/chalog-node22/bin/node`의 Node 22를 사용합니다.
+시스템 Node와 다른 서비스는 변경하지 않습니다. 새 서버에는 공식 Node 22 배포본을
+SHA256 검증 후 이 경로에 설치해야 합니다. GitHub Actions는 이 경로가 없으면 실패합니다.
+배포 패키지는 컴파일된 JS 마이그레이션을 사용하며, PM2 interpreter도 같은 절대 경로로 지정합니다.
+
 ## 배포 실행
 
 ### 방법 1: GitHub Actions 자동 배포 (권장)

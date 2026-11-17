@@ -2,13 +2,16 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { teasApi, tagsApi } from '../lib/api';
 import { Tea, Seller } from '../types';
 import { logger } from '../lib/logger';
-import { toast } from 'sonner';
 import { SEARCH_DEBOUNCE_DELAY } from '../constants';
 
 interface TeaSearchState {
   teas: Tea[];
   isLoading: boolean;
   hasSearched: boolean;
+  searchError: string | null;
+  setSearchError: (error: string | null) => void;
+  sectionsError: string | null;
+  flavorError: string | null;
   setTeas: (teas: Tea[]) => void;
   setIsLoading: (loading: boolean) => void;
   setHasSearched: (searched: boolean) => void;
@@ -33,6 +36,9 @@ export function useTeaSearch(): TeaSearchState {
   const [teas, setTeas] = useState<Tea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [sectionsError, setSectionsError] = useState<string | null>(null);
+  const [flavorError, setFlavorError] = useState<string | null>(null);
 
   const [popularTeas, setPopularTeas] = useState<Tea[]>([]);
   const [newTeas, setNewTeas] = useState<Tea[]>([]);
@@ -58,15 +64,17 @@ export function useTeaSearch(): TeaSearchState {
 
     try {
       setIsLoading(true);
+      setSearchError(null);
       setHasSearched(true);
       const data = await teasApi.getAll(query);
+      if (!Array.isArray(data)) throw new Error('Invalid tea search response');
       if (!controller.signal.aborted) {
-        setTeas(Array.isArray(data) ? data : []);
+        setTeas(data);
       }
     } catch (error) {
       if (!controller.signal.aborted) {
         logger.error('Search failed:', error);
-        toast.error('검색에 실패했습니다.');
+        setSearchError('차 검색 결과를 불러오지 못했습니다.');
       }
     } finally {
       if (!controller.signal.aborted) {
@@ -77,12 +85,15 @@ export function useTeaSearch(): TeaSearchState {
 
   const reset = useCallback(() => {
     searchAbortRef.current?.abort();
+    setSearchError(null);
+    setIsLoading(false);
     setHasSearched(false);
     setTeas([]);
   }, []);
 
   const fetchSections = useCallback(async () => {
     setSectionsLoading(true);
+    setSectionsError(null);
     const [popularRes, newRes, curationRes, sellersRes, tagsRes] = await Promise.allSettled([
       teasApi.getPopularRankings(10),
       teasApi.getNewRankings(3),
@@ -90,22 +101,22 @@ export function useTeaSearch(): TeaSearchState {
       teasApi.getSellers(),
       tagsApi.getPopularTags(15),
     ]);
-    if (popularRes.status === 'fulfilled') {
-      setPopularTeas(Array.isArray(popularRes.value) ? popularRes.value : []);
+    if (popularRes.status === 'fulfilled' && Array.isArray(popularRes.value)) {
+      setPopularTeas(popularRes.value);
     } else {
-      logger.error('Failed to fetch popular rankings:', popularRes.reason);
+      logger.error('Failed to fetch popular rankings:', popularRes.status === 'rejected' ? popularRes.reason : 'Invalid response');
     }
-    if (newRes.status === 'fulfilled') {
-      setNewTeas(Array.isArray(newRes.value) ? newRes.value : []);
+    if (newRes.status === 'fulfilled' && Array.isArray(newRes.value)) {
+      setNewTeas(newRes.value);
     } else {
-      logger.error('Failed to fetch new rankings:', newRes.reason);
+      logger.error('Failed to fetch new rankings:', newRes.status === 'rejected' ? newRes.reason : 'Invalid response');
     }
-    if (curationRes.status === 'fulfilled') {
-      setCurationTeas(Array.isArray(curationRes.value) ? curationRes.value : []);
+    if (curationRes.status === 'fulfilled' && Array.isArray(curationRes.value)) {
+      setCurationTeas(curationRes.value);
     } else {
-      logger.error('Failed to fetch curation:', curationRes.reason);
+      logger.error('Failed to fetch curation:', curationRes.status === 'rejected' ? curationRes.reason : 'Invalid response');
     }
-    if (sellersRes.status === 'fulfilled' && sellersRes.value?.sellers) {
+    if (sellersRes.status === 'fulfilled' && Array.isArray(sellersRes.value?.sellers)) {
       setSellers(sellersRes.value.sellers);
     } else if (sellersRes.status === 'rejected') {
       logger.error('Failed to fetch sellers:', sellersRes.reason);
@@ -119,12 +130,13 @@ export function useTeaSearch(): TeaSearchState {
       );
     }
     const anyFailed =
-      popularRes.status === 'rejected' ||
-      newRes.status === 'rejected' ||
-      curationRes.status === 'rejected' ||
-      sellersRes.status === 'rejected';
+      popularRes.status === 'rejected' || !Array.isArray(popularRes.value) ||
+      newRes.status === 'rejected' || !Array.isArray(newRes.value) ||
+      curationRes.status === 'rejected' || !Array.isArray(curationRes.value) ||
+      sellersRes.status === 'rejected' || !Array.isArray(sellersRes.value?.sellers) ||
+      tagsRes.status === 'rejected' || !Array.isArray(tagsRes.value);
     if (anyFailed) {
-      toast.error('탐색 데이터를 불러오는데 실패했습니다.');
+      setSectionsError('탐색 데이터를 모두 불러오지 못했습니다.');
     }
     setSectionsLoading(false);
   }, []);
@@ -132,6 +144,7 @@ export function useTeaSearch(): TeaSearchState {
   const handleFlavorTagClick = useCallback(
     async (tagName: string) => {
       if (selectedFlavorTag === tagName) {
+        setFlavorError(null);
         setSelectedFlavorTag(null);
         setFlavorTeas([]);
         flavorRequestRef.current = null;
@@ -139,6 +152,7 @@ export function useTeaSearch(): TeaSearchState {
         return;
       }
 
+      setFlavorError(null);
       setSelectedFlavorTag(tagName);
       setIsFlavorLoading(true);
 
@@ -147,12 +161,13 @@ export function useTeaSearch(): TeaSearchState {
 
       try {
         const data = await teasApi.getByTags([tagName], 'match', 20);
+        if (!Array.isArray(data)) throw new Error('Invalid flavor search response');
         if (flavorRequestRef.current === requestId) {
-          setFlavorTeas(Array.isArray(data) ? data : []);
+          setFlavorTeas(data);
         }
       } catch {
         if (flavorRequestRef.current === requestId) {
-          setFlavorTeas([]);
+          setFlavorError('향미 검색 결과를 불러오지 못했습니다.');
         }
       } finally {
         if (flavorRequestRef.current === requestId) {
@@ -174,6 +189,10 @@ export function useTeaSearch(): TeaSearchState {
     teas,
     isLoading,
     hasSearched,
+    searchError,
+    setSearchError,
+    sectionsError,
+    flavorError,
     setTeas,
     setIsLoading,
     setHasSearched,

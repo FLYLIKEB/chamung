@@ -17,7 +17,6 @@ vi.mock('../../lib/api', async () => {
   return {
     ...actual,
     usersApi: {
-      getLevel: vi.fn(() => Promise.resolve(null)),
       getById: vi.fn(),
       getOnboardingPreference: vi.fn(),
       getLevel: vi.fn(() => Promise.resolve(null)),
@@ -119,7 +118,7 @@ describe('UserProfile', () => {
     );
 
     await waitFor(() => {
-      const heading = screen.getByRole('heading', { name: '프로필 사용자' });
+      const heading = screen.getByText('프로필 사용자', { selector: 'span.font-bold', exact: true });
       expect(heading).toBeInTheDocument();
     });
   });
@@ -145,7 +144,7 @@ describe('UserProfile', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/총 \d+개/)).toBeInTheDocument();
+      expect(screen.getByText('2개', { exact: true })).toBeInTheDocument();
     });
   });
 
@@ -340,14 +339,16 @@ describe('UserProfile', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: '프로필 사용자' })).toBeInTheDocument();
+        expect(screen.getByText('프로필 사용자', { selector: 'span.font-bold', exact: true })).toBeInTheDocument();
       });
 
-      const followButton = screen.getByRole('button', { name: /구독/ });
+      const followButton = screen.getByRole('button', { name: '구독' });
       await user.click(followButton);
 
       await waitFor(() => {
         expect(followsApi.toggle).toHaveBeenCalledWith(2);
+        expect(screen.getByRole('button', { name: '구독 중' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /6\s*구독자/ })).toBeInTheDocument();
       });
     });
 
@@ -365,14 +366,17 @@ describe('UserProfile', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: '프로필 사용자' })).toBeInTheDocument();
+        expect(screen.getByText('프로필 사용자', { selector: 'span.font-bold', exact: true })).toBeInTheDocument();
       });
 
-      const followButton = screen.getByRole('button', { name: /구독/ });
+      const followButton = screen.getByRole('button', { name: '구독' });
       await user.click(followButton);
 
       await waitFor(() => {
         expect(followsApi.toggle).toHaveBeenCalledWith(2);
+        expect(screen.getByRole('button', { name: '구독' })).not.toBeDisabled();
+        expect(screen.getByRole('button', { name: /5\s*구독자/ })).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: '구독 중' })).not.toBeInTheDocument();
       });
     });
   });
@@ -400,7 +404,6 @@ describe('UserProfile', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('관심 차종')).toBeInTheDocument();
         expect(screen.getByText('녹차')).toBeInTheDocument();
         expect(screen.getByText('홍차')).toBeInTheDocument();
         expect(screen.getByText('청차/우롱차')).toBeInTheDocument();
@@ -423,28 +426,21 @@ describe('UserProfile', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('향미')).toBeInTheDocument();
-        expect(screen.getByText('꽃향')).toBeInTheDocument();
-        expect(screen.getByText('과일향')).toBeInTheDocument();
+        expect(screen.getByText('#꽃향', { exact: true })).toBeInTheDocument();
+        expect(screen.getByText('#과일향', { exact: true })).toBeInTheDocument();
       });
     });
 
-    it('타인 프로필일 때 취향 정보를 표시하지 않아야 함', async () => {
+    it('타인 프로필의 공개 취향을 표시하지만 수정 버튼은 숨긴다', async () => {
       vi.mocked(usersApi.getById).mockResolvedValue(mockUser);
+      vi.mocked(usersApi.getOnboardingPreference).mockResolvedValue(mockOnboardingPreference);
 
-      render(
-        <MemoryRouter>
-          <UserProfile />
-        </MemoryRouter>,
-      );
+      render(<MemoryRouter><UserProfile /></MemoryRouter>);
 
-      await waitFor(() => {
-        expect(screen.getByRole('heading', { name: '프로필 사용자' })).toBeInTheDocument();
-      });
-
-      expect(screen.queryByText('관심 차종')).not.toBeInTheDocument();
-      expect(screen.queryByText('향미')).not.toBeInTheDocument();
-      expect(usersApi.getOnboardingPreference).not.toHaveBeenCalled();
+      expect(await screen.findByText('#꽃향', { exact: true })).toBeInTheDocument();
+      expect(screen.getByText('녹차', { exact: true })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '취향 수정' })).not.toBeInTheDocument();
+      expect(usersApi.getOnboardingPreference).toHaveBeenCalledWith(2);
     });
 
     it('온보딩 미완료 유저(404)의 경우 취향 섹션을 표시하지 않아야 함', async () => {
@@ -463,11 +459,11 @@ describe('UserProfile', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: '프로필 사용자' })).toBeInTheDocument();
+        expect(screen.getByText('프로필 사용자', { selector: 'span.font-bold', exact: true })).toBeInTheDocument();
       });
 
-      expect(screen.queryByText('관심 차종')).not.toBeInTheDocument();
-      expect(screen.queryByText('향미')).not.toBeInTheDocument();
+      expect(screen.queryByText('#꽃향', { exact: true })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '취향 수정' })).not.toBeInTheDocument();
     });
   });
 });

@@ -2,7 +2,16 @@ import { apiClient } from './client';
 import { UpdateUserRequest } from './users.api';
 import { CreateTeaRequest, CreateSellerRequest } from './teas.api';
 
+interface TeaCrawlItem { name: string; type: string; price?: number; }
+interface CrawlConfig { nameSelector: string; typeSelector?: string; priceSelector?: string; }
+interface BulkTeaResult { total: number; success: number; skipped: number; errors: { row: number; message: string }[]; }
+
 export const adminApi = {
+  bulkUploadTeas: (file: File) => apiClient.uploadFile<BulkTeaResult>('/admin/teas/bulk-upload', file),
+  crawlPreview: (url: string, config: CrawlConfig) =>
+    apiClient.post<TeaCrawlItem[]>('/admin/crawl/preview', { url, config }),
+  crawlRegister: (items: TeaCrawlItem[], sellerId?: number) =>
+    apiClient.post<{ success: number; skipped: number }>('/admin/crawl/register', { items, sellerId }),
   getDashboard: () => apiClient.get('/admin/dashboard'),
   getMetrics: () => apiClient.get('/admin/metrics'),
   getLogs: (params?: { level?: 'error' | 'warn' | 'all'; limit?: number }) => {

@@ -46,9 +46,7 @@ describe('SpeedDialFAB', () => {
     const fab = screen.getByRole('button', { name: '메뉴 열기' });
     expect(fab).toBeInTheDocument();
     expect(fab).toHaveAttribute('aria-expanded', 'false');
-    // 메뉴 아이템은 pointer-events-none(닫힘 상태)
-    const menuItem = screen.queryByRole('button', { name: '차 추가' });
-    expect(menuItem?.closest('.pointer-events-none')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '차 추가', hidden: true })).not.toBeInTheDocument();
   });
 
   it('FAB 클릭 시 5개 메뉴 항목이 나타남', () => {
@@ -57,8 +55,8 @@ describe('SpeedDialFAB', () => {
     expect(screen.getByRole('button', { name: '차 추가' })).toBeVisible();
     expect(screen.getByRole('button', { name: '차록 작성' })).toBeVisible();
     expect(screen.getByRole('button', { name: '찻장에 추가' })).toBeVisible();
-    expect(screen.getByRole('button', { name: '다회 작성' })).toBeVisible();
-    expect(screen.getByRole('button', { name: '블라인드 작성' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '다회 시작' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '블라인드 시작' })).toBeVisible();
   });
 
   it('차 추가 클릭 → /tea/new 이동', () => {
@@ -85,14 +83,14 @@ describe('SpeedDialFAB', () => {
   it('다회모드 클릭 → toggleSessionMode 호출', () => {
     renderFAB();
     fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
-    fireEvent.click(screen.getByRole('button', { name: '다회 작성' }));
+    fireEvent.click(screen.getByRole('button', { name: '다회 시작' }));
     expect(mockToggleSessionMode).toHaveBeenCalledOnce();
   });
 
   it('블라인드모드 클릭 → toggleBlindMode 호출', () => {
     renderFAB();
     fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
-    fireEvent.click(screen.getByRole('button', { name: '블라인드 작성' }));
+    fireEvent.click(screen.getByRole('button', { name: '블라인드 시작' }));
     expect(mockToggleBlindMode).toHaveBeenCalledOnce();
   });
 

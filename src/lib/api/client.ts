@@ -145,7 +145,7 @@ function parseDates<T>(obj: T): T {
 export interface BackendNote {
   id: number;
   teaId: number;
-  tea?: { name: string; type?: string };
+  tea?: Omit<Tea, 'seller'> & { seller?: string | { name: string } };
   userId: number;
   user?: { name: string };
   schemaId: number;
@@ -192,55 +192,7 @@ export interface BackendNote {
   createdAt: Date | string;
 }
 
-export interface NormalizedNote {
-  id: number;
-  teaId: number;
-  teaName: string;
-  teaType?: string;
-  userId: number;
-  userName: string;
-  schemaId: number;
-  schema?: {
-    id: number;
-    code: string;
-    version: string;
-    nameKo: string;
-    nameEn: string;
-    descriptionKo?: string | null;
-    descriptionEn?: string | null;
-    overallMinValue: number;
-    overallMaxValue: number;
-    overallStep: number;
-    isActive: boolean;
-  };
-  overallRating: number | null;
-  isRatingIncluded: boolean;
-  axisValues?: Array<{
-    axisId: number;
-    valueNumeric: number;
-    axis?: {
-      id: number;
-      schemaId: number;
-      code: string;
-      nameKo: string;
-      nameEn: string;
-      descriptionKo?: string | null;
-      descriptionEn?: string | null;
-      minValue: number;
-      maxValue: number;
-      stepValue: number;
-      displayOrder: number;
-      isRequired: boolean;
-      teaType?: string | null;
-    };
-  }>;
-  memo: string | null;
-  images?: string[];
-  imageThumbnails?: string[] | null;
-  tags?: string[];
-  isPublic: boolean;
-  createdAt: Date;
-}
+export type NormalizedNote = Note;
 
 /**
  * Note 응답을 프론트엔드 타입으로 정규화
@@ -264,7 +216,7 @@ function normalizeNote(note: BackendNote): NormalizedNote {
   // tea.seller 객체를 문자열로 정리 (React에서 객체 렌더링 방지)
   const cleanedTea = note.tea ? {
     ...note.tea,
-    seller: note.tea.seller?.name || note.tea.seller || undefined,
+    seller: typeof note.tea.seller === 'object' ? note.tea.seller?.name : note.tea.seller,
   } : undefined;
 
   return {
@@ -707,7 +659,7 @@ class ApiClient {
         logger.info(`[API Request ${requestId}] 성공 (204 No Content)`, {
           responseTime: `${Date.now() - startTime}ms`,
         });
-        return null as T;
+        return undefined as T;
       }
 
       logger.debug(`[API Request ${requestId}] 응답 본문 파싱 시작`);
@@ -749,7 +701,7 @@ class ApiClient {
         logger.info(`[API Request ${requestId}] 성공 (빈 응답 본문)`, {
           responseTime: `${Date.now() - startTime}ms`,
         });
-        return null as T;
+        return undefined as T;
       }
 
       // 날짜 문자열을 Date 객체로 자동 변환
@@ -858,8 +810,11 @@ class ApiClient {
     });
   }
 
-  async delete(endpoint: string): Promise<void> {
-    await this.request<void>(endpoint, { method: 'DELETE' });
+  async delete<T = void>(endpoint: string, options?: { data?: unknown }): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'DELETE',
+      body: options?.data === undefined ? undefined : JSON.stringify(options.data),
+    });
   }
 
   async uploadFile<T>(endpoint: string, file: File, isRetry = false): Promise<T> {

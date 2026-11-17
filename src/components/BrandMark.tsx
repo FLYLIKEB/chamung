@@ -8,7 +8,7 @@ interface BrandMarkProps {
 
 /**
  * 차멍 브랜드 마크.
- * 중앙 점을 기준으로 잎이 방사되는 기하학적 단색 패턴이다.
+ * 4px 격자 위에 찻잔과 김을 그린 도트 마크.
  */
 export function BrandMark({ className, title }: BrandMarkProps) {
   const generatedId = useId();
@@ -25,13 +25,10 @@ export function BrandMark({ className, title }: BrandMarkProps) {
       xmlns="http://www.w3.org/2000/svg"
     >
       {title && <title id={titleId}>{title}</title>}
-      <g stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M32 17c5.4 4.8 5.4 10.4 0 15.2C26.6 27.4 26.6 21.8 32 17Z" />
-        <path d="M47 32c-4.8 5.4-10.4 5.4-15.2 0C36.6 26.6 42.2 26.6 47 32Z" />
-        <path d="M32 47c-5.4-4.8-5.4-10.4 0-15.2C37.4 36.6 37.4 42.2 32 47Z" />
-        <path d="M17 32c4.8-5.4 10.4-5.4 15.2 0C27.4 37.4 21.8 37.4 17 32Z" />
+      <g fill="currentColor" shapeRendering="crispEdges">
+        <path d="M24 8h4v8h-4zM28 4h4v4h-4zM36 8h4v8h-4zM40 4h4v4h-4zM20 20h24v4H20zM16 24h4v16h-4zM20 40h4v4h-4zM24 44h16v4H24zM40 40h4v4h-4zM44 24h4v16h-4zM48 24h8v4h-8zM52 28h4v8h-4zM48 36h4v4h-4zM12 52h40v4H12z" />
+        <path d="M24 28h16v8H24z" opacity=".3" />
       </g>
-      <circle cx="32" cy="32" r="3.2" fill="currentColor" />
     </svg>
   );
 }

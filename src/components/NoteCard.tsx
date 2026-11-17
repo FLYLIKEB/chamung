@@ -67,125 +67,127 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
   const rating = Number(note.overallRating);
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        'relative aspect-[3/4] w-full overflow-hidden flex flex-col rounded-sm bg-card border-0 shadow-none text-left transition-colors',
-        canView ? 'hover:bg-muted/20' : 'opacity-60 cursor-not-allowed',
-      )}
-    >
-      {thumbnail ? (
-        <>
-          {!imageLoaded && (
-            <div className="absolute inset-0 bg-muted animate-pulse" />
-          )}
-          <ImageWithFallback
-            src={thumbnail}
-            alt={note.teaName}
-            className={cn(
-              'absolute inset-0 h-full w-full object-cover transition-opacity duration-500',
-              imageLoaded ? 'opacity-[0.09]' : 'opacity-0',
-            )}
-            style={{ filter: 'grayscale(1) saturate(0) contrast(0.85) brightness(1.08)' }}
-            onLoad={handleImageLoad}
-          />
-          <div className="absolute inset-0 bg-card/70" aria-hidden="true" />
-        </>
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/40" aria-hidden="true">
-          <BrandMark className="w-12 h-12 text-foreground/8" />
-        </div>
-      )}
-
-      <div className="relative z-10 flex items-center justify-between px-2.5 pt-2">
-        {note.teaType ? (
-          <span className="inline-flex items-center gap-1 px-0 py-0 text-[9px] font-semibold text-muted-foreground">
-            <span className="w-1 h-1 rounded-full shrink-0 bg-muted-foreground/35" />
-            {note.teaType}
-          </span>
-        ) : <span />}
-        {!note.isPublic && (
-          <span className="p-0.5 rounded-sm text-muted-foreground" aria-label="비공개">
-            <Lock className="w-2.5 h-2.5" />
-          </span>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={handleClick}
+        className={cn(
+          'relative aspect-[3/4] w-full overflow-hidden flex flex-col rounded-sm bg-card border-0 shadow-none text-left transition-colors',
+          canView ? 'hover:bg-muted/20' : 'opacity-60 cursor-not-allowed',
         )}
-      </div>
+      >
+        {thumbnail ? (
+          <>
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-muted animate-pulse" />
+            )}
+            <ImageWithFallback
+              src={thumbnail}
+              alt={note.teaName}
+              className={cn(
+                'absolute inset-0 h-full w-full object-cover transition-opacity duration-500',
+                imageLoaded ? 'opacity-[0.09]' : 'opacity-0',
+              )}
+              style={{ filter: 'grayscale(1) saturate(0) contrast(0.85) brightness(1.08)' }}
+              onLoad={handleImageLoad}
+            />
+            <div className="absolute inset-0 bg-card/70" aria-hidden="true" />
+          </>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/40" aria-hidden="true">
+            <BrandMark className="w-12 h-12 text-foreground/8" />
+          </div>
+        )}
 
-      <div className="relative z-10 flex-1 flex flex-col justify-between px-2.5 pt-2 pb-2">
-        <div className="space-y-0.5">
-          {showTeaName && (
-            <p className="text-xs font-semibold text-foreground truncate leading-tight">
-              {note.teaName}
-            </p>
-          )}
-          <p className="text-[9px] text-muted-foreground truncate">
-            {[note.teaYear ? `${note.teaYear}년` : null, note.teaSeller].filter(Boolean).join(' · ') || '\u00A0'}
-          </p>
-          {note.overallRating !== null && rating > 0 && (
-            <div className="flex items-center gap-px pt-0.5">
-              {[1, 2, 3, 4, 5].map((i) => {
-                const filled = i <= Math.floor(rating);
-                const half = !filled && i === Math.ceil(rating) && rating % 1 >= 0.3;
-                return (
-                  <Star
-                    key={i}
-                    className={cn(
-                      'w-2.5 h-2.5',
-                      filled
-                        ? 'fill-rating text-rating'
-                        : half
-                          ? 'fill-rating/50 text-rating'
-                          : 'fill-none text-muted-foreground/25',
-                    )}
-                  />
-                );
-              })}
-            </div>
+        <div className="relative z-10 flex items-center justify-between px-2.5 pt-2">
+          {note.teaType ? (
+            <span className="inline-flex items-center gap-1 px-0 py-0 text-[9px] font-semibold text-muted-foreground">
+              <span className="w-1 h-1 rounded-full shrink-0 bg-muted-foreground/35" />
+              {note.teaType}
+            </span>
+          ) : <span />}
+          {!note.isPublic && (
+            <span className="p-0.5 rounded-sm text-muted-foreground" aria-label="비공개">
+              <Lock className="w-2.5 h-2.5" />
+            </span>
           )}
         </div>
 
-        {/* 하단 미니 푸터: 날짜 + 작성자 + 북마크 */}
-        <div className="flex items-center justify-between mt-auto">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-[9px] text-muted-foreground/60 font-medium shrink-0">
-              {note.createdAt
-                ? new Date(note.createdAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })
-                : ''}
-            </span>
-            {note.userName && (
-              <>
-                <span className="text-[9px] text-muted-foreground/30">·</span>
-                <span className="text-[9px] text-muted-foreground/60 truncate">
-                  {note.userName}
-                </span>
-              </>
+        <div className="relative z-10 flex-1 flex flex-col justify-between px-2.5 pt-2 pb-2">
+          <div className="space-y-0.5">
+            {showTeaName && (
+              <p className="font-title text-sm text-foreground truncate leading-tight">
+                {note.teaName}
+              </p>
+            )}
+            <p className="text-[9px] text-muted-foreground truncate">
+              {[note.teaYear ? `${note.teaYear}년` : null, note.teaSeller].filter(Boolean).join(' · ') || '\u00A0'}
+            </p>
+            {note.overallRating !== null && rating > 0 && (
+              <div className="flex items-center gap-px pt-0.5">
+                {[1, 2, 3, 4, 5].map((i) => {
+                  const filled = i <= Math.floor(rating);
+                  const half = !filled && i === Math.ceil(rating) && rating % 1 >= 0.3;
+                  return (
+                    <Star
+                      key={i}
+                      className={cn(
+                        'w-2.5 h-2.5',
+                        filled
+                          ? 'fill-rating text-rating'
+                          : half
+                            ? 'fill-rating/50 text-rating'
+                            : 'fill-none text-muted-foreground/25',
+                      )}
+                    />
+                  );
+                })}
+              </div>
             )}
           </div>
-          {user && (
-            <button
-              type="button"
-              onClick={handleBookmarkClick}
-              className="p-0.5 rounded-full hover:bg-muted/50 transition-colors shrink-0"
-              aria-label={isBookmarked ? '북마크 해제' : '북마크 추가'}
-            >
-              {isTogglingBookmark ? (
-                <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
-              ) : (
-                <Bookmark
-                  className={cn(
-                    'w-3 h-3 transition-colors',
-                    isBookmarked
-                      ? 'fill-primary text-primary'
-                      : 'fill-none text-muted-foreground/30',
-                  )}
-                />
+
+          {/* 하단 미니 푸터: 날짜 + 작성자 + 북마크 */}
+          <div className="flex items-center justify-between mt-auto">
+            <div className={cn('flex items-center gap-1.5 min-w-0', user && 'pr-5')}>
+              <span className="text-[9px] text-muted-foreground/60 font-medium shrink-0">
+                {note.createdAt
+                  ? new Date(note.createdAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })
+                  : ''}
+              </span>
+              {note.userName && (
+                <>
+                  <span className="text-[9px] text-muted-foreground/30">·</span>
+                  <span className="text-[9px] text-muted-foreground/60 truncate">
+                    {note.userName}
+                  </span>
+                </>
               )}
-            </button>
-          )}
+            </div>
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+      {user && (
+        <button
+          type="button"
+          onClick={handleBookmarkClick}
+          className="absolute bottom-2 right-2.5 z-20 p-0.5 rounded-full hover:bg-muted/50 transition-colors shrink-0"
+          aria-label={isBookmarked ? '북마크 해제' : '북마크 추가'}
+        >
+          {isTogglingBookmark ? (
+            <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+          ) : (
+            <Bookmark
+              className={cn(
+                'w-3 h-3 transition-colors',
+                isBookmarked
+                  ? 'fill-primary text-primary'
+                  : 'fill-none text-muted-foreground/30',
+              )}
+            />
+          )}
+        </button>
+      )}
+    </div>
   );
 };
 

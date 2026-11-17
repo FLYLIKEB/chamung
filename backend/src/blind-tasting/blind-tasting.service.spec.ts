@@ -9,6 +9,8 @@ import { Note } from '../notes/entities/note.entity';
 import { TeasService } from '../teas/teas.service';
 import { NotesService } from '../notes/notes.service';
 import { BlindSessionStatus } from './entities/blind-tasting-session.entity';
+import { BlindSessionRound, BlindRoundStatus } from './entities/blind-session-round.entity';
+import { BlindSessionParticipantNote } from './entities/blind-session-participant-note.entity';
 
 describe('BlindTastingService', () => {
   let service: BlindTastingService;
@@ -16,6 +18,7 @@ describe('BlindTastingService', () => {
   let participantsRepository: jest.Mocked<Repository<BlindSessionParticipant>>;
   let teasService: jest.Mocked<TeasService>;
   let notesService: jest.Mocked<NotesService>;
+  let roundsRepository: jest.Mocked<Repository<BlindSessionRound>>;
 
   const mockSession = (overrides: Partial<BlindTastingSession> = {}) =>
     ({
@@ -59,6 +62,11 @@ describe('BlindTastingService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BlindTastingService,
+        { provide: getRepositoryToken(BlindSessionRound), useValue: {
+          create: jest.fn((round) => ({ id: round.roundOrder, ...round })),
+          save: jest.fn(async (round) => round),
+        } },
+        { provide: getRepositoryToken(BlindSessionParticipantNote), useValue: {} },
         { provide: getRepositoryToken(BlindTastingSession), useValue: mockSessionsRepository },
         { provide: getRepositoryToken(BlindSessionParticipant), useValue: mockParticipantsRepository },
         { provide: getRepositoryToken(Note), useValue: mockNotesRepository },
@@ -78,6 +86,7 @@ describe('BlindTastingService', () => {
     participantsRepository = module.get(getRepositoryToken(BlindSessionParticipant));
     teasService = module.get(TeasService);
     notesService = module.get(NotesService);
+    roundsRepository = module.get(getRepositoryToken(BlindSessionRound));
   });
 
   describe('create', () => {
@@ -87,8 +96,12 @@ describe('BlindTastingService', () => {
       (sessionsRepository.save as jest.Mock).mockResolvedValue(session);
       (sessionsRepository.findOne as jest.Mock).mockResolvedValue(null);
 
-      const result = await service.create(10, { teaId: 5 });
+      const result = await service.create(10, { teaIds: [5, 6] });
       expect(teasService.findOne).toHaveBeenCalledWith(5);
+      expect(teasService.findOne).toHaveBeenCalledWith(6);
+      expect(roundsRepository.create).toHaveBeenNthCalledWith(1, expect.objectContaining({ sessionId: 1, teaId: 5, roundOrder: 1, status: BlindRoundStatus.IN_PROGRESS }));
+      expect(roundsRepository.create).toHaveBeenNthCalledWith(2, expect.objectContaining({ sessionId: 1, teaId: 6, roundOrder: 2, status: BlindRoundStatus.PENDING }));
+      expect(result.rounds).toHaveLength(2);
       expect(sessionsRepository.create).toHaveBeenCalled();
       expect(sessionsRepository.save).toHaveBeenCalled();
       expect(result.inviteCode).toBeDefined();
