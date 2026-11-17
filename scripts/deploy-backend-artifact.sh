@@ -77,6 +77,8 @@ for item in "${managed[@]}"; do [[ -e "$stage/$item" ]] || fail "missing artifac
 
 # This also loads native modules on the destination before disturbing the live app.
 (cd "$stage" && "$node_cmd" -e 'for (const p of ["typeorm","@nestjs/core","@nestjs/common","mysql2","class-transformer","class-validator","reflect-metadata","sharp","bcrypt"]) { if (!require.resolve(p).startsWith(process.cwd()+"/node_modules/")) throw new Error("Dependency outside artifact: "+p); require(p); }')
+# AdminJS loads ESM transitive dependencies that ordinary require() checks do not cover.
+(cd "$stage" && "$node_cmd" --input-type=module -e 'import "reflect-metadata"; import { pathToFileURL } from "node:url"; for (const p of ["adminjs","@adminjs/typeorm","@adminjs/nestjs","@adminjs/express"]) { if (!import.meta.resolve(p).startsWith(pathToFileURL(process.cwd()+"/node_modules/").href)) throw new Error("Dependency outside artifact: "+p); await import(p); }')
 ln -s "$backend_dir/.env" "$stage/.env"
 (cd "$stage" && "$node_cmd" node_modules/typeorm/cli.js migration:run -d dist/src/database/data-source.js)
 
