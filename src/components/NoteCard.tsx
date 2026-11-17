@@ -32,7 +32,9 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
   const [imageLoaded, setImageLoaded] = useState(false);
   const handleImageLoad = useCallback(() => setImageLoaded(true), []);
 
-  const handleClick = () => {
+  const handleClick = (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+    if (canView && (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) return;
+    event.preventDefault();
     if (!canView) {
       toast.error('비공개 차록은 작성자만 볼 수 있습니다.');
       return;
@@ -70,10 +72,13 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
     ? note.memo?.split(/###\s*다회모드로 작성됨[^\n]*/)[0].replace(/\n?---\s*$/m, '').trim()
     : null;
 
+  const CardAction = canView ? 'a' : 'button';
+
   return (
     <div className="relative h-full">
-      <button
-        type="button"
+      <CardAction
+        href={canView ? `/note/${note.id}` : undefined}
+        type={canView ? undefined : 'button'}
         onClick={handleClick}
         className={cn(
           'relative min-h-44 h-full w-full overflow-hidden flex flex-col rounded-sm bg-card border border-border/35 shadow-none text-left transition-colors',
@@ -173,7 +178,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
             </div>
           </div>
         </div>
-      </button>
+      </CardAction>
       {user && (
         <button
           type="button"

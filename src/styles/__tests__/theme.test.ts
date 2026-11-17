@@ -22,7 +22,7 @@ describe('pixel theme behavior contracts', () => {
     expect(`${globals}\n${theme}`).not.toMatch(/hsl\(var\(--/);
   });
 
-  it('keeps long note content scrollable and its photo source available', () => {
+  it('keeps note content at natural height with scrollable tables and photo sources', () => {
     const declarations = new Map<string, Map<string, string>>();
     styles.walkRules((rule) => {
       const values = declarations.get(rule.selector) ?? new Map<string, string>();
@@ -30,7 +30,9 @@ describe('pixel theme behavior contracts', () => {
       declarations.set(rule.selector, values);
     });
     expect(declarations.get('.note-detail-card-deck')?.get('overflow-x')).toBe('auto');
-    expect(declarations.get('.note-detail-card-deck > *')?.get('overflow-y')).toBe('auto');
+    expect(declarations.get('.note-detail-card-deck > *')?.has('height')).toBe(false);
+    expect(declarations.get('.note-detail-card-deck > *')?.has('aspect-ratio')).toBe(false);
+    expect(declarations.get('.note-detail-card-deck > *')?.get('overflow-y')).not.toBe('hidden');
     expect(`${globals}\n${theme}`).toContain('var(--note-card-photo)');
     expect(declarations.get('.note-detail-session-table-wrap')?.get('overflow-x')).toBe('auto');
   });

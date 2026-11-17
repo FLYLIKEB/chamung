@@ -1,4 +1,4 @@
-import { type FC, memo } from 'react';
+import { type FC, type MouseEvent, memo } from 'react';
 import { MarkdownPreview } from './MarkdownPreview';
 import { Pin, Megaphone, Shield, Heart, MessageCircle, Eye, MoreHorizontal, ChevronRight, Share2, Flag, Bookmark } from 'lucide-react';
 import { Post, POST_CATEGORY_LABELS } from '../types';
@@ -24,6 +24,13 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
     navigate(`/chadam/${post.id}`);
   };
 
+  const handleLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.stopPropagation();
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    handleClick();
+  };
+
   const authorName = post.isAnonymous ? '익명' : (post.user?.name ?? '알 수 없음');
   const authorImage = post.isAnonymous ? null : post.user?.profileImageUrl;
   const likeCount = post.likeCount ?? 0;
@@ -31,17 +38,10 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
 
   if (post.isPinned) {
     return (
-      <div
-        onClick={handleClick}
+      <a
+        href={`/chadam/${post.id}`}
+        onClick={handleLinkClick}
         className="px-4 py-3.5 bg-muted/40 rounded-lg cursor-pointer active:bg-muted/60 transition-colors flex items-center gap-2"
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleClick();
-          }
-        }}
       >
         <Pin className="w-4 h-4 text-green-600 shrink-0" />
         {post.title ? (
@@ -50,7 +50,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
           <MarkdownPreview content={post.content} className="post-card-content-preview flex-1 min-w-0 text-sm text-foreground line-clamp-1" />
         )}
         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-      </div>
+      </a>
     );
   }
 
@@ -58,14 +58,6 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
     <div
       onClick={handleClick}
       className="px-4 py-4 cursor-pointer active:bg-muted/30 transition-colors"
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleClick();
-        }
-      }}
     >
       {/* 작성자 행 */}
       <div className="flex items-center gap-2 mb-2">
@@ -113,7 +105,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
       </div>
 
       {/* 본문 */}
-      <div className="flex gap-3 items-start min-w-0">
+      <a href={`/chadam/${post.id}`} onClick={handleLinkClick} className="flex gap-3 items-start min-w-0">
         <div className="flex-1 min-w-0">
           {post.title && (
             <h3 className="text-[15px] font-bold text-foreground leading-snug mb-0.5 line-clamp-1">
@@ -140,7 +132,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
             )}
           </div>
         )}
-      </div>
+      </a>
 
       {/* 액션 행 */}
       <div className="flex items-center justify-between mt-3">

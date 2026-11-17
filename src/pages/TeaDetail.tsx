@@ -1,3 +1,5 @@
+import { usePageMetadata } from '../components/SeoMetadata';
+import { plainDescription } from '../lib/seo';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Star, Loader2, Pencil, Heart, Bell, Package } from 'lucide-react';
@@ -131,6 +133,12 @@ export function TeaDetail() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  usePageMetadata(isLoading ? null : {
+    title: tea ? `${tea.name} | 차멍` : '차 정보 | 차멍',
+    description: tea ? plainDescription([tea.name, tea.year ? `${tea.year}년` : '', tea.type, tea.seller, '차 정보와 다우들의 시음 기록을 확인하세요.'].filter(Boolean).join(' · ')) : undefined,
+    noindex: !tea,
+  });
 
   if (isLoading) {
     return (

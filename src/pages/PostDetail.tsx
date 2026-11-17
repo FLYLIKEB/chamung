@@ -1,3 +1,5 @@
+import { usePageMetadata } from '../components/SeoMetadata';
+import { plainDescription } from '../lib/seo';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -240,6 +242,12 @@ export function PostDetail() {
       navigate('/chadam', { replace: true });
     } catch { toast.error('게시글 삭제에 실패했습니다.'); }
   };
+
+  usePageMetadata(isLoading ? null : {
+    title: post ? `${post.title || plainDescription(post.content).slice(0, 40) || '차 이야기'} | 차담 · 차멍` : '차담 | 차멍',
+    description: post ? plainDescription(post.content) : undefined,
+    noindex: !post,
+  });
 
   if (isLoading) {
     return (
