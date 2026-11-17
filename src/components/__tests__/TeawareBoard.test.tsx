@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { getTeawareImage } from '../../constants/teaware';
 import { TeawareBoard } from '../TeawareBoard';
 
 describe('TeawareBoard', () => {
@@ -16,10 +17,10 @@ describe('TeawareBoard', () => {
     expect(within(board).getByText('개완')).toBeInTheDocument();
     expect(within(board).getByText('백자 찻잔')).toBeInTheDocument();
     const images = board.querySelectorAll('img');
-    expect(images[0]).toHaveAttribute('src', '/teaware/gaiwan.svg');
+    expect(images[0]).toHaveAttribute('src', getTeawareImage({kind: 'gaiwan', name: '개완'}));
     expect(images[1]).toHaveAttribute('src', 'https://example.com/cup.jpg');
     fireEvent.error(images[1]);
-    expect(images[1]).toHaveAttribute('src', '/teaware/cup.svg');
+    expect(images[1]).toHaveAttribute('src', getTeawareImage({kind: 'cup', name: '찻잔'}));
     expect(within(board).getByText('사진을 불러오지 못했어요')).toBeInTheDocument();
     expect(images[1].parentElement).toHaveAttribute('data-teaware-image-url', 'https://example.com/cup.jpg');
     expect(within(board).getByText('백자 찻잔')).toBeInTheDocument();

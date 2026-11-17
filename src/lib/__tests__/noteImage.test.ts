@@ -80,7 +80,10 @@ describe('note image export', () => {
     const card = document.createElement('section');
     card.innerHTML = '<div data-note-image="teaware"><figure data-teaware-kind="gaiwan"><img src="/teaware/gaiwan.svg"><figcaption>개완</figcaption></figure><figure data-teaware-kind="cup" data-teaware-image-url="https://example.com/cup.jpg"><img class="teaware-pixel" src="/teaware/cup.svg"><figcaption>내 백자잔</figcaption></figure></div>';
     await createNoteImage(card);
-    expect(context.drawImage).toHaveBeenCalledTimes(2);
+    expect(context.drawImage.mock.calls.length).toBeGreaterThan(2);
+    const toolDraws = context.drawImage.mock.calls.filter(call => call.length === 5);
+    expect(toolDraws).toHaveLength(2);
+    expect(toolDraws[0][2]).toBeLessThan(toolDraws[1][2]);
     expect(teawareApi.getImageData).toHaveBeenCalledWith('https://example.com/cup.jpg');
     const text = context.fillText.mock.calls.map(call => call[0]).join(' ');
     expect(text).toContain('사용한 다구');

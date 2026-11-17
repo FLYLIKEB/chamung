@@ -2,13 +2,14 @@ import { useCallback, useEffect, useId, useState } from 'react';
 import { Check, Loader2, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TeawareItem, TeawareKind } from '../types';
-import { TEAWARE_PRESETS, getTeawareImage, teawareKey } from '../constants/teaware';
+import { TEAWARE_PRESETS, TEAWARE_VARIANTS, getTeawareImage, teawareKey } from '../constants/teaware';
 import { teawareApi } from '../lib/api/teaware.api';
 import { useAuth } from '../contexts/AuthContext';
 import { ImageUploader } from './ImageUploader';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 
 interface TeawareSelectorProps {
@@ -18,13 +19,15 @@ interface TeawareSelectorProps {
 }
 
 // Library responses also contain server timestamps; only store the note snapshot.
-function snapshot({ id, kind, name, imageUrl }: TeawareItem): TeawareItem {
-  return { ...(id != null ? { id } : {}), kind, name, ...(imageUrl ? { imageUrl } : {}) };
+function snapshot({ id, variantId, kind, name, imageUrl }: TeawareItem): TeawareItem {
+  return { ...(id != null ? { id } : {}), ...(variantId ? { variantId } : {}), kind, name, ...(imageUrl ? { imageUrl } : {}) };
 }
 
 export function TeawareSelector({ value, onChange, allowLibrary = true }: TeawareSelectorProps) {
   const { isAuthenticated, user } = useAuth();
   const inputId = useId();
+  const [activeKind, setActiveKind] = useState<TeawareKind>('gaiwan');
+  const [query, setQuery] = useState('');
   const [library, setLibrary] = useState<TeawareItem[]>([]);
   const [failedImageUrls, setFailedImageUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -89,10 +92,11 @@ export function TeawareSelector({ value, onChange, allowLibrary = true }: Teawar
 
   // Old note snapshots remain selectable even if removed from the personal library.
   const personal = [...library.map(item => value.find(selected => selected.id === item.id) ?? item), ...value.filter(item => item.id != null && !library.some(saved => saved.id === item.id))];
+  const gallery = TEAWARE_VARIANTS.filter(item => item.kind === activeKind && item.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const tile = (item: TeawareItem, removable = false) => {
     const selected = value.some(current => teawareKey(current) === teawareKey(item));
     const photoFailed = !!item.imageUrl && failedImageUrls.includes(item.imageUrl);
-    const fallback = getTeawareImage({ ...item, imageUrl: undefined });
+    const fallback = getTeawareImage({ ...item, imageUrl: undefined, variantId: undefined });
     return (
       <div key={teawareKey(item)} className="relative min-w-0">
         <button
@@ -102,7 +106,7 @@ export function TeawareSelector({ value, onChange, allowLibrary = true }: Teawar
           onClick={() => toggle(item)}
           className={`relative flex min-h-28 w-full flex-col items-center justify-end gap-2 rounded-sm px-2 py-3 text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${selected ? 'bg-muted text-foreground ring-1 ring-primary/60' : 'text-muted-foreground hover:bg-muted/50'}`}
         >
-          <img src={photoFailed ? fallback : getTeawareImage(item)} alt="" className={`h-16 w-20 object-contain ${item.imageUrl ? '' : '[image-rendering:pixelated]'}`} onError={event => {
+          <img loading="lazy" decoding="async" src={photoFailed ? fallback : getTeawareImage(item)} alt="" className={`h-16 w-20 object-contain ${item.imageUrl ? '' : '[image-rendering:pixelated]'}`} onError={event => {
             const imageUrl = item.imageUrl;
             if (imageUrl) setFailedImageUrls(urls => urls.includes(imageUrl) ? urls : [...urls, imageUrl]);
             if (event.currentTarget.getAttribute('src') !== fallback) event.currentTarget.src = fallback;
@@ -122,7 +126,25 @@ export function TeawareSelector({ value, onChange, allowLibrary = true }: Teawar
         <h3 className="text-sm font-medium">사용한 다구</h3>
         {value.length > 0 && <button type="button" onClick={() => onChange([])} className="min-h-9 text-xs text-muted-foreground hover:text-foreground">선택 해제</button>}
       </div>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">{TEAWARE_PRESETS.map(item => tile(item))}</div>
+      {value.length > 0 && (
+        <div className="space-y-2" aria-label="선택한 다구">
+          <p className="text-xs text-muted-foreground">선택한 다구 {value.length}/12</p>
+          <div className="flex flex-wrap gap-1.5">
+            {value.map(item => <button key={teawareKey(item)} type="button" aria-label={`${item.name} 선택 해제`} onClick={() => toggle(item)} className="flex min-h-9 items-center gap-1.5 rounded-sm bg-muted px-2.5 py-1 text-xs text-foreground"><span>{item.name}</span><X aria-hidden="true" className="h-3 w-3 shrink-0" /></button>)}
+          </div>
+        </div>
+      )}
+      <Tabs value={activeKind} onValueChange={next => { setActiveKind(next as TeawareKind); setQuery(''); }}>
+        <TabsList aria-label="다구 종류" className="flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
+          {TEAWARE_PRESETS.map(category => <TabsTrigger key={category.kind} value={category.kind} aria-label={`${category.name} ${TEAWARE_VARIANTS.filter(item => item.kind === category.kind).length}종`} className="min-h-10 gap-1.5 px-2.5 text-xs data-[state=active]:underline underline-offset-8 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">{category.name}<span className="text-[10px] text-muted-foreground">{TEAWARE_VARIANTS.filter(item => item.kind === category.kind).length}</span></TabsTrigger>)}
+        </TabsList>
+        <div className="mt-3"><Label className="sr-only" htmlFor={`${inputId}-search`}>다구 이름 검색</Label><Input id={`${inputId}-search`} value={query} onChange={event => setQuery(event.target.value)} placeholder="다구 이름 검색" type="search" /></div>
+        <TabsContent value={activeKind} className="mt-2">
+          <div className="max-h-80 overflow-y-auto overscroll-contain p-1" aria-label="기본 다구 그림">
+            {gallery.length > 0 ? <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">{gallery.map(item => tile(item))}</div> : <p className="py-8 text-center text-xs text-muted-foreground">찾는 다구가 없습니다.</p>}
+          </div>
+        </TabsContent>
+      </Tabs>
       {canUseLibrary && (
         <div className="space-y-2 pt-2">
           <div className="flex items-center justify-between gap-3">

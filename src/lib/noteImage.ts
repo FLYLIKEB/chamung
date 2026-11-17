@@ -1,3 +1,6 @@
+import { getTeawareImage } from '../constants/teaware';
+import type { TeawareKind } from '../types';
+import { arrangeTeaware, TEAWARE_MAT } from './teawareLayout';
 import { teawareApi } from './api/teaware.api';
 
 const WIDTH = 1080;
@@ -102,46 +105,59 @@ export async function createNoteImage(card: HTMLElement, filename = '차록.png'
   const tools = Array.from(card.querySelectorAll<HTMLElement>('[data-teaware-kind]'));
   if (tools.length) {
     section('사용한 다구');
-    const images = await Promise.all(tools.map(tool => {
+    const [mat, ...images] = await Promise.all([loadToolImage(TEAWARE_MAT), ...tools.map(tool => {
       const image = tool.querySelector('img');
-      const src = tool.dataset.teawareImageUrl || image?.src || `/teaware/${tool.dataset.teawareKind}.svg`;
+      const src = tool.dataset.teawareImageUrl || image?.src || getTeawareImage({ kind: tool.dataset.teawareKind as TeawareKind, name: noteImageText(tool.querySelector('figcaption')), variantId: tool.dataset.teawareVariant });
       return tool.dataset.teawareImageUrl || image?.classList.contains('teaware-photo')
         ? teawareApi.getImageData(src).then(({ dataUrl }) => loadToolImage(dataUrl))
         : loadToolImage(src);
-    }));
+    })]);
     const top = y;
-    const columnWidth = CONTENT_WIDTH / 3;
-    const labels = tools.map(tool => wrapImageText(noteImageText(tool.querySelector('figcaption')), columnWidth - 32, line => {
-      context.font = `400 26px ${family}`;
-      return context.measureText(line).width;
-    }));
-    const rowHeights = Array.from({ length: Math.ceil(tools.length / 3) }, (_, row) =>
-      228 + Math.max(...labels.slice(row * 3, row * 3 + 3).map(lines => lines.length)) * 40,
-    );
-    const height = rowHeights.reduce((sum, value) => sum + value, 0) + 24;
+    const rows = arrangeTeaware(tools.map(tool => ({ kind: tool.dataset.teawareKind as TeawareKind })));
+    context.font = `400 26px ${family}`;
+    const labels = new Map<number, string[]>();
+    const heights = rows.map(row => {
+      row.items.forEach(placement => labels.set(placement.index, wrapImageText(noteImageText(tools[placement.index].querySelector('figcaption')), placement.width * CONTENT_WIDTH - 16, line => context.measureText(line).width)));
+      return Math.max(...row.items.map(placement => placement.imageWidth * CONTENT_WIDTH + (labels.get(placement.index)?.length || 0) * 38)) + 40;
+    });
+    const height = heights.reduce((sum, value) => sum + value, 0) + 40;
     commands.push(() => {
-      context.fillStyle = '#293619';
-      context.fillRect(PADDING, top, CONTENT_WIDTH, height);
-      tools.forEach((tool, index) => {
-        const image = images[index];
-        const row = Math.floor(index / 3);
-        const x = PADDING + (index % 3) * columnWidth;
-        const rowTop = top + rowHeights.slice(0, row).reduce((sum, value) => sum + value, 0);
-        const isPhoto = !!tool.dataset.teawareImageUrl || tool.querySelector('img')?.classList.contains('teaware-photo');
-        const size = isPhoto ? 176 : 208;
-        context.imageSmoothingEnabled = !!isPhoto;
-        if (isPhoto) {
-          const side = Math.min(image.naturalWidth, image.naturalHeight);
-          context.drawImage(image, (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side, x + (columnWidth - size) / 2, rowTop + 32, size, size);
-        } else {
-          context.drawImage(image, x + (columnWidth - size) / 2, rowTop + 16, size, size);
+      context.imageSmoothingEnabled = false;
+      // Repeat the same pixel mat used by the live board, without stretching it.
+      for (let tileY = 0; tileY < height; tileY += 256) {
+        for (let tileX = 0; tileX < CONTENT_WIDTH; tileX += 256) {
+          const width = Math.min(256, CONTENT_WIDTH - tileX);
+          const tileHeight = Math.min(256, height - tileY);
+          context.drawImage(mat, 0, 0, mat.naturalWidth * width / 256, mat.naturalHeight * tileHeight / 256, PADDING + tileX, top + tileY, width, tileHeight);
         }
-        context.fillStyle = MUTED;
-        context.font = `400 26px ${family}`;
-        context.textAlign = 'center';
-        context.textBaseline = 'top';
-        labels[index].forEach((line, lineIndex) => context.fillText(line, x + columnWidth / 2, rowTop + 228 + lineIndex * 40));
-        context.textAlign = 'start';
+      }
+      let rowTop = top + 20;
+      rows.forEach((row, rowIndex) => {
+        row.items.forEach(placement => {
+          const tool = tools[placement.index];
+          const image = images[placement.index];
+          const center = PADDING + placement.center * CONTENT_WIDTH;
+          const size = placement.imageWidth * CONTENT_WIDTH;
+          const lines = labels.get(placement.index) || [];
+          const labelTop = rowTop + heights[rowIndex] - 32 - lines.length * 38;
+          const imageTop = labelTop - size - 8;
+          context.imageSmoothingEnabled = !!tool.dataset.teawareImageUrl || !!tool.querySelector('img')?.classList.contains('teaware-photo');
+          // Contain original photos: the entire personal tool stays visible.
+          const scale = size / Math.max(image.naturalWidth, image.naturalHeight);
+          const width = image.naturalWidth * scale;
+          const imageHeight = image.naturalHeight * scale;
+          context.drawImage(image, center - width / 2, imageTop + (size - imageHeight) / 2, width, imageHeight);
+          context.font = `400 26px ${family}`;
+          context.fillStyle = '#293619';
+          const labelWidth = Math.min(placement.width * CONTENT_WIDTH, Math.max(...lines.map(line => context.measureText(line).width), 0) + 16);
+          context.fillRect(center - labelWidth / 2, labelTop, labelWidth, lines.length * 38);
+          context.fillStyle = INK;
+          context.textAlign = 'center';
+          context.textBaseline = 'top';
+          lines.forEach((line, index) => context.fillText(line, center, labelTop + index * 38));
+          context.textAlign = 'start';
+        });
+        rowTop += heights[rowIndex];
       });
     });
     y += height;
