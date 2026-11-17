@@ -120,7 +120,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
         <div className="relative z-10 flex-1 flex flex-col px-3 pt-2 pb-3">
           <div className="space-y-1.5">
             {showTeaName && (
-              <p className="font-title text-base sm:text-lg text-foreground line-clamp-2 break-words leading-snug">
+              <p className="font-title text-lg sm:text-xl text-foreground line-clamp-3 break-words leading-snug">
                 {note.teaName}
               </p>
             )}
@@ -151,7 +151,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
           </div>
 
           {memoPreview && (
-            <MarkdownPreview content={memoPreview} className="note-card-memo-preview my-3 line-clamp-2 text-[13px] leading-relaxed text-foreground/80" />
+            <MarkdownPreview content={memoPreview} className="note-card-memo-preview my-3 line-clamp-4 text-[13px] leading-relaxed text-foreground/80" />
           )}
 
           {/* 하단 미니 푸터: 날짜 + 작성자 + 북마크 */}

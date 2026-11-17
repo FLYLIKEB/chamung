@@ -55,7 +55,7 @@ describe('NoteCard - 그리드 카드', () => {
     const { container } = render(<MemoryRouter><NoteCard note={{ ...mockNote, memo }} /></MemoryRouter>);
     const preview = container.querySelector('.note-card-memo-preview');
     expect(preview?.textContent).toBe(memo);
-    expect(preview).toHaveClass('line-clamp-2');
+    expect(preview).toHaveClass('line-clamp-4');
     expect(screen.getAllByRole('button')[0]).toHaveClass('min-h-44');
   });
 
