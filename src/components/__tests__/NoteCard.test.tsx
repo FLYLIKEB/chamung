@@ -53,10 +53,20 @@ describe('NoteCard - 그리드 카드', () => {
   it('목록 카드에 글귀와 작성한 줄바꿈을 두 줄 미리보기로 표시한다', () => {
     const memo = '불을 많이 쬔 탁함, 여운이 길고 끝에 아득함.\n화려함. 다채로움';
     const { container } = render(<MemoryRouter><NoteCard note={{ ...mockNote, memo }} /></MemoryRouter>);
-    const preview = container.querySelector('p.whitespace-pre-line');
+    const preview = container.querySelector('.note-card-memo-preview');
     expect(preview?.textContent).toBe(memo);
     expect(preview).toHaveClass('line-clamp-2');
     expect(screen.getAllByRole('button')[0]).toHaveClass('min-h-44');
+  });
+
+  it('차록 글귀의 마크다운을 렌더링하고 줄바꿈을 유지한다', () => {
+    const memo = '**꽃향**\n[찻집](https://example.com)과 ~~쓴맛~~\n\n---\n### 다회모드로 작성됨 🔄\n| 탕 | 시간 |';
+    const { container } = render(<MemoryRouter><NoteCard note={{ ...mockNote, memo }} /></MemoryRouter>);
+    const preview = container.querySelector('.note-card-memo-preview')!;
+    expect(preview.textContent).toBe('꽃향\n찻집과 쓴맛');
+    expect(preview.querySelector('strong')).toHaveTextContent('꽃향');
+    expect(preview.querySelector('a')).toBeNull();
+    expect(preview).toHaveClass('whitespace-pre-line');
   });
 
   it('다회 자동 기록 표는 제외하고 작성한 글귀만 표시한다', () => {
@@ -68,12 +78,12 @@ describe('NoteCard - 그리드 카드', () => {
 
   it('다회 자동 기록만 있으면 글귀를 표시하지 않는다', () => {
     const { container } = render(<MemoryRouter><NoteCard note={{ ...mockNote, memo: '### 다회모드로 작성됨 🔄\n| 탕 | 시간 |' }} /></MemoryRouter>);
-    expect(container.querySelector('p.whitespace-pre-line')).toBeNull();
+    expect(container.querySelector('.note-card-memo-preview')).toBeNull();
   });
 
   it.each([null, '', '   '])('글귀가 %s이면 빈 미리보기를 표시하지 않는다', (memo) => {
     const { container } = render(<MemoryRouter><NoteCard note={{ ...mockNote, memo }} /></MemoryRouter>);
-    expect(container.querySelector('p.whitespace-pre-line')).toBeNull();
+    expect(container.querySelector('.note-card-memo-preview')).toBeNull();
   });
 
   it('다른 사람의 비공개 차록 글귀는 표시하지 않는다', () => {
