@@ -435,3 +435,18 @@
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
   .animate-fade-in-up, .animate-float-in, .animate-pull-refresh-in { animation: none; opacity: 1; transform: none; }
 }
+
+/* Retain the requested raised treatment only on primary form/action buttons. */
+[data-slot='button']:is([data-variant='default'], [data-variant='secondary'], [data-variant='outline']) {
+  border: 1px solid #85887f;
+  border-radius: 0;
+  background: #d3d3cd;
+  color: #252923;
+  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #85887f;
+}
+[data-slot='button']:is([data-variant='default'], [data-variant='secondary'], [data-variant='outline']):hover {
+  background: #e1e2db;
+}
+[data-slot='button']:is([data-variant='default'], [data-variant='secondary'], [data-variant='outline']):active {
+  box-shadow: inset 1px 1px 0 #85887f, inset -1px -1px 0 #ffffff;
+}
