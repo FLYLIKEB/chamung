@@ -50,6 +50,25 @@ const mockNote: Note = {
 describe('NoteCard - 그리드 카드', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it('목록 카드에 글귀와 작성한 줄바꿈을 두 줄 미리보기로 표시한다', () => {
+    const memo = '불을 많이 쬔 탁함, 여운이 길고 끝에 아득함.\n화려함. 다채로움';
+    const { container } = render(<MemoryRouter><NoteCard note={{ ...mockNote, memo }} /></MemoryRouter>);
+    const preview = container.querySelector('p.whitespace-pre-line');
+    expect(preview?.textContent).toBe(memo);
+    expect(preview).toHaveClass('line-clamp-2');
+    expect(screen.getAllByRole('button')[0]).toHaveClass('min-h-44');
+  });
+
+  it.each([null, '', '   '])('글귀가 %s이면 빈 미리보기를 표시하지 않는다', (memo) => {
+    const { container } = render(<MemoryRouter><NoteCard note={{ ...mockNote, memo }} /></MemoryRouter>);
+    expect(container.querySelector('p.whitespace-pre-line')).toBeNull();
+  });
+
+  it('다른 사람의 비공개 차록 글귀는 표시하지 않는다', () => {
+    render(<MemoryRouter><NoteCard note={{ ...mockNote, userId: 2, isPublic: false, memo: '비공개 글귀' }} /></MemoryRouter>);
+    expect(screen.queryByText('비공개 글귀')).not.toBeInTheDocument();
+  });
+
   it('카드와 북마크를 중첩하지 않고 키보드로 각각 실행해야 함', async () => {
     const user = userEvent.setup();
     const onBookmarkToggle = vi.fn();

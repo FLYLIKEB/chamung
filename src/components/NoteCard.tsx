@@ -65,6 +65,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
   };
 
   const rating = Number(note.overallRating);
+  const memoPreview = canView ? note.memo?.trim() : null;
 
   return (
     <div className="relative">
@@ -72,7 +73,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
         type="button"
         onClick={handleClick}
         className={cn(
-          'relative aspect-[3/4] w-full overflow-hidden flex flex-col rounded-sm bg-card border-0 shadow-none text-left transition-colors',
+          'relative aspect-[3/4] min-h-44 w-full overflow-hidden flex flex-col rounded-sm bg-card border-0 shadow-none text-left transition-colors',
           canView ? 'hover:bg-muted/20' : 'opacity-60 cursor-not-allowed',
         )}
       >
@@ -145,6 +146,12 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
               </div>
             )}
           </div>
+
+          {memoPreview && (
+            <p className="my-2 line-clamp-2 whitespace-pre-line break-words text-[11px] leading-relaxed text-foreground/80">
+              {memoPreview}
+            </p>
+          )}
 
           {/* 하단 미니 푸터: 날짜 + 작성자 + 북마크 */}
           <div className="flex items-center justify-between mt-auto">
