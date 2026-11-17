@@ -1,3 +1,5 @@
+import { teawareApi } from './api/teaware.api';
+
 const WIDTH = 1080;
 const PADDING = 72;
 const CONTENT_WIDTH = WIDTH - PADDING * 2;
@@ -44,6 +46,17 @@ export function wrapImageText(text: string, width: number, measure: (text: strin
  * Export the complete note as a portable PNG, without DOM screenshots or remote
  * image dependencies. Semantic text and rating blocks keep long notes readable.
  */
+async function loadToolImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const timeout = window.setTimeout(() => reject(new Error('다구 사진을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')), 10000);
+    image.crossOrigin = 'anonymous';
+    image.onload = () => { window.clearTimeout(timeout); resolve(image); };
+    image.onerror = () => { window.clearTimeout(timeout); reject(new Error('다구 사진을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')); };
+    image.src = src;
+  });
+}
+
 export async function createNoteImage(card: HTMLElement, filename = '차록.png'): Promise<File> {
   if (document.fonts) await document.fonts.ready;
   const canvas = document.createElement('canvas');
@@ -86,6 +99,53 @@ export async function createNoteImage(card: HTMLElement, filename = '차록.png'
   if (metadata) { y += 14; text(metadata, 28, MUTED); }
   const chips = field('chips');
   if (chips) { y += 12; text(chips, 28, MUTED); }
+  const tools = Array.from(card.querySelectorAll<HTMLElement>('[data-teaware-kind]'));
+  if (tools.length) {
+    section('사용한 다구');
+    const images = await Promise.all(tools.map(tool => {
+      const image = tool.querySelector('img');
+      const src = tool.dataset.teawareImageUrl || image?.src || `/teaware/${tool.dataset.teawareKind}.svg`;
+      return tool.dataset.teawareImageUrl || image?.classList.contains('teaware-photo')
+        ? teawareApi.getImageData(src).then(({ dataUrl }) => loadToolImage(dataUrl))
+        : loadToolImage(src);
+    }));
+    const top = y;
+    const columnWidth = CONTENT_WIDTH / 3;
+    const labels = tools.map(tool => wrapImageText(noteImageText(tool.querySelector('figcaption')), columnWidth - 32, line => {
+      context.font = `400 26px ${family}`;
+      return context.measureText(line).width;
+    }));
+    const rowHeights = Array.from({ length: Math.ceil(tools.length / 3) }, (_, row) =>
+      228 + Math.max(...labels.slice(row * 3, row * 3 + 3).map(lines => lines.length)) * 40,
+    );
+    const height = rowHeights.reduce((sum, value) => sum + value, 0) + 24;
+    commands.push(() => {
+      context.fillStyle = '#293619';
+      context.fillRect(PADDING, top, CONTENT_WIDTH, height);
+      tools.forEach((tool, index) => {
+        const image = images[index];
+        const row = Math.floor(index / 3);
+        const x = PADDING + (index % 3) * columnWidth;
+        const rowTop = top + rowHeights.slice(0, row).reduce((sum, value) => sum + value, 0);
+        const isPhoto = !!tool.dataset.teawareImageUrl || tool.querySelector('img')?.classList.contains('teaware-photo');
+        const size = isPhoto ? 176 : 208;
+        context.imageSmoothingEnabled = !!isPhoto;
+        if (isPhoto) {
+          const side = Math.min(image.naturalWidth, image.naturalHeight);
+          context.drawImage(image, (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side, x + (columnWidth - size) / 2, rowTop + 32, size, size);
+        } else {
+          context.drawImage(image, x + (columnWidth - size) / 2, rowTop + 16, size, size);
+        }
+        context.fillStyle = MUTED;
+        context.font = `400 26px ${family}`;
+        context.textAlign = 'center';
+        context.textBaseline = 'top';
+        labels[index].forEach((line, lineIndex) => context.fillText(line, x + columnWidth / 2, rowTop + 228 + lineIndex * 40));
+        context.textAlign = 'start';
+      });
+    });
+    y += height;
+  }
   const memo = field('memo', '.note-detail-prose');
   if (memo) { y += 34; text(memo); }
 

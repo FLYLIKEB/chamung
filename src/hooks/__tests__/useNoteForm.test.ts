@@ -2,6 +2,8 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useNoteForm } from '../useNoteForm';
 
+vi.mock('../../utils/weather', () => ({ fetchWeather: vi.fn(() => Promise.resolve(null)) }));
+
 const mockNavigate = vi.fn();
 let mockSelectedTea: number | null = null;
 const mockUser = { id: 1, name: '김차인', email: 'test@example.com' };
@@ -243,5 +245,34 @@ describe('useNoteForm - edit 모드', () => {
       1,
       expect.objectContaining({ teaId: 2 }),
     );
+  });
+});
+
+
+describe('useNoteForm - 사용한 다구 저장', () => {
+  const teaware = [{ kind: 'gaiwan' as const, name: '개완' }, { id: 3, kind: 'cup' as const, name: '청자 잔', imageUrl: 'https://example.com/cup.jpg' }];
+
+  it('신규 차록에 기본 및 사진 다구를 함께 전송한다', async () => {
+    mockSelectedTea = 1;
+    const { notesApi } = await import('../../lib/api');
+    const { result } = renderHook(() => useNoteForm({ mode: 'new' }));
+    await waitFor(() => expect(result.current.schemas).toHaveLength(1));
+    act(() => result.current.setTeaware(teaware));
+    await act(async () => { await result.current.handleSave(); });
+    expect(notesApi.create).toHaveBeenCalledWith(expect.objectContaining({ teaware }));
+  });
+
+  it('기존 차록의 다구를 복원하고 빈 배열로 제거한다', async () => {
+    mockSelectedTea = 1;
+    const { notesApi } = await import('../../lib/api');
+    vi.mocked(notesApi.getById).mockResolvedValue({ id: 1, userId: 1, teaId: 1, teaName: '테스트 차', schemaIds: [1], overallRating: 4, memo: '', teaware, isPublic: false } as any);
+    const { result } = renderHook(() => useNoteForm({ mode: 'edit', noteId: 1 }));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.teaware).toEqual(teaware);
+    await act(async () => { await result.current.handleSave(); });
+    expect(notesApi.update).toHaveBeenLastCalledWith(1, expect.objectContaining({ teaware }));
+    act(() => result.current.setTeaware([]));
+    await act(async () => { await result.current.handleSave(); });
+    expect(notesApi.update).toHaveBeenLastCalledWith(1, expect.objectContaining({ teaware: [] }));
   });
 });

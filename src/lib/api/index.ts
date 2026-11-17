@@ -40,3 +40,7 @@ export { tagsApi, commentsApi, notificationsApi } from './social.api';
 
 // Admin
 export { adminApi } from './admin.api';
+
+// Teaware
+export { teawareApi } from './teaware.api';
+export type { CreateTeawareRequest } from './teaware.api';

@@ -1,5 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { createNoteImage, noteImageText, wrapImageText } from '../noteImage';
+
+vi.mock('../api/teaware.api', () => ({ teawareApi: { getImageData: vi.fn().mockResolvedValue({ dataUrl: 'data:image/png;base64,cG5n' }) } }));
+
+import { teawareApi } from '../api/teaware.api';
 
 const measure = (text: string) => Array.from(text).length;
 
@@ -18,12 +22,13 @@ describe('note image text layout', () => {
 });
 
 describe('note image export', () => {
-  afterEach(() => vi.restoreAllMocks());
+  beforeEach(() => { vi.mocked(teawareApi.getImageData).mockResolvedValue({ dataUrl: 'data:image/png;base64,cG5n' }); });
+  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
   function setupCanvas() {
     const context = {
       font: '', fillStyle: '', textBaseline: '',
       measureText: vi.fn((text: string) => ({ width: Array.from(text).length * 28 })),
-      fillText: vi.fn(), fillRect: vi.fn(),
+      fillText: vi.fn(), fillRect: vi.fn(), drawImage: vi.fn(),
     };
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context as unknown as CanvasRenderingContext2D);
     const sizes: number[] = [];
@@ -63,6 +68,33 @@ describe('note image export', () => {
     await createNoteImage(card);
     expect(sizes[1]).toBeGreaterThan(3000);
     expect(context.fillText.mock.calls.some(call => call[0] === '기록 49')).toBe(true);
+  });
+  it('draws the selected tool images and complete labels on one exported board', async () => {
+    const { context } = setupCanvas();
+    vi.stubGlobal('Image', class {
+      onload?: () => void;
+      naturalWidth = 128;
+      naturalHeight = 128;
+      set src(_value: string) { queueMicrotask(() => this.onload?.()); }
+    });
+    const card = document.createElement('section');
+    card.innerHTML = '<div data-note-image="teaware"><figure data-teaware-kind="gaiwan"><img src="/teaware/gaiwan.svg"><figcaption>개완</figcaption></figure><figure data-teaware-kind="cup" data-teaware-image-url="https://example.com/cup.jpg"><img class="teaware-pixel" src="/teaware/cup.svg"><figcaption>내 백자잔</figcaption></figure></div>';
+    await createNoteImage(card);
+    expect(context.drawImage).toHaveBeenCalledTimes(2);
+    expect(teawareApi.getImageData).toHaveBeenCalledWith('https://example.com/cup.jpg');
+    const text = context.fillText.mock.calls.map(call => call[0]).join(' ');
+    expect(text).toContain('사용한 다구');
+    expect(text).toContain('내 백자잔');
+  });
+  it('reports unavailable tool photos instead of exporting a blank space', async () => {
+    setupCanvas();
+    vi.stubGlobal('Image', class {
+      onerror?: () => void;
+      set src(_value: string) { queueMicrotask(() => this.onerror?.()); }
+    });
+    const card = document.createElement('section');
+    card.innerHTML = '<figure data-teaware-kind="cup"><img src="https://example.com/missing.jpg"><figcaption>찻잔</figcaption></figure>';
+    await expect(createNoteImage(card)).rejects.toThrow('다구 사진을 불러오지 못했습니다');
   });
   it('rejects failed encoding instead of producing an empty file', async () => {
     setupCanvas();

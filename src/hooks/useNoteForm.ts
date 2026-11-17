@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notesApi } from '../lib/api';
-import { Note, RatingSchema, RatingAxis } from '../types';
+import { Note, RatingSchema, RatingAxis, TeawareItem } from '../types';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../lib/logger';
@@ -49,6 +49,7 @@ export function useNoteForm({
   const [images, setImages] = useState<string[]>([]);
   const [imageThumbnails, setImageThumbnails] = useState<(string | null)[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+  const [teaware, setTeaware] = useState<TeawareItem[]>([]);
   const [drinkDate, setDrinkDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [isPublic, setIsPublic] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -174,6 +175,7 @@ export function useNoteForm({
             : noteImages.map(() => null),
         );
         setTags(normalizedNote.tags || []);
+        setTeaware(normalizedNote.teaware || []);
         if (normalizedNote.drinkDate) {
           setDrinkDate(String(normalizedNote.drinkDate).slice(0, 10));
         }
@@ -329,6 +331,7 @@ export function useNoteForm({
           isRatingIncluded: true,
           axisValues: axisValuesArray,
           memo: processedMemo,
+          teaware,
           images: imagePayload,
           imageThumbnails: thumbnailPayload,
           tags: tags.length > 0 ? tags : undefined,
@@ -354,6 +357,7 @@ export function useNoteForm({
           isRatingIncluded: true,
           axisValues: axisValuesArray,
           memo: processedMemo,
+          teaware,
           images: imagePayload,
           imageThumbnails: thumbnailPayload,
           tags: tags.length > 0 ? tags : undefined,
@@ -405,6 +409,8 @@ export function useNoteForm({
     },
     tags,
     setTags,
+    teaware,
+    setTeaware,
     drinkDate,
     setDrinkDate,
     isPublic,

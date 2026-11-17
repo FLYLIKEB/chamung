@@ -1,4 +1,4 @@
-import { CellarItem, TeaSession, TeaSessionSteep, SteepDataV1 } from '../../types';
+import { CellarItem, TeaSession, TeaSessionSteep, SteepDataV1, TeawareItem } from '../../types';
 import { apiClient } from './client';
 
 export interface CreateCellarItemRequest {
@@ -27,6 +27,7 @@ export interface PublishSessionToNoteRequest {
   overallRating?: number | null;
   isRatingIncluded?: boolean;
   axisValues: Array<{ axisId: number; value: number }>;
+  teaware?: TeawareItem[];
   memo?: string | null;
   tags?: string[];
   isPublic: boolean;

@@ -1,3 +1,4 @@
+import { TeawareBoard } from '../components/TeawareBoard';
 import { usePageMetadata } from '../components/SeoMetadata';
 import { plainDescription } from '../lib/seo';
 import { MarkdownPreview } from '../components/MarkdownPreview';
@@ -129,7 +130,7 @@ export function NoteDetail() {
     setImageFile(null);
     setImageBusy(true);
     try { setImageFile(await createNoteImage(cardRef.current, `차록-${noteId}.png`)); }
-    catch { toast.error('이미지를 만들지 못했습니다. 다시 시도해 주세요.'); }
+    catch (error) { toast.error(error instanceof Error ? error.message : '이미지를 만들지 못했습니다. 다시 시도해 주세요.'); }
     finally { setImageBusy(false); }
   };
   const shareImage = async () => {
@@ -433,6 +434,8 @@ export function NoteDetail() {
                 <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">{tea.weight}g</span>
               )}
             </div>
+
+            <TeawareBoard items={note.teaware} />
 
             {hasStoryContent && (
               <div className="note-detail-story-content mt-5">

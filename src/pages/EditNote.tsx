@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { StarRating } from '../components/StarRating';
 import { AddTemplateModal } from '../components/AddTemplateModal';
+import { TeawareSelector } from '../components/TeawareSelector';
 import { ImageUploader } from '../components/ImageUploader';
 import { TagInput } from '../components/TagInput';
 import { Textarea } from '../components/ui/textarea';
@@ -44,6 +45,8 @@ export function EditNote() {
     setImagesAndThumbnails,
     tags,
     setTags,
+    teaware,
+    setTeaware,
     isPublic,
     setIsPublic,
     isSaving,
@@ -136,6 +139,8 @@ export function EditNote() {
           axisValues={axisValues}
           onAxisChange={(axisId, value) => setAxisValues((prev) => ({ ...prev, [axisId]: value }))}
         />
+
+        <TeawareSelector value={teaware} onChange={setTeaware} />
 
         <section className="bg-card rounded-lg p-4">
           <ImageUploader

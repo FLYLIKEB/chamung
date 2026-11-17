@@ -108,6 +108,15 @@ export interface AxisValue {
   value: number;
 }
 
+export type TeawareKind = 'gaiwan' | 'yixing' | 'cup' | 'pitcher' | 'kettle' | 'strainer';
+
+export interface TeawareItem {
+  id?: number;
+  kind: TeawareKind;
+  name: string;
+  imageUrl?: string;
+}
+
 export interface Note {
   tea?: Tea;
   id: number;
@@ -132,6 +141,7 @@ export interface Note {
     axis?: RatingAxis;
   }>;
   appearance?: string | null;
+  teaware?: TeawareItem[] | null;
   memo: string | null;
   images?: string[] | null;
   imageThumbnails?: string[] | null;
