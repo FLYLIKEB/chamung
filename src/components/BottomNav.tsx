@@ -34,7 +34,7 @@ const NAV_ITEMS: NavItemDef[] = [
 ];
 
 const MOBILE_BOTTOM_NAV_CLASS = cn(
-  'app-bottom-nav app-bottom-nav-mobile fixed inset-x-0 bottom-0 z-60 px-4 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))]',
+  'app-bottom-nav app-bottom-nav-mobile fixed left-6 right-6 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] z-60 px-1.5 py-1',
   'flex items-center justify-around md:hidden',
 );
 
@@ -42,7 +42,7 @@ function navItemClass(direction: NavDirection, isActive: boolean) {
   return cn(
     'flex items-center justify-center gap-1 transition-colors duration-200',
     direction === 'horizontal'
-      ? 'min-h-14 min-w-11 flex-1 flex-col px-2'
+      ? 'min-h-11 min-w-11 flex-1 flex-col px-2'
       : 'min-h-11 w-full px-3 py-2 flex-row gap-3',
     isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
   );
@@ -169,10 +169,10 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
       {/* Desktop: vertical floating bar */}
       <nav
         className={cn(
-          'app-bottom-nav app-side-nav hidden md:flex fixed left-0 top-0 bottom-0 z-50',
-          'flex-col items-center justify-center gap-1 p-3',
+          'app-bottom-nav app-side-nav hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 z-50',
+          'flex-col items-center gap-1 p-2',
           'bg-background border-0 rounded-none shadow-none',
-          'w-[160px]',
+          'w-[140px]',
         )}
       >
         {/* Logo */}
