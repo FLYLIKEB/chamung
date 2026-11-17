@@ -120,7 +120,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
         <div className="relative z-10 flex-1 flex flex-col px-3 pt-2 pb-3">
           <div className="space-y-1.5">
             {showTeaName && (
-              <p className="font-title text-lg sm:text-xl text-foreground line-clamp-3 break-words leading-snug">
+              <p className="font-title text-lg sm:text-xl text-foreground line-clamp-3 break-keep break-words leading-snug">
                 {note.teaName}
               </p>
             )}
