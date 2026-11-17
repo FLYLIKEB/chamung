@@ -1,3 +1,4 @@
+import { MarkdownPreview } from './MarkdownPreview';
 import { type FC, type MouseEvent, useState, memo, useCallback } from 'react';
 import { Star, Lock, Bookmark, Loader2 } from 'lucide-react';
 import { Note } from '../types';
@@ -150,9 +151,7 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
           </div>
 
           {memoPreview && (
-            <p className="my-2 line-clamp-2 whitespace-pre-line break-words text-[11px] leading-relaxed text-foreground/80">
-              {memoPreview}
-            </p>
+            <MarkdownPreview content={memoPreview} className="note-card-memo-preview my-2 line-clamp-2 text-[11px] leading-relaxed text-foreground/80" />
           )}
 
           {/* 하단 미니 푸터: 날짜 + 작성자 + 북마크 */}

@@ -1,3 +1,4 @@
+import { MarkdownPreview } from '../components/MarkdownPreview';
 import React, { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Trash2, Loader2, Heart, Bookmark, Edit, Flag, Share2, Lock, Unlock, ChevronDown } from 'lucide-react';
@@ -527,7 +528,7 @@ export function NoteDetail() {
                         <tr key={`${row[0] || 'steep'}-${rowIndex}`}>
                           {row.map((cell, cellIndex) => (
                             <td key={`${rowIndex}-${SESSION_MEMO_HEADERS[cellIndex]}`} data-label={SESSION_MEMO_HEADERS[cellIndex]}>
-                              {cell || '-'}
+                              {cell && cell !== '-' ? <MarkdownPreview content={cell} /> : '-'}
                             </td>
                           ))}
                         </tr>

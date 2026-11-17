@@ -1,6 +1,5 @@
 import { type FC, memo } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { MarkdownPreview } from './MarkdownPreview';
 import { Pin, Megaphone, Shield, Heart, MessageCircle, Eye, MoreHorizontal, ChevronRight, Share2, Flag, Bookmark } from 'lucide-react';
 import { Post, POST_CATEGORY_LABELS } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -14,25 +13,6 @@ interface PostCardProps {
   post: Post;
   commentCount?: number;
   onBookmarkToggle?: (isBookmarked: boolean) => void;
-}
-
-// Preview content is readable Markdown, with navigation owned by the card.
-function PostContentPreview({ content, className }: { content: string; className?: string }) {
-  return (
-    <div className={cn('post-card-content-preview whitespace-pre-line break-words [&_p]:m-0 [&_pre]:whitespace-pre-wrap [&_code]:font-[inherit] [&_h1]:font-[inherit] [&_h2]:font-[inherit] [&_h3]:font-[inherit]', className)}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        skipHtml
-        components={{
-          a: ({ children }) => <span>{children}</span>,
-          img: ({ alt }) => <span>{alt}</span>,
-          input: () => null,
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-    </div>
-  );
 }
 
 const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
@@ -67,7 +47,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
         {post.title ? (
           <span className="flex-1 min-w-0 text-sm font-medium text-foreground truncate font-title">{post.title}</span>
         ) : (
-          <PostContentPreview content={post.content} className="flex-1 min-w-0 text-sm text-foreground line-clamp-1" />
+          <MarkdownPreview content={post.content} className="post-card-content-preview flex-1 min-w-0 text-sm text-foreground line-clamp-1" />
         )}
         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
       </div>
@@ -140,7 +120,7 @@ const PostCardComponent: FC<PostCardProps> = ({ post, commentCount }) => {
               {post.title}
             </h3>
           )}
-          <PostContentPreview content={post.content} className="text-[14px] text-foreground/80 line-clamp-2 leading-relaxed" />
+          <MarkdownPreview content={post.content} className="post-card-content-preview text-[14px] text-foreground/80 line-clamp-2 leading-relaxed" />
         </div>
 
         {post.images && post.images.length > 0 && (
