@@ -197,20 +197,13 @@
 .note-detail-scene { background: var(--background); color: var(--foreground); }
 .note-detail-glass-card { overflow: hidden; }
 .note-detail-card-deck {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: min(92vw, 560px);
-  gap: 1rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: 0.6rem;
-  padding: 0.35rem 0.6rem 1.45rem;
-  scrollbar-width: none;
+  display: block;
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: 0.35rem 0.6rem 1rem;
 }
 .note-detail-card-deck > * {
   position: relative;
-  scroll-snap-align: center;
   min-height: 22rem;
   min-width: 0;
   align-self: start;
@@ -219,7 +212,6 @@
   background: var(--card);
   color: var(--foreground);
 }
-.note-detail-card-deck::-webkit-scrollbar { display: none; }
 .note-detail-hero, .note-detail-story-card, .note-detail-profile-card { display: flex; flex-direction: column; }
 .note-detail-hero > * { flex-shrink: 0; }
 .note-detail-tea-title { font-family: var(--font-title); line-height: 1.4; overflow-wrap: anywhere; word-break: keep-all; }
@@ -286,7 +278,6 @@
 .post-detail-reading-action:hover, .post-detail-reading-action.is-active, .post-detail-comment-jump { color: var(--foreground); }
 
 @media (min-width: 768px) {
-  .note-detail-card-deck { grid-auto-columns: minmax(0, 1fr); }
   .post-detail-reading-dock { left: 160px; }
   .post-detail-page { padding-bottom: 4rem; }
 }

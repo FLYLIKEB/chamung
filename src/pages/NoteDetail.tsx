@@ -29,6 +29,8 @@ import { Note, Tea } from '../types';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../lib/logger';
+import { createNoteImage } from '../lib/noteImage';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../components/ui/dialog';
 import { useShare } from '../hooks/useShare';
 import { TeaTypeBadge } from '../components/TeaTypeBadge';
 import ReactMarkdown from 'react-markdown';
@@ -110,8 +112,33 @@ export function NoteDetail() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [use10Scale, setUse10Scale] = useState(false);
   const { share } = useShare();
-  const cardDeckRef = useRef<HTMLDivElement | null>(null);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const cardRef = useRef<HTMLElement | null>(null);
+  const [imageDialog, setImageDialog] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageBusy, setImageBusy] = useState(false);
+  useEffect(() => {
+    if (!imageFile) { setImageUrl(''); return; }
+    const url = URL.createObjectURL(imageFile);
+    setImageUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+  const prepareImage = async () => {
+    if (!cardRef.current) return;
+    setImageDialog(true);
+    setImageFile(null);
+    setImageBusy(true);
+    try { setImageFile(await createNoteImage(cardRef.current, `차록-${noteId}.png`)); }
+    catch { toast.error('이미지를 만들지 못했습니다. 다시 시도해 주세요.'); }
+    finally { setImageBusy(false); }
+  };
+  const shareImage = async () => {
+    if (!imageFile) return;
+    try { await navigator.share({ files: [imageFile] }); }
+    catch (error) {
+      if (!(error instanceof Error && error.name === 'AbortError')) toast.error('공유할 수 없습니다. 이미지 저장을 이용해 주세요.');
+    }
+  };
   const [showStoryPhotos, setShowStoryPhotos] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -176,30 +203,6 @@ export function NoteDetail() {
     return { sessionMemoTable: table, displayMemo: memo };
   }, [note?.memo]);
 
-  useEffect(() => {
-    const deck = cardDeckRef.current;
-    if (!deck || typeof IntersectionObserver === 'undefined') return;
-    const cards = Array.from(deck.children) as HTMLElement[];
-    if (cards.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        let maxRatio = 0;
-        let maxIndex = 0;
-        entries.forEach((entry) => {
-          if (entry.intersectionRatio > maxRatio) {
-            maxRatio = entry.intersectionRatio;
-            maxIndex = cards.indexOf(entry.target as HTMLElement);
-          }
-        });
-        if (maxRatio > 0) setCurrentCardIndex(maxIndex);
-      },
-      { root: deck, threshold: [0, 0.5, 1] },
-    );
-
-    cards.forEach((card) => observer.observe(card));
-    return () => observer.disconnect();
-  }, [note]);
 
   if (isLoading) {
     return (
@@ -311,22 +314,8 @@ export function NoteDetail() {
   const brewColor = note.appearance ? BREW_COLORS.find((c) => c.value === note.appearance) : null;
   const hasStoryContent = !!(note.memo || (note.images && note.images.length > 0));
   const hasProfileCard = !!((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0) || weather?.teaComment);
-  const cardMeta = [
-    { id: 'hero' as const, show: true },
-    { id: 'profile' as const, show: hasProfileCard },
-  ].filter((c) => c.show);
-  const cardCount = cardMeta.length;
-
-  const getCardPhotoUrl = (cardIndex: number) => {
-    const images = note.images ?? [];
-    if (images.length === 0) return undefined;
-    if (images.length === 1 && cardIndex > 0) return undefined;
-
-    return images[cardIndex % images.length];
-  };
-
-  const getPhotoCardProps = (cardIndex: number) => {
-    const imageUrl = getCardPhotoUrl(cardIndex);
+  const getPhotoCardProps = () => {
+    const imageUrl = note.images?.[0];
     const encodedUrl = imageUrl ? encodeURI(imageUrl) : undefined;
     return {
       'data-has-photo': imageUrl ? 'true' : undefined,
@@ -345,12 +334,13 @@ export function NoteDetail() {
       <div className="relative z-10 pt-2 pb-4">
         {/* 차록 카드 덱 */}
         <article className="note-detail-glass-card relative overflow-hidden">
-        <div ref={cardDeckRef} className="note-detail-card-deck" aria-label="차록 상세 콘텐츠">
+        <div className="note-detail-card-deck" aria-label="차록 상세 콘텐츠">
 
           {/* ── 카드 1: 차 정보 + 노트 ── */}
           <section
             className="note-detail-hero note-detail-photo-card flex flex-col px-4 pb-5 pt-4"
-            {...getPhotoCardProps(cardMeta.findIndex((c) => c.id === 'hero'))}
+            ref={cardRef}
+            {...getPhotoCardProps()}
           >
 
             {/* 상단: 작성자 + 공개여부 + 날짜 */}
@@ -358,12 +348,12 @@ export function NoteDetail() {
               <button
                 type="button"
                 onClick={() => navigate(`/user/${note.userId}`)}
-                className="text-xs font-medium text-muted-foreground hover:text-primary cursor-pointer transition-colors"
+                data-note-image="author" className="text-xs font-medium text-muted-foreground hover:text-primary cursor-pointer transition-colors"
               >
                 {note.userName}
               </button>
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                <span>{dateYear}.{String(dateMonth).padStart(2, '0')}.{String(dateDay).padStart(2, '0')}</span>
+                <span data-note-image="date">{dateYear}.{String(dateMonth).padStart(2, '0')}.{String(dateDay).padStart(2, '0')}</span>
                 <button
                   type="button"
                   onClick={isMyNote ? handleTogglePublic : undefined}
@@ -394,14 +384,14 @@ export function NoteDetail() {
                     onClick={() => navigate(`/tea/${tea.id}`)}
                     className="text-left"
                   >
-                    <h2 className="note-detail-tea-title font-title text-xl font-bold text-foreground leading-tight">{tea.name}</h2>
+                    <h2 data-note-image="title" className="note-detail-tea-title font-title text-xl font-bold text-foreground leading-tight">{tea.name}</h2>
                   </button>
                 ) : (
-                  <h2 className="note-detail-tea-title font-title text-xl font-bold text-foreground leading-tight">차록</h2>
+                  <h2 data-note-image="title" className="note-detail-tea-title font-title text-xl font-bold text-foreground leading-tight">{note.teaName || '차록'}</h2>
                 )}
               </div>
               {note.overallRating !== null && (
-                <div className="shrink-0 flex items-center gap-1 text-foreground">
+                <div data-note-image="rating" className="shrink-0 flex items-center gap-1 text-foreground">
                   <Star className="h-4 w-4 fill-rating text-rating" />
                   <span className="text-lg font-bold">{Number(note.overallRating).toFixed(1)}</span>
                   <span className="text-xs text-muted-foreground">/ 5</span>
@@ -410,7 +400,7 @@ export function NoteDetail() {
             </div>
 
             {/* 차 메타 */}
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div data-note-image="meta" className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
               {tea?.type && <TeaTypeBadge type={tea.type} />}
               {tea?.year && <span>{tea.year}년</span>}
               {tea?.seller && (
@@ -421,7 +411,7 @@ export function NoteDetail() {
             </div>
 
             {/* 칩 레일: 날씨 / 수색 / 가격 / 무게 */}
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <div data-note-image="chips" className="mt-3 flex flex-wrap gap-1.5">
               {weather && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">
                   {weather.emoji} {weather.label}
@@ -507,36 +497,10 @@ export function NoteDetail() {
               </div>
             )}
 
-            {isMyNote && !isAuthLoading && (
-              <div className="note-detail-owner-actions mt-auto flex justify-end gap-2 pt-4">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/note/${noteId}/edit`)}
-                  className="note-detail-owner-action"
-                  aria-label="수정"
-                  title="수정"
-                >
-                  <Edit className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="note-detail-owner-action note-detail-owner-action--danger"
-                  aria-label="삭제"
-                  title="삭제"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-
-          </section>
-
-          {/* ── 카드 2: PROFILE (향미 그래프 + 태그) ── */}
+          {/* 감각 프로필도 같은 카드 안에서 표시 */}
           {hasProfileCard && (
             <section
-              className="note-detail-profile-card note-detail-section note-detail-section-axis note-detail-photo-card space-y-3 px-5 pt-4 pb-5"
-              {...getPhotoCardProps(cardMeta.findIndex((c) => c.id === 'profile'))}
+              className="note-detail-profile-card note-detail-section note-detail-section-axis space-y-3 mt-6 pt-4"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -606,25 +570,35 @@ export function NoteDetail() {
               )}
 
               {weather?.teaComment && (
-                <p className="pt-1 text-xs italic leading-relaxed text-muted-foreground">&ldquo;{weather.teaComment}&rdquo;</p>
+                <p data-note-image="weather" className="pt-1 text-xs italic leading-relaxed text-muted-foreground">&ldquo;{weather.teaComment}&rdquo;</p>
               )}
             </section>
           )}
-        </div>
+            {isMyNote && !isAuthLoading && (
+              <div className="note-detail-owner-actions mt-auto flex justify-end gap-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/note/${noteId}/edit`)}
+                  className="note-detail-owner-action"
+                  aria-label="수정"
+                  title="수정"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="note-detail-owner-action note-detail-owner-action--danger"
+                  aria-label="삭제"
+                  title="삭제"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            )}
 
-        {/* 페이지 인디케이터 */}
-        {cardCount > 1 && (
-          <div className="flex items-center justify-center gap-1.5 py-2 md:hidden" aria-label={`현재 ${currentCardIndex + 1}번째 카드`}>
-            {Array.from({ length: cardCount }).map((_, i) => (
-              <span
-                key={i}
-                className={`h-1.5 rounded-full transition-all duration-200 ${
-                  i === currentCardIndex ? 'w-4 bg-primary' : 'w-1.5 bg-foreground/25'
-                }`}
-              />
-            ))}
-          </div>
-        )}
+          </section>
+        </div>
 
         {/* 액션 독 */}
         {user && (
@@ -648,6 +622,7 @@ export function NoteDetail() {
             </button>
             <button
               type="button"
+              aria-label="링크 공유"
               onClick={() => share(tea?.name ?? '차록', window.location.href)}
               className="flex min-h-[40px] min-w-[40px] items-center justify-center px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -655,6 +630,24 @@ export function NoteDetail() {
             </button>
           </div>
         )}
+
+        <div className="flex justify-center pb-3">
+          <Button variant="ghost" onClick={prepareImage} disabled={imageBusy} className="gap-2">
+            <Share2 className="h-4 w-4" />이미지로 공유
+          </Button>
+        </div>
+        <Dialog open={imageDialog} onOpenChange={setImageDialog}>
+          <DialogContent>
+            <DialogTitle>차록 이미지</DialogTitle>
+            <DialogDescription>이미지를 저장해 인스타그램·X·스레드에 올리거나 앱으로 공유해 보세요.</DialogDescription>
+            {imageBusy && <p role="status">이미지를 만들고 있어요…</p>}
+            {imageUrl && <img src={imageUrl} alt="공유할 차록 카드" className="max-h-[55dvh] w-full object-contain" />}
+            <div className="flex justify-center gap-3">
+              {imageFile && navigator.canShare?.({ files: [imageFile] }) && <Button onClick={shareImage}>앱으로 공유</Button>}
+              {imageUrl && <Button asChild><a href={imageUrl} download={imageFile?.name}>이미지 저장</a></Button>}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* 카드 밖: 수정/삭제/신고 */}
         <div className="mt-3 space-y-2 px-4">
