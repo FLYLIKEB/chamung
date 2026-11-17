@@ -4,6 +4,7 @@ module.exports = {
     {
       name: 'chalog-backend',
       script: './dist/src/main.js',
+      interpreter: '/home/ubuntu/.local/chalog-node22/bin/node',
       instances: 1,
       exec_mode: 'fork',
       cwd: '/home/ubuntu/chalog-backend',

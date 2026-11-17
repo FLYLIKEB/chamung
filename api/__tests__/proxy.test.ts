@@ -52,6 +52,22 @@ describe('Vercel Proxy', () => {
     vi.restoreAllMocks();
   });
 
+  it('forwards binary upload bytes without changing content type', async () => {
+    const bytes = Buffer.from([0, 255, 128, 13, 10, 42]);
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+    globalThis.fetch = fetchMock;
+    const req = createMockReq({ method: 'POST', headers: { 'content-type': 'multipart/form-data; boundary=test' } });
+    req.on.mockImplementation((event: string, callback: (data?: Buffer) => void) => {
+      if (event === 'data') callback(bytes);
+      if (event === 'end') callback();
+      return req;
+    });
+    await handler(req, createMockRes());
+    const options = fetchMock.mock.calls[0][1];
+    expect(Array.from(new Uint8Array(await new Response(options.body).arrayBuffer()))).toEqual(Array.from(bytes));
+    expect(options.headers['Content-Type']).toBe('multipart/form-data; boundary=test');
+  });
+
   describe('CORS', () => {
     it('허용된 Origin에 Access-Control-Allow-Credentials: true를 설정해야 한다', async () => {
       const fetchMock = vi.fn().mockResolvedValue(
