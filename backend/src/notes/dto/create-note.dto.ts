@@ -1,3 +1,4 @@
+import { TeawareSelectionDto } from '../../teaware/dto/teaware.dto';
 import { IsString, IsNumber, Min, Max, IsBoolean, ValidateNested, IsOptional, IsArray, ArrayMaxSize, MaxLength, Matches, registerDecorator, ValidationOptions } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { VALIDATION } from '../../common/constants/validation';
@@ -107,6 +108,13 @@ export class CreateNoteDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'drinkDate는 YYYY-MM-DD 형식이어야 합니다' })
   @Transform(({ value }) => value === null ? null : value)
   drinkDate?: string | null;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(12)
+  @ValidateNested({ each: true })
+  @Type(() => TeawareSelectionDto)
+  teaware?: TeawareSelectionDto[];
 
   @IsBoolean()
   isPublic: boolean;

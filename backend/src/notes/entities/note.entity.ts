@@ -1,3 +1,4 @@
+import { TeawareSnapshot } from '../../teaware/teaware.types';
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Tea } from '../../teas/entities/tea.entity';
@@ -49,6 +50,9 @@ export class Note {
 
   @Column({ type: 'json', nullable: true })
   imageThumbnails: string[] | null;
+
+  @Column({ type: 'json', nullable: true })
+  teaware: TeawareSnapshot[] | null;
 
   @Column({ type: 'date', nullable: true })
   drinkDate: string | null;

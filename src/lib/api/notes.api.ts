@@ -1,4 +1,4 @@
-import { RatingSchema, RatingAxis, Note } from '../../types';
+import { RatingSchema, RatingAxis, Note, TeawareItem } from '../../types';
 import { apiClient } from './client';
 import { ReportReason } from './users.api';
 
@@ -36,6 +36,7 @@ export interface CreateNoteRequest {
     axisId: number;
     value: number;
   }>;
+  teaware?: TeawareItem[];
   memo?: string | null;
   images?: string[] | null;
   imageThumbnails?: string[] | null;

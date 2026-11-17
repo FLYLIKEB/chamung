@@ -184,4 +184,12 @@ describe('TeaSessionsService', () => {
       ).rejects.toThrow(BadRequestException);
     });
   });
+  it('publishes selected teaware through the note ownership validator', async () => {
+    mockTeaSessionsRepository.findOne.mockResolvedValue(mockSession());
+    mockNotesService.create.mockResolvedValue({ id: 50 });
+    const teaware = [{ kind: 'cup' as const, name: '찻잔' }];
+    await expect(service.publish(10, 1, { schemaId: 1, axisValues: [], isPublic: false, teaware })).resolves.toEqual({ noteId: 50 });
+    expect(mockNotesService.create).toHaveBeenCalledWith(10, expect.objectContaining({ teaware }));
+  });
+
 });

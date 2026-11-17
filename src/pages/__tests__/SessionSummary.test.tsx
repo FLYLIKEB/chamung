@@ -1,3 +1,5 @@
+vi.mock('../../lib/api/teaware.api', () => ({ teawareApi: { getAll: vi.fn(() => Promise.resolve([])) } }));
+import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -100,4 +102,16 @@ describe('SessionSummary', () => {
       expect(screen.getByText(/30초/)).toBeInTheDocument();
     });
   });
+});
+
+
+it('다회 기록 발행에 선택한 다구를 포함한다', async () => {
+  vi.mocked(teaSessionsApi.getById).mockResolvedValue(makeSession() as any);
+  vi.mocked(notesApi.getActiveSchemas).mockResolvedValue({ schemas: [{ id: 1, nameKo: '기본' }], pinnedSchemaIds: [1] } as any);
+  vi.mocked(teaSessionsApi.publish).mockResolvedValue({ noteId: 12 });
+  const user = userEvent.setup();
+  renderWithRouter(1);
+  await user.click(await screen.findByRole('button', { name: '개완' }));
+  await user.click(screen.getByRole('button', { name: '노트로 발행' }));
+  await waitFor(() => expect(teaSessionsApi.publish).toHaveBeenCalledWith(1, expect.objectContaining({ teaware: [{ kind: 'gaiwan', name: '개완' }] })));
 });

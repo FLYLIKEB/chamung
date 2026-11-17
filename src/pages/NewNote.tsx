@@ -4,6 +4,7 @@ import { Loader2, CalendarDays } from 'lucide-react';
 import { Header } from '../components/Header';
 import { AxisStarRow } from '../components/AxisStarRow';
 import { AddTemplateModal } from '../components/AddTemplateModal';
+import { TeawareSelector } from '../components/TeawareSelector';
 import { ImageUploader } from '../components/ImageUploader';
 import { TagInput } from '../components/TagInput';
 import { Textarea } from '../components/ui/textarea';
@@ -48,6 +49,8 @@ export function NewNote() {
     setImagesAndThumbnails,
     tags,
     setTags,
+    teaware,
+    setTeaware,
     drinkDate,
     setDrinkDate,
     isPublic,
@@ -180,6 +183,8 @@ export function NewNote() {
               onOpenChange={setAddTemplateOpen}
               onSuccess={handleTemplateAdded}
             />
+
+            <TeawareSelector value={teaware} onChange={setTeaware} allowLibrary={!isSampleMode} />
 
             <section className="bg-card rounded-lg p-4">
               <ImageUploader

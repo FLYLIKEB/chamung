@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { TeawareSelector } from '../components/TeawareSelector';
 import { Header } from '../components/Header';
 import { AxisStarRow } from '../components/AxisStarRow';
 import { StarRating } from '../components/StarRating';
@@ -11,7 +12,7 @@ import { Switch } from '../components/ui/switch';
 import { Label } from '../components/ui/label';
 import { BREW_COLORS } from '../components/BrewColorPicker';
 import { teaSessionsApi, notesApi } from '../lib/api';
-import { TeaSession, TeaSessionSteep, RatingSchema, RatingAxis } from '../types';
+import { TeaSession, TeaSessionSteep, RatingSchema, RatingAxis, TeawareItem } from '../types';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppMode } from '../contexts/AppModeContext';
@@ -34,6 +35,7 @@ export function SessionSummary() {
   const [axisValues, setAxisValues] = useState<Record<number, number>>({});
   const [overallRating, setOverallRating] = useState<number | null>(null);
   const [memo, setMemo] = useState('');
+  const [teaware, setTeaware] = useState<TeawareItem[]>([]);
   const [isPublic, setIsPublic] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
@@ -141,6 +143,7 @@ export function SessionSummary() {
         isRatingIncluded: true,
         axisValues: axisValuesArray,
         memo: memo.trim() || null,
+        teaware,
         isPublic,
       });
 
@@ -296,6 +299,8 @@ export function SessionSummary() {
             </div>
           </section>
         )}
+
+        <TeawareSelector value={teaware} onChange={setTeaware} />
 
         {/* 메모 */}
         <section className="bg-card rounded-lg p-4">

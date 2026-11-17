@@ -1,3 +1,4 @@
+import { TeawareService } from '../teaware/teaware.service';
 import { Injectable, NotFoundException, ForbiddenException, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, In, DataSource, QueryFailedError } from 'typeorm';
@@ -55,6 +56,7 @@ export class NotesService {
     private s3Service: S3Service,
     private followsService: FollowsService,
     private notificationsService: NotificationsService,
+    private teawareService: TeawareService,
   ) {}
 
   async create(userId: number, createNoteDto: CreateNoteDto): Promise<Note> {
@@ -92,6 +94,7 @@ export class NotesService {
 
     const note = this.notesRepository.create({
       ...noteData,
+      teaware: createNoteDto.teaware == null ? null : await this.teawareService.snapshots(userId, createNoteDto.teaware),
       teaId: tea.id,
       schemaId: primarySchemaId,
       userId,
@@ -352,6 +355,11 @@ export class NotesService {
       ...noteData
     } = updateNoteDto as any;
     const previousTeaId = note.teaId;
+
+    if (noteData.teaware !== undefined) {
+      noteData.teaware = noteData.teaware === null ? null : await this.teawareService.snapshots(userId, noteData.teaware, note.teaware ?? []);
+    }
+
 
     if (requestedTeaId !== undefined && requestedTeaId !== note.teaId) {
       const tea = await this.teasService.findOne(requestedTeaId);
