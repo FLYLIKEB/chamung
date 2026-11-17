@@ -28,7 +28,7 @@ Header, mobile BottomNav and desktop sidebar use a solid 4px #293619 outer outli
 Preserve accessible names, keyboard focus and aria-current. Navigation touch targets are at least 44px high. Active labels have an underline as well as color contrast. Retain readable labels beside or below icons.
 
 ## Responsive behavior
-Below md: floating top and bottom bars with side margins and safe-area offsets. At md and above: retain a floating left navigation, 140px wide, with header starting to its right. Preserve content spacer tokens. Note detail uses natural-height panels: swipe between overview and profile on mobile, and show both side by side at md and above.
+Below md: floating top and bottom bars with side margins and safe-area offsets. At md and above: retain a floating left navigation, 140px wide, with header starting to its right. Preserve content spacer tokens. Note detail combines tea information, full memo and sensory profile into one natural-height card, at most 48rem wide. Image sharing previews a readable PNG with all text and sensory ratings; save is always available, file sharing uses the device share sheet when supported.
 
 ## Interaction states
 Existing notification counts, signed-out login routes and active destination handling remain. Opaque bars prevent scrolling content from showing through.

@@ -29,7 +29,7 @@ describe('pixel theme behavior contracts', () => {
       rule.walkDecls((decl) => { values.set(decl.prop, decl.value); });
       declarations.set(rule.selector, values);
     });
-    expect(declarations.get('.note-detail-card-deck')?.get('overflow-x')).toBe('auto');
+    expect(declarations.get('.note-detail-card-deck')?.get('display')).toBe('block');
     expect(declarations.get('.note-detail-card-deck > *')?.has('height')).toBe(false);
     expect(declarations.get('.note-detail-card-deck > *')?.has('aspect-ratio')).toBe(false);
     expect(declarations.get('.note-detail-card-deck > *')?.get('overflow-y')).not.toBe('hidden');

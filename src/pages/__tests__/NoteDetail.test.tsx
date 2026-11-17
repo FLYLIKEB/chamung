@@ -4,7 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { NoteDetail } from '../NoteDetail';
 import { MemoryRouter } from 'react-router-dom';
 import { notesApi } from '../../lib/api';
+import { createNoteImage } from '../../lib/noteImage';
 import { Note } from '../../types';
+
+vi.mock('../../lib/noteImage', () => ({ createNoteImage: vi.fn() }));
 
 const mockNavigate = vi.fn();
 
@@ -69,6 +72,27 @@ describe('NoteDetail - 카드 사진 배경', () => {
     vi.mocked(notesApi.getById).mockResolvedValue(mockNote);
   });
 
+  it('이미지를 미리 본 뒤 PNG 저장과 파일 공유를 제공한다', async () => {
+    const file = new File(['png'], '차록-1.png', { type: 'image/png' });
+    vi.mocked(createNoteImage).mockResolvedValue(file);
+    const revoke = vi.fn();
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:note'), revokeObjectURL: revoke }));
+    const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+    const user = userEvent.setup();
+    const { unmount } = render(<MemoryRouter><NoteDetail /></MemoryRouter>);
+    await user.click(await screen.findByRole('button', { name: '이미지로 공유' }));
+    expect(await screen.findByAltText('공유할 차록 카드')).toHaveAttribute('src', 'blob:note');
+    expect(screen.getByRole('link', { name: '이미지 저장' })).toHaveAttribute('download', '차록-1.png');
+    await user.click(screen.getByRole('button', { name: '앱으로 공유' }));
+    expect(share).toHaveBeenCalledWith({ files: [file] });
+    unmount();
+    expect(revoke).toHaveBeenCalledWith('blob:note');
+    delete (navigator as { share?: unknown }).share;
+    delete (navigator as { canShare?: unknown }).canShare;
+  });
+
   it('공개 차록에는 고유 제목과 설명을 제공하고 비공개 차록은 검색에서 제외한다', async () => {
     const { unmount } = render(<MemoryRouter initialEntries={['/note/1']}><NoteDetail /></MemoryRouter>);
     await waitFor(() => expect(document.title).toBe('테스트 차 차록 | 차멍'));
@@ -82,13 +106,14 @@ describe('NoteDetail - 카드 사진 배경', () => {
     expect(document.title).toBe('차록 | 차멍');
   });
 
-  it('차 정보와 전체 노트를 첫 페이지에 통합하고 프로필만 별도로 표시한다', async () => {
+  it('차 정보와 전체 노트를 첫 페이지에 통합하고 감각 프로필도 한 카드에 표시한다', async () => {
     const memo = '첫 향은 은은합니다.\n' + '긴 여운이 남습니다. '.repeat(15);
     vi.mocked(notesApi.getById).mockResolvedValue({ ...mockNote, memo });
     const { container } = render(<MemoryRouter><NoteDetail /></MemoryRouter>);
     await screen.findByRole('button', { name: /사진/i });
     const deck = screen.getByLabelText('차록 상세 콘텐츠');
-    expect(deck.children).toHaveLength(2);
+    expect(deck.children).toHaveLength(1);
+    expect(within(deck.children[0] as HTMLElement).getByText("감각 프로필")).toBeInTheDocument();
     const first = deck.children[0] as HTMLElement;
     expect(first.querySelector('.note-detail-prose')?.textContent).toBe(memo.trim());
     expect(within(first).getByText('테스트 사용자')).toBeInTheDocument();
@@ -117,8 +142,7 @@ describe('NoteDetail - 카드 사진 배경', () => {
     const cards = document.querySelectorAll<HTMLElement>('.note-detail-photo-card');
     expect(cards[0]).toHaveAttribute('data-has-photo', 'true');
     expect(cards[0].style.getPropertyValue('--note-card-photo')).toContain('image1.jpg');
-    expect(cards[1]).toHaveAttribute('data-has-photo', 'true');
-    expect(cards[1].style.getPropertyValue('--note-card-photo')).toContain('image2.jpg');
+    expect(cards).toHaveLength(1);
   });
 
   it('사진이 한 장이면 첫 카드에만 사진 배경을 배정해야 함', async () => {
@@ -137,7 +161,7 @@ describe('NoteDetail - 카드 사진 배경', () => {
     const cards = document.querySelectorAll<HTMLElement>('.note-detail-photo-card');
     expect(cards[0]).toHaveAttribute('data-has-photo', 'true');
     expect(cards[0].style.getPropertyValue('--note-card-photo')).toContain('only.jpg');
-    expect(cards[1]).not.toHaveAttribute('data-has-photo');
+    expect(cards).toHaveLength(1);
   });
 
   it('사진 목록은 사진 버튼을 눌렀을 때만 보여야 함', async () => {
@@ -193,7 +217,7 @@ describe('NoteDetail - 카드 사진 배경', () => {
     const profileTitle = await screen.findByText('감각 프로필');
     const profileCard = profileTitle.closest('section');
     expect(profileCard).toHaveClass('note-detail-profile-card');
-    expect(profileCard).toHaveClass('note-detail-photo-card');
+    expect(profileCard?.closest('.note-detail-hero')).toBeInTheDocument();
     for (const tag of tags) {
       expect(within(profileCard as HTMLElement).getByRole('link', { name: tag }))
         .toHaveAttribute('href', `/tag/${encodeURIComponent(tag)}`);
