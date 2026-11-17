@@ -81,6 +81,36 @@ describe('PostCard 컴포넌트', () => {
     expect(screen.getByText('어떻게 우리면 좋을까요?')).toBeInTheDocument();
   });
 
+  it('미리보기에서 마크다운 문법 대신 본문과 줄바꿈을 표시한다', () => {
+    const content = '# 차 이야기\n\n**첫 줄**\n둘째 줄\n\n[찻집](https://example.com)과 ~~쓴맛~~';
+    const { container } = renderWithRouter(<PostCard post={{ ...mockPost, content }} />, { route: '/chadam' });
+    const preview = container.querySelector('.post-card-content-preview')!;
+    expect(preview.textContent).toContain('첫 줄\n둘째 줄');
+    expect(preview.textContent).toContain('찻집과 쓴맛');
+    expect(preview.textContent).not.toMatch(/\*\*|~~|# 차|https:\/\/example/);
+    expect(preview).toHaveClass('whitespace-pre-line', 'line-clamp-2');
+    expect(preview.querySelector('a')).toBeNull();
+    fireEvent.click(screen.getByText('찻집'));
+    expect(mockNavigate).toHaveBeenCalledWith('/chadam/1');
+  });
+
+  it('제목 없는 고정 글에도 마크다운 미리보기를 적용한다', () => {
+    const { container } = renderWithRouter(<PostCard post={{ ...mockPost, title: '', isPinned: true, content: '**공지**\n다음 줄' }} />, { route: '/chadam' });
+    const preview = container.querySelector('.post-card-content-preview')!;
+    expect(preview.textContent).toBe('공지\n다음 줄');
+    expect(preview).toHaveClass('line-clamp-1');
+  });
+
+  it('미리보기의 이미지와 HTML 및 체크박스는 별도 동작을 만들지 않는다', () => {
+    const content = '![찻잔](https://example.com/image.png)\n\n- [x] 시음 완료\n\n<script>alert(1)</script>';
+    const { container } = renderWithRouter(<PostCard post={{ ...mockPost, content }} />, { route: '/chadam' });
+    const preview = container.querySelector('.post-card-content-preview')!;
+    expect(preview.textContent).toContain('찻잔');
+    expect(preview.textContent).toContain('시음 완료');
+    expect(preview.querySelector('img, input, script')).toBeNull();
+    expect(preview.textContent).not.toContain('alert(1)');
+  });
+
   it('카테고리 뱃지를 표시한다', () => {
     renderWithRouter(<PostCard post={mockPost} />, { route: '/chadam' });
     expect(screen.getByText('#우림 질문')).toBeInTheDocument();
