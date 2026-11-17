@@ -192,6 +192,7 @@ export class TeaSessionsService {
       memo,
       isPublic: dto.isPublic,
       tags: dto.tags,
+      teaware: dto.teaware,
     };
 
     const note = await this.notesService.create(userId, createNoteDto);

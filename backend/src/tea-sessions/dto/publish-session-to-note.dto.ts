@@ -1,3 +1,5 @@
+import { ArrayMaxSize } from 'class-validator';
+import { TeawareSelectionDto } from '../../teaware/dto/teaware.dto';
 import {
   IsNumber,
   Min,
@@ -48,6 +50,13 @@ export class PublishSessionToNoteDto {
   @IsArray({ message: 'tags must be an array' })
   @IsString({ each: true, message: 'each tag must be a string' })
   tags?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(12)
+  @ValidateNested({ each: true })
+  @Type(() => TeawareSelectionDto)
+  teaware?: TeawareSelectionDto[];
 
   @IsBoolean()
   isPublic: boolean;

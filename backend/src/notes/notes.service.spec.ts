@@ -1,3 +1,4 @@
+import { TeawareService } from '../teaware/teaware.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
@@ -43,6 +44,8 @@ describe('NotesService', () => {
     getMany: jest.fn(),
     getRawOne: jest.fn(),
   };
+
+  const mockTeawareService = { snapshots: jest.fn(async (_userId, items) => items) };
 
   const mockNotesRepository = {
     create: jest.fn(),
@@ -167,6 +170,7 @@ describe('NotesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NotesService,
+        { provide: TeawareService, useValue: mockTeawareService },
         {
           provide: getRepositoryToken(Note),
           useValue: mockNotesRepository,
@@ -404,6 +408,13 @@ describe('NotesService', () => {
       mockNoteSchemaRepository.save.mockResolvedValue([]);
     });
 
+    it('creates canonical teaware snapshots', async () => {
+      const selected = [{ kind: 'gaiwan' as const, name: '개완' }];
+      await service.create(userId, { ...createNoteDto, teaware: selected });
+      expect(mockTeawareService.snapshots).toHaveBeenCalledWith(userId, selected);
+      expect(mockNotesRepository.create).toHaveBeenCalledWith(expect.objectContaining({ teaware: selected }));
+    });
+
     it('스키마와 축 값을 포함한 노트를 생성해야 함', async () => {
       const result = await service.create(userId, createNoteDto);
 
@@ -510,6 +521,15 @@ describe('NotesService', () => {
       mockNoteSchemaRepository.delete.mockResolvedValue({ affected: 1 } as any);
       mockNoteSchemaRepository.create.mockImplementation((o: any) => o);
       mockNoteSchemaRepository.save.mockResolvedValue([]);
+    });
+
+    it('clears teaware explicitly while an omitted field preserves snapshots', async () => {
+      await service.update(noteId, userId, { teaware: [] });
+      expect(mockTeawareService.snapshots).toHaveBeenCalledWith(userId, [], []);
+      expect(mockNotesRepository.save).toHaveBeenCalledWith(expect.objectContaining({ teaware: [] }));
+      mockTeawareService.snapshots.mockClear();
+      await service.update(noteId, userId, { memo: '다른 메모' });
+      expect(mockTeawareService.snapshots).not.toHaveBeenCalled();
     });
 
     it('축 값을 업데이트해야 함', async () => {

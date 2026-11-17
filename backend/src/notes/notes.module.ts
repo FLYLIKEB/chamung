@@ -1,3 +1,4 @@
+import { TeawareModule } from '../teaware/teaware.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotesService } from './notes.service';
@@ -24,6 +25,7 @@ import { EmailVerifiedGuard } from '../auth/guards/email-verified.guard';
   imports: [
     TypeOrmModule.forFeature([Note, Tag, NoteTag, NoteLike, NoteBookmark, RatingSchema, RatingAxis, NoteAxisValue, NoteSchema, TagFollow, UserSchemaPin]),
     TeasModule,
+    TeawareModule,
     StorageModule,
     FollowsModule,
     NotificationsModule,
