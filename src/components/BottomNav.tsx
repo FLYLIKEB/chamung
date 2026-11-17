@@ -4,7 +4,6 @@ import { Home, MessageSquare, Package } from 'lucide-react';
 import { cn } from './ui/utils';
 import { useAuth } from '../contexts/AuthContext';
 import { ChaLogLogo } from './ChaLogLogo';
-import { LIQUID_GLASS } from '../constants/liquidGlass';
 
 type NavItemDef = {
   label: string;
@@ -35,18 +34,17 @@ const NAV_ITEMS: NavItemDef[] = [
 ];
 
 const MOBILE_BOTTOM_NAV_CLASS = cn(
-  'app-bottom-nav app-bottom-nav-mobile fixed left-6 right-6 z-60 rounded-[1.5rem] px-1.5 py-1',
-  'bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around md:hidden',
-  LIQUID_GLASS.surface,
+  'app-bottom-nav app-bottom-nav-mobile fixed inset-x-0 bottom-0 z-60 px-4 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))]',
+  'flex items-center justify-around md:hidden',
 );
 
 function navItemClass(direction: NavDirection, isActive: boolean) {
   return cn(
     'flex items-center justify-center gap-1 transition-colors duration-200',
     direction === 'horizontal'
-      ? 'min-h-[40px] min-w-[44px] flex-col rounded-xl px-0.5'
-      : 'min-h-[40px] w-full px-3 py-2 rounded-none flex-row gap-3',
-    isActive ? 'text-primary' : 'text-muted-foreground',
+      ? 'min-h-14 min-w-11 flex-1 flex-col px-2'
+      : 'min-h-11 w-full px-3 py-2 flex-row gap-3',
+    isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
   );
 }
 
@@ -110,6 +108,7 @@ function ProfileButton({
       onClick={onClick}
       className={navItemClass(direction, isActive)}
       aria-label="내 차록"
+      aria-current={isActive ? 'page' : undefined}
     >
       <div className="w-6 h-6 rounded-full overflow-hidden">
         {user?.profileImageUrl ? (
@@ -170,10 +169,10 @@ export function BottomNav({ className, ...rest }: BottomNavProps) {
       {/* Desktop: vertical floating bar */}
       <nav
         className={cn(
-          'app-bottom-nav hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 z-50',
-          'flex-col items-center gap-1 p-2',
+          'app-bottom-nav app-side-nav hidden md:flex fixed left-0 top-0 bottom-0 z-50',
+          'flex-col items-center justify-center gap-1 p-3',
           'bg-background border-0 rounded-none shadow-none',
-          'w-[140px]',
+          'w-[160px]',
         )}
       >
         {/* Logo */}

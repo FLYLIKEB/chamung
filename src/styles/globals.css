@@ -144,7 +144,7 @@
 }
 
 /* Shared chrome. No blanket overrides of Tailwind color or button variants. */
-.pixel-surface, .app-bottom-nav {
+.pixel-surface {
   border: 1px solid var(--border);
   border-radius: var(--card-radius);
   background: var(--card);
@@ -159,9 +159,18 @@
 }
 .pixel-control:hover { background: var(--accent); }
 .pixel-fab { background: var(--card); color: var(--foreground); }
-.app-bottom-nav button[aria-current='page'] {
-  background: var(--primary);
-  color: var(--primary-foreground);
+.app-header, .app-bottom-nav {
+  background: var(--background);
+  color: var(--foreground);
+}
+.app-header { border-bottom: 1px solid color-mix(in srgb, var(--border) 35%, transparent); }
+.app-bottom-nav-mobile { border-top: 1px solid color-mix(in srgb, var(--border) 35%, transparent); }
+.app-side-nav { border-right: 1px solid color-mix(in srgb, var(--border) 25%, transparent); }
+.app-bottom-nav button[aria-current='page'] { color: var(--foreground); }
+.app-bottom-nav button[aria-current='page'] > span {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  text-decoration-thickness: 1px;
 }
 .app-bottom-nav button[aria-current='page'] :is(svg, span) { color: inherit; }
 .auth-page { background: var(--background); }
