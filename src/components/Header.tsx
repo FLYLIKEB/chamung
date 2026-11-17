@@ -11,13 +11,13 @@ interface HeaderProps {
   onTitleClick?: () => void;
   showProfile?: boolean;
   showLogo?: boolean;
-  /** Retained for callers; shared chrome now uses one opaque pixel surface. */
+  /** Retained for callers; shared chrome uses an opaque background. */
   tone?: 'default' | 'glassDark';
   /** Retained for callers; navigation remains visible while scrolling. */
   hideWhenCollapsed?: boolean;
 }
 
-const iconButton = 'flex h-11 w-11 shrink-0 items-center justify-center text-foreground hover:bg-accent';
+const iconButton = 'flex h-11 w-11 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground transition-colors';
 const iconSize = 'h-4.5 w-4.5';
 
 export function Header({ title, showBack, onBack, onTitleClick, showProfile, showLogo }: HeaderProps) {
@@ -27,8 +27,8 @@ export function Header({ title, showBack, onBack, onTitleClick, showProfile, sho
 
   return (
     <>
-      <header className="pixel-surface fixed top-[calc(0.35rem+env(safe-area-inset-top,0px))] left-4 right-4 z-100 md:left-[176px]">
-        <div className="mx-auto flex h-12 max-w-6xl items-center gap-2 px-2 sm:px-4">
+      <header className="app-header fixed top-0 left-0 right-0 z-100 pt-[env(safe-area-inset-top,0px)] md:left-[160px]">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:px-6">
           {showBack && <button type="button" onClick={() => onBack ? onBack() : navigate(-1)} className={iconButton} aria-label="뒤로"><ChevronLeft className={iconSize} /></button>}
           <div className="flex min-w-0 flex-1 items-center gap-2">
             {(showLogo || (!title && !showBack)) && (
