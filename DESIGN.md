@@ -19,10 +19,10 @@ Header: home/back/title, search, notifications, settings/login. Navigation: home
 Content takes priority. Navigation floats with space around its edges; background color establishes boundaries. Selection uses foreground contrast and a short label underline.
 
 ## Visual language
-Reuse existing green card backgrounds, ivory foreground and muted text tokens. No borders, separator lines, shadows, blur, gradients or enclosing navigation boxes. Keep existing fonts and icons.
+Reuse existing green card backgrounds, ivory foreground and muted text tokens. Floating controls use a solid 4px #293619 outer outline; avoid bright borders, separator lines, blurred shadows, blur and gradients. Keep existing fonts and icons.
 
 ## Components
-Header, mobile BottomNav and desktop sidebar have no borders, separators or shadows. PersonalizedHero and its write action have transparent backgrounds and no borders. Shared buttons and other pixel surfaces remain independent.
+Header, mobile BottomNav and desktop sidebar use a solid 4px #293619 outer outline to separate overlapping content. PersonalizedHero and its write action have transparent backgrounds and no borders. Shared buttons and other pixel surfaces remain independent.
 
 ## Accessibility
 Preserve accessible names, keyboard focus and aria-current. Navigation touch targets are at least 44px high. Active labels have an underline as well as color contrast. Retain readable labels beside or below icons.
