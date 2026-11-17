@@ -436,9 +436,8 @@ export function NoteDetail() {
 
             {hasStoryContent && (
               <div className="note-detail-story-content mt-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">NOTE</p>
-                  {note.images && note.images.length > 0 && (
+                {note.images && note.images.length > 0 && (
+                  <div className="mb-3 flex justify-end">
                     <button
                       type="button"
                       onClick={() => setShowStoryPhotos((value) => !value)}
@@ -448,8 +447,8 @@ export function NoteDetail() {
                       사진
                       <ChevronDown className={`h-3 w-3 transition-transform ${showStoryPhotos ? 'rotate-180' : ''}`} />
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
                 {displayMemo && (
                   <div className="note-detail-prose text-[0.92rem] leading-[1.75] text-foreground
                     [&_p]:my-1 [&_p]:whitespace-pre-wrap
@@ -504,7 +503,7 @@ export function NoteDetail() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">PROFILE</p>
+
                   <p className="mt-0.5 text-sm font-medium text-foreground">감각 프로필</p>
                 </div>
                 {note.axisValues && note.axisValues.length > 0 && (
@@ -556,7 +555,7 @@ export function NoteDetail() {
 
               {note.tags && note.tags.length > 0 && (
                 <div className="note-detail-section-tags pt-1">
-                  <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">FLAVOR TRACE</p>
+
                   <div className="flex flex-wrap gap-1.5">
                     {note.tags.map((tag, index) => (
                       <Link key={index} to={`/tag/${encodeURIComponent(tag)}`}>

@@ -357,11 +357,10 @@ export function FlavorProfileCard({ tags, linked = true, className, showHeader =
       {showHeader && (
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">PROFILE</p>
             <p className="mt-0.5 text-sm font-medium text-foreground">향미 프로필</p>
           </div>
           <span className="shrink-0 rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-            {tags.length} tags
+            태그 {tags.length}개
           </span>
         </div>
       )}

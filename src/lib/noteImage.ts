@@ -87,7 +87,7 @@ export async function createNoteImage(card: HTMLElement, filename = '차록.png'
   const chips = field('chips');
   if (chips) { y += 12; text(chips, 28, MUTED); }
   const memo = field('memo', '.note-detail-prose');
-  if (memo) { section('NOTE'); text(memo); }
+  if (memo) { y += 34; text(memo); }
 
   // An eight-column table would become illegible on a social image. Each steep
   // is rendered as a complete labeled record, retaining every cell and newline.
