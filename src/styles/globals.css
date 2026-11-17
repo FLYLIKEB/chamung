@@ -158,7 +158,7 @@
   color: var(--foreground);
 }
 .pixel-control:hover { background: var(--accent); }
-.pixel-fab { background: var(--card); color: var(--foreground); border: 1px solid var(--background); border-radius: var(--card-radius); box-shadow: 0 0 0 4px var(--background); }
+.pixel-fab { background: var(--card); color: var(--foreground); border: 1px solid #293619; border-radius: var(--card-radius); box-shadow: 0 0 0 4px #293619; }
 .app-header, .app-bottom-nav {
   background: var(--card);
   border-radius: var(--card-radius);
