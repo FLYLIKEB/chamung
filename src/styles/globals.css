@@ -164,7 +164,7 @@
   border-radius: var(--card-radius);
   color: var(--foreground);
   border: 0;
-  box-shadow: none;
+  box-shadow: 0 0 0 4px #293619;
 }
 .app-bottom-nav button[aria-current='page'] { color: var(--foreground); }
 .app-bottom-nav button[aria-current='page'] > span {
