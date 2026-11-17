@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { NoteCard } from '../NoteCard';
@@ -56,7 +56,7 @@ describe('NoteCard - 그리드 카드', () => {
     const preview = container.querySelector('.note-card-memo-preview');
     expect(preview?.textContent).toBe(memo);
     expect(preview).toHaveClass('line-clamp-4');
-    expect(screen.getAllByRole('button')[0]).toHaveClass('min-h-44');
+    expect(screen.getByRole('link')).toHaveClass('min-h-44');
   });
 
   it('차록 글귀의 마크다운을 렌더링하고 줄바꿈을 유지한다', () => {
@@ -89,6 +89,7 @@ describe('NoteCard - 그리드 카드', () => {
   it('다른 사람의 비공개 차록 글귀는 표시하지 않는다', () => {
     render(<MemoryRouter><NoteCard note={{ ...mockNote, userId: 2, isPublic: false, memo: '비공개 글귀' }} /></MemoryRouter>);
     expect(screen.queryByText('비공개 글귀')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
   it('카드와 북마크를 중첩하지 않고 키보드로 각각 실행해야 함', async () => {
@@ -98,13 +99,12 @@ describe('NoteCard - 그리드 카드', () => {
     const { container } = render(
       <MemoryRouter><NoteCard note={mockNote} onBookmarkToggle={onBookmarkToggle} /></MemoryRouter>,
     );
-    expect(container.querySelector('button button')).toBeNull();
-    const card = screen.getAllByRole('button')[0];
+    expect(container.querySelector('button button, a button, a a')).toBeNull();
+    const card = screen.getByRole('link');
     await user.tab();
     expect(card).toHaveFocus();
     await user.keyboard('{Enter}');
-    await user.keyboard(' ');
-    expect(mockNavigate).toHaveBeenCalledTimes(2);
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenLastCalledWith('/note/1');
     mockNavigate.mockClear();
     await user.tab();
@@ -179,6 +179,16 @@ describe('NoteCard - 그리드 카드', () => {
     expect(screen.getByText('테스트 차')).toBeInTheDocument();
   });
 
+  it('공개 차록은 실제 링크를 제공하고 수정 키 클릭을 가로채지 않는다', () => {
+    render(<MemoryRouter><NoteCard note={mockNote} /></MemoryRouter>);
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', '/note/1');
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+    fireEvent(link, event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it('카드를 클릭하면 상세 페이지로 이동해야 함', async () => {
     const user = userEvent.setup();
     render(
@@ -187,7 +197,7 @@ describe('NoteCard - 그리드 카드', () => {
       </MemoryRouter>,
     );
 
-    const card = screen.getAllByRole('button')[0];
+    const card = screen.getByRole('link');
     await user.click(card);
 
     expect(mockNavigate).toHaveBeenCalledWith('/note/1');
@@ -200,7 +210,7 @@ describe('NoteCard - 그리드 카드', () => {
       </MemoryRouter>,
     );
 
-    const card = screen.getAllByRole('button')[0];
+    const card = screen.getByRole('link');
     const stars = card.querySelectorAll('.fill-rating');
     expect(stars.length).toBeGreaterThan(0);
   });

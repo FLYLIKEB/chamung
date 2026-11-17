@@ -1,3 +1,4 @@
+import { SeoMetadata } from './components/SeoMetadata';
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
@@ -227,6 +228,7 @@ export default function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="chalog-theme">
       <AuthProvider>
         <BrowserRouter>
+          <SeoMetadata />
           <AppContent />
           <Toaster
             position="top-center"

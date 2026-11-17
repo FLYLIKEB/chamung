@@ -20,7 +20,9 @@ export const TeaCard: FC<TeaCardProps> = ({ tea }) => {
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <h3 className="truncate font-medium text-foreground">{tea.name}</h3>
+            <h3 className="truncate font-medium text-foreground">
+              <Link to={`/tea/${tea.id}`} onClick={(event) => event.stopPropagation()}>{tea.name}</Link>
+            </h3>
             {tea.type && <TeaTypeBadge type={tea.type} className="shrink-0" />}
           </div>
           <p className="text-xs text-muted-foreground mt-1.5 truncate whitespace-nowrap">

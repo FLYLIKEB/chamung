@@ -1,3 +1,5 @@
+import { usePageMetadata } from '../components/SeoMetadata';
+import { plainDescription } from '../lib/seo';
 import { MarkdownPreview } from '../components/MarkdownPreview';
 import React, { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -161,6 +163,12 @@ export function NoteDetail() {
       .catch(() => {});
     return () => { ignore = true; };
   }, [weatherDateStr]);
+
+  usePageMetadata(isLoading ? null : {
+    title: note?.isPublic ? `${tea?.name || note.teaName || '차'} 차록 | 차멍` : '차록 | 차멍',
+    description: note?.isPublic ? plainDescription(note.memo) || `${tea?.name || note.teaName || '차'}의 향과 맛을 기록한 차록입니다.` : undefined,
+    noindex: !note?.isPublic,
+  });
 
   const { sessionMemoTable, displayMemo } = useMemo(() => {
     const table = parseSessionMemoTable(note?.memo);

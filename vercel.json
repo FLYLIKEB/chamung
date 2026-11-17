@@ -4,6 +4,14 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/sitemaps/:kind.xml",
+      "destination": "/api/sitemap?kind=:kind"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/proxy?path=$1"
     },
@@ -13,6 +21,43 @@
     }
   ],
   "cleanUrls": false,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/:path(login|register|forgot-password|reset-password|verify-email|find-email|onboarding|settings|notifications|my-notes|saved|calendar|sessions|report|tags|templates)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/:path(admin|session|blind|cellar)/:rest*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/:section(tea|note|chadam|teahouse)/new",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/:section(tea|note|chadam|teahouse)/:id/edit",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    }
+  ]
 }
-

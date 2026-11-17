@@ -69,6 +69,19 @@ describe('NoteDetail - 카드 사진 배경', () => {
     vi.mocked(notesApi.getById).mockResolvedValue(mockNote);
   });
 
+  it('공개 차록에는 고유 제목과 설명을 제공하고 비공개 차록은 검색에서 제외한다', async () => {
+    const { unmount } = render(<MemoryRouter initialEntries={['/note/1']}><NoteDetail /></MemoryRouter>);
+    await waitFor(() => expect(document.title).toBe('테스트 차 차록 | 차멍'));
+    expect(document.querySelector('meta[name="description"]')).toHaveAttribute('content', '테스트 메모');
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute('href', 'https://www.chamung.com/note/1');
+    unmount();
+    vi.mocked(notesApi.getById).mockResolvedValue({ ...mockNote, isPublic: false, memo: '공개하면 안 되는 메모' });
+    render(<MemoryRouter initialEntries={['/note/1']}><NoteDetail /></MemoryRouter>);
+    await waitFor(() => expect(document.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex, follow'));
+    expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).not.toContain('공개하면 안 되는 메모');
+    expect(document.title).toBe('차록 | 차멍');
+  });
+
   it('차 정보와 전체 노트를 첫 페이지에 통합하고 프로필만 별도로 표시한다', async () => {
     const memo = '첫 향은 은은합니다.\n' + '긴 여운이 남습니다. '.repeat(15);
     vi.mocked(notesApi.getById).mockResolvedValue({ ...mockNote, memo });

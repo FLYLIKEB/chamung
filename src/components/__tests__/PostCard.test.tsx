@@ -74,6 +74,17 @@ describe('PostCard 컴포넌트', () => {
 
   afterEach(() => { vi.clearAllMocks(); });
 
+  it.each([false, true])('공개 글은 고정 여부(%s)와 관계없이 실제 상세 링크를 제공한다', (isPinned) => {
+    const { container } = renderWithRouter(<PostCard post={{ ...mockPost, isPinned }} />, { route: '/chadam' });
+    const link = screen.getByRole('link', { name: /우림 질문입니다/ });
+    expect(link).toHaveAttribute('href', '/chadam/1');
+    expect(container.querySelector('a button, a a')).toBeNull();
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true });
+    fireEvent(link, event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it('제목과 내용을 표시한다', () => {
     renderWithRouter(<PostCard post={mockPost} />, { route: '/chadam' });
 
