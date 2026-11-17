@@ -52,7 +52,7 @@ vi.mock('../../lib/api', () => ({
     getPopularRankings: vi.fn(() => Promise.resolve(mockTeas)),
     getNewRankings: vi.fn(() => Promise.resolve(mockTeas)),
     getCuration: vi.fn(() => Promise.resolve(mockTeas)),
-    getSellers: vi.fn(() => Promise.resolve({ sellers: mockSellers })),
+    getSellers: vi.fn((query?: string) => Promise.resolve({ sellers: query ? mockSellers.filter((seller) => seller.name.includes(query)) : mockSellers })),
     getTrending: vi.fn(() => Promise.resolve(mockTeas)),
   },
   tagsApi: {
@@ -254,5 +254,48 @@ describe('탭 토글 제거 + 자동 전환 (#276)', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('explore-section')).not.toBeInTheDocument();
     });
+  });
+});
+
+
+describe('Search request errors', () => {
+  it('reports malformed category responses instead of an empty result', async () => {
+    const { tagsApi } = await import('../../lib/api');
+    vi.mocked(tagsApi.getPopularTags).mockImplementation(async (limit?: number) => limit === 100 ? null as never : mockPopularTags);
+    const user = userEvent.setup();
+    renderWithRouter(<Search />, { route: '/sasaek' });
+    await user.type(screen.getByPlaceholderText('차 이름, 종류, 구매처로 검색...'), '없는차');
+    expect(await screen.findByRole('alert')).toHaveTextContent('검색 결과를 불러오지 못했습니다.');
+    expect(screen.queryByText('검색 결과가 없어요.')).not.toBeInTheDocument();
+  });
+  it('shows a retry instead of an empty tea result when search fails', async () => {
+    const { teasApi } = await import('../../lib/api');
+    vi.mocked(teasApi.getAll).mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce([]);
+    const user = userEvent.setup();
+    renderWithRouter(<Search />, { route: '/sasaek' });
+    await user.click(screen.getByRole('button', { name: '차' }));
+    await user.type(screen.getByPlaceholderText('차 이름, 종류, 구매처로 검색...'), '없는차');
+    expect(await screen.findByRole('alert')).toHaveTextContent('차 검색 결과를 불러오지 못했습니다.');
+    expect(screen.queryByText('검색 결과가 없어요.')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '다시 시도' }));
+    expect(await screen.findByText('검색 결과가 없어요.')).toBeInTheDocument();
+  });
+});
+
+describe('Search trending failures', () => {
+  it.each(['reject', 'malformed'])('exposes %s trending failure and retries to a valid empty list', async (failure) => {
+    const { teasApi, usersApi } = await import('../../lib/api');
+    const trending = vi.mocked(teasApi.getTrending);
+    if (failure === 'reject') trending.mockRejectedValueOnce(new Error('offline'));
+    else trending.mockResolvedValueOnce({ unexpected: true } as never);
+    trending.mockResolvedValueOnce([]);
+    vi.mocked(usersApi.getTrending).mockResolvedValue([]);
+    const user = userEvent.setup();
+    renderWithRouter(<Search />, { route: '/sasaek' });
+    expect(await screen.findByRole('alert')).toHaveTextContent('인기 차와 다우 목록을 불러오지 못했습니다.');
+    await user.click(screen.getByRole('button', { name: '인기 목록 다시 시도' }));
+    await waitFor(() => expect(screen.queryByText('인기 차와 다우 목록을 불러오지 못했습니다.')).not.toBeInTheDocument());
+    expect(trending).toHaveBeenCalledTimes(2);
+    expect(screen.queryByText('요즘 인기 차')).not.toBeInTheDocument();
   });
 });

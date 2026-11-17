@@ -5,6 +5,7 @@ import { Search as SearchIcon, Clock, X } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 import { BottomNav } from '../components/BottomNav';
 import { tagsApi, notesApi, cellarApi, teasApi, usersApi } from '../lib/api';
 import { Seller, Note, CellarItem, Tea } from '../types';
@@ -46,7 +47,7 @@ export function Search() {
   const { recentSearches, addSearch, removeSearch, clearAll } = useRecentSearches();
   const filters = useSearchFilters();
   const {
-    filterType, filterMinRating, filterPriceRange, filterSellerName,
+    filterType, filterMinRating,
     filterSort, noteSort, setNoteSort,
     filterOpen, setFilterOpen, activeFilterCount,
     urlTags, hasTagParams, hasFilterParams,
@@ -54,7 +55,7 @@ export function Search() {
   } = filters;
 
   const {
-    teas, isLoading, hasSearched,
+    teas, isLoading, hasSearched, searchError, setSearchError, sectionsError, flavorError,
     setTeas, setIsLoading, setHasSearched,
     search, reset: resetSearch,
     popularTeas, newTeas, curationTeas, sellers,
@@ -67,6 +68,9 @@ export function Search() {
   const [trendingCreators, setTrendingCreators] = useState<Array<{ id: number; name: string; profileImageUrl?: string | null; followerCount: number }>>([]);
   const [searchCategory, setSearchCategory] = useState<SearchCategory>('all');
   const [categoryLoading, setCategoryLoading] = useState(false);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
+  const [allTags, setAllTags] = useState<{ name: string; noteCount: number }[]>([]);
   const [noteResults, setNoteResults] = useState<Note[]>([]);
   const [allNotes, setAllNotes] = useState<Note[]>([]);
   const [sellerResults, setSellerResults] = useState<Seller[]>([]);
@@ -77,89 +81,46 @@ export function Search() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const filterCallbacks = useMemo(
-    () => ({ setTeas, setIsLoading, setHasSearched }),
-    [setTeas, setIsLoading, setHasSearched],
+    () => ({ setTeas, setIsLoading, setHasSearched, setError: setSearchError }),
+    [setTeas, setIsLoading, setHasSearched, setSearchError],
   );
   const urlTagsStr = searchParams.get('tags') ?? '';
 
   useTeaSearchDebounce(searchQuery, search, addSearch, resetSearch);
 
   useEffect(() => {
-    if (searchCategory !== 'note' && searchCategory !== 'tag' && searchCategory !== 'cellar' && searchCategory !== 'all') return;
+    let cancelled = false;
+    setCategoryError(null);
+    if (searchCategory === 'tea') { setCategoryLoading(false); return; }
     setCategoryLoading(true);
-    const q = searchQuery.trim().toLowerCase();
-    if (searchCategory === 'all') {
-      const notesFetch = user?.id
-        ? notesApi.getAll(user.id, undefined, undefined, undefined, undefined, noteSort, 1, 200)
-          .then((data: unknown) => {
-            const notes: Note[] = Array.isArray(data)
-              ? data
-              : (data as { data?: Note[] })?.data ?? (data as { notes?: Note[] })?.notes ?? [];
-            setAllNotes(notes);
-            setNoteResults(q ? notes.filter((n) => n.teaName?.toLowerCase().includes(q) || n.memo?.toLowerCase().includes(q) || n.teaSeller?.toLowerCase().includes(q)) : notes.slice(0, 6));
-          })
-          .catch(() => { setAllNotes([]); setNoteResults([]); })
-        : Promise.resolve();
-      Promise.allSettled([
-        notesFetch,
-        tagsApi.getPopularTags(100)
-          .then((data) => {
-            const tags = Array.isArray(data) ? data : [];
-            setTagResults(q ? tags.filter((t) => t.name?.toLowerCase().includes(q)) : tags.slice(0, 8));
-          })
-          .catch(() => setTagResults([])),
-        cellarApi.getAll()
-          .then((data: unknown) => {
-            const items: CellarItem[] = Array.isArray(data) ? data : [];
-            setAllCellar(items);
-            setCellarResults(q ? items.filter((c) => c.tea?.name?.toLowerCase().includes(q)) : items.slice(0, 4));
-          })
-          .catch(() => { setAllCellar([]); setCellarResults([]); }),
-      ]).finally(() => setCategoryLoading(false));
-    } else if (searchCategory === 'note') {
-      if (!user?.id) { setCategoryLoading(false); return; }
-      notesApi.getAll(user.id, undefined, undefined, undefined, undefined, noteSort, 1, 200)
-        .then((data: unknown) => {
-          const notes: Note[] = Array.isArray(data)
-            ? data
-            : (data as { data?: Note[] })?.data ?? (data as { notes?: Note[] })?.notes ?? [];
-          setAllNotes(notes);
-          setNoteResults(q ? notes.filter((n) => n.teaName?.toLowerCase().includes(q) || n.memo?.toLowerCase().includes(q) || n.teaSeller?.toLowerCase().includes(q)) : notes);
-        })
-        .catch(() => { setAllNotes([]); setNoteResults([]); })
-        .finally(() => setCategoryLoading(false));
-    } else if (searchCategory === 'tag') {
-      tagsApi.getPopularTags(100)
-        .then((data) => {
-          const tags = Array.isArray(data) ? data : [];
-          setTagResults(q ? tags.filter((t) => t.name?.toLowerCase().includes(q)) : tags);
-        })
-        .catch(() => setTagResults([]))
-        .finally(() => setCategoryLoading(false));
-    } else if (searchCategory === 'cellar') {
-      cellarApi.getAll()
-        .then((data: unknown) => {
-          const items: CellarItem[] = Array.isArray(data) ? data : [];
-          setAllCellar(items);
-          setCellarResults(q ? items.filter((c) => c.tea?.name?.toLowerCase().includes(q)) : items);
-        })
-        .catch(() => { setAllCellar([]); setCellarResults([]); })
-        .finally(() => setCategoryLoading(false));
-    }
-  }, [searchCategory, user?.id, noteSort]);
-
-  useEffect(() => {
-    if (searchCategory !== 'seller' && searchCategory !== 'all') return;
-    setCategoryLoading(true);
-    const q = searchQuery.trim();
-    const id = setTimeout(() => {
-      teasApi.getSellers(q || undefined)
-        .then((data) => setSellerResults(data?.sellers ?? []))
-        .catch(() => setSellerResults([]))
-        .finally(() => setCategoryLoading(false));
+    const timer = setTimeout(async () => {
+      const includes = (category: SearchCategory) => searchCategory === 'all' || searchCategory === category;
+      try {
+        const [notesData, tagsData, cellarData, sellersData] = await Promise.all([
+          includes('note') && user?.id
+            ? notesApi.getAll(user.id, undefined, undefined, undefined, undefined, noteSort, 1, 200)
+            : Promise.resolve([]),
+          includes('tag') ? tagsApi.getPopularTags(100) : Promise.resolve([]),
+          includes('cellar') && user?.id ? cellarApi.getAll() : Promise.resolve([]),
+          includes('seller') ? teasApi.getSellers(searchQuery.trim() || undefined) : Promise.resolve({ sellers: [] }),
+        ]);
+        if (cancelled) return;
+        const notes = Array.isArray(notesData) ? notesData : (notesData as { data?: Note[] })?.data;
+        if (!Array.isArray(notes) || !Array.isArray(tagsData) || !Array.isArray(cellarData) || !Array.isArray(sellersData?.sellers)) {
+          throw new Error('Invalid search response');
+        }
+        setAllNotes(notes);
+        setAllTags(tagsData);
+        setAllCellar(cellarData);
+        setSellerResults(sellersData.sellers);
+      } catch {
+        if (!cancelled) setCategoryError('검색 결과를 불러오지 못했습니다.');
+      } finally {
+        if (!cancelled) setCategoryLoading(false);
+      }
     }, SEARCH_DEBOUNCE_DELAY);
-    return () => clearTimeout(id);
-  }, [searchQuery, searchCategory]);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [searchCategory, user?.id, noteSort, searchQuery, retry]);
 
   useEffect(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -187,10 +148,10 @@ export function Search() {
       setCellarResults(searchCategory === 'all' ? filtered.slice(0, 4) : filtered);
     }
     if (searchCategory === 'tag' || searchCategory === 'all') {
-      const filtered = q ? popularTags.filter((t) => t.name?.toLowerCase().includes(q)) : popularTags;
+      const filtered = q ? allTags.filter((t) => t.name?.toLowerCase().includes(q)) : allTags;
       setTagResults(searchCategory === 'all' ? filtered.slice(0, 8) : filtered);
     }
-  }, [searchQuery, searchCategory, allNotes, allCellar, popularTags, filterType, filterMinRating, urlTagsStr, cellarSort]);
+  }, [searchQuery, searchCategory, allNotes, allCellar, allTags, filterType, filterMinRating, urlTagsStr, cellarSort]);
 
   const noteHasFilters = !!(filterType || filterMinRating != null || urlTags.length > 0);
   const cellarHasFilters = !!filterType;
@@ -244,12 +205,12 @@ export function Search() {
       const urlType = searchParams.get('type');
       const urlMinRating = searchParams.get('minRating');
       if (hasTagParams) {
-        fetchWithFilters({ tags: urlTags, sort: urlSort && ['match', 'popular', 'recent'].includes(urlSort) ? urlSort : 'match' }, { setTeas, setIsLoading });
+        fetchWithFilters({ tags: urlTags, sort: urlSort && ['match', 'popular', 'recent'].includes(urlSort) ? urlSort : 'match' }, { setTeas, setIsLoading, setError: setSearchError });
       } else {
-        fetchWithFilters({ q: searchQuery.trim() || undefined, type: urlType || undefined, minRating: urlMinRating ? parseFloat(urlMinRating) : undefined, sort: urlSort || 'popular' }, { setTeas, setIsLoading });
+        fetchWithFilters({ q: searchQuery.trim() || undefined, type: urlType || undefined, minRating: urlMinRating ? parseFloat(urlMinRating) : undefined, sort: urlSort || 'popular' }, { setTeas, setIsLoading, setError: setSearchError });
       }
     }
-  }, [hasFilterParams, hasTagParams, urlTagsStr, searchParams, fetchWithFilters, searchQuery, setTeas, setIsLoading, setHasSearched, urlTags]);
+  }, [hasFilterParams, hasTagParams, urlTagsStr, searchParams, fetchWithFilters, searchQuery, setTeas, setIsLoading, setHasSearched, setSearchError, urlTags, retry]);
 
   useEffect(() => {
     if (!searchQuery.trim() && !hasSearched && !hasFilterParams) {
@@ -257,15 +218,33 @@ export function Search() {
     }
   }, [searchQuery, hasSearched, hasFilterParams, fetchSections]);
 
-  const hasFetchedTrending = useRef(false);
+  const [trendingError, setTrendingError] = useState<string | null>(null);
+  const [trendingLoading, setTrendingLoading] = useState(true);
+  const [trendingRetry, setTrendingRetry] = useState(0);
   useEffect(() => {
-    if (!hasFetchedTrending.current) {
-      hasFetchedTrending.current = true;
-      teasApi.getTrending('7d').then(data => setTrendingTeas(Array.isArray(data) ? data : [])).catch(() => setTrendingTeas([]));
-      usersApi.getTrending('7d').then(data => setTrendingCreators(Array.isArray(data) ? data : [])).catch(() => setTrendingCreators([]));
-    }
-  }, []);
-
+    let cancelled = false;
+    setTrendingError(null);
+    setTrendingLoading(true);
+    const loadTrending = async () => {
+      try {
+        const [teas, creators] = await Promise.all([
+          teasApi.getTrending('7d'),
+          usersApi.getTrending('7d'),
+        ]);
+        if (!Array.isArray(teas) || !Array.isArray(creators)) throw new Error('Invalid trending response');
+        if (!cancelled) {
+          setTrendingTeas(teas);
+          setTrendingCreators(creators);
+        }
+      } catch {
+        if (!cancelled) setTrendingError('인기 차와 다우 목록을 불러오지 못했습니다.');
+      } finally {
+        if (!cancelled) setTrendingLoading(false);
+      }
+    };
+    void loadTrending();
+    return () => { cancelled = true; };
+  }, [trendingRetry]);
 
   const handleApplyFilters = useCallback(() => {
     if (searchCategory === 'tea' || searchCategory === 'all') {
@@ -405,10 +384,6 @@ export function Search() {
             setFilterType={filters.setFilterType}
             filterMinRating={filterMinRating}
             setFilterMinRating={filters.setFilterMinRating}
-            filterPriceRange={filterPriceRange}
-            setFilterPriceRange={filters.setFilterPriceRange}
-            filterSellerName={filterSellerName}
-            setFilterSellerName={filters.setFilterSellerName}
             filterSort={filterSort}
             setFilterSort={filters.setFilterSort}
             noteSort={noteSort}
@@ -423,8 +398,12 @@ export function Search() {
           />
         )}
 
-        {showResults && (
+        {showResults && !user && (searchCategory === 'note' || searchCategory === 'cellar') ? (
+          <div className="space-y-3 py-8 text-center"><p>내 기록을 보려면 로그인해 주세요.</p><Button onClick={() => navigate('/login')}>로그인</Button></div>
+        ) : showResults && (
           <SearchResults
+            error={categoryError || ((searchCategory === 'tea' || searchCategory === 'all') ? searchError : null)}
+            onRetry={() => { setRetry((value) => value + 1); if (!hasFilterParams && (searchCategory === 'tea' || searchCategory === 'all')) void search(searchQuery, addSearch); }}
             searchCategory={searchCategory}
             isLoading={isLoading}
             categoryLoading={categoryLoading}
@@ -440,7 +419,22 @@ export function Search() {
           />
         )}
 
-        {!showResults && searchQuery.trim().length === 0 && (
+        {!showResults && searchQuery.trim().length === 0 && trendingLoading && (
+          <p role="status" className="text-sm text-muted-foreground">인기 목록을 불러오는 중…</p>
+        )}
+        {!showResults && searchQuery.trim().length === 0 && trendingError && (
+          <div role="alert" className="space-y-3 py-4">
+            <p>{trendingError}</p>
+            <Button onClick={() => setTrendingRetry((value) => value + 1)}>인기 목록 다시 시도</Button>
+          </div>
+        )}
+        {!showResults && sectionsError && (
+          <div role="alert" className="space-y-3 py-4"><p>{sectionsError}</p><Button onClick={fetchSections}>다시 시도</Button></div>
+        )}
+        {!showResults && flavorError && (
+          <div role="alert" className="space-y-3"><p>{flavorError}</p><Button onClick={() => selectedFlavorTag && handleFlavorTagClick(selectedFlavorTag)}>향미 선택으로 돌아가기</Button></div>
+        )}
+        {!showResults && !sectionsError && !flavorError && searchQuery.trim().length === 0 && (
           <ExploreSection
             sectionsLoading={sectionsLoading}
             popularTeas={popularTeas}

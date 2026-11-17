@@ -3,15 +3,6 @@ import { vi, describe, it, expect } from 'vitest';
 import { Home } from '../Home';
 import { renderWithRouter } from '../../test/renderWithRouter';
 
-vi.mock('../../contexts/AppModeContext', () => ({
-  useAppMode: () => ({
-    sessionMode: { active: false },
-    blindMode: { active: false },
-    toggleSessionMode: vi.fn(),
-    toggleBlindMode: vi.fn(),
-  }),
-}));
-
 vi.mock('../../lib/api', () => ({
   notesApi: {
     getAll: vi.fn(() => Promise.resolve([])),
@@ -54,9 +45,10 @@ vi.mock('sonner', () => ({
 }));
 
 describe('Home 페이지', () => {
-  it('홈 컴포넌트가 에러 없이 렌더링된다', () => {
-    const { container } = renderWithRouter(<Home />, { route: '/' });
-    expect(container).toBeTruthy();
+  it('공개 피드를 최신으로 표시하고 조회 성공 후 빈 상태를 표시한다', async () => {
+    renderWithRouter(<Home />, { route: '/' });
+    expect(screen.getByRole('tab', { name: '최신' })).toBeInTheDocument();
+    expect(await screen.findByText(/아직 등록된 차록/)).toBeInTheDocument();
   });
 
   it('모드 카드가 표시된다', async () => {

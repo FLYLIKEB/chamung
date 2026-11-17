@@ -64,7 +64,7 @@ database/       # TypeORM 설정
 - `/api` → `http://localhost:3000` (NestJS)
 
 ## 상세 문서
-- 전체 아키텍처: `docs/architecture/Architecture.md`
+- 전체 아키텍처: `docs/architecture/SERVER_ARCHITECTURE.md`
 - 서버 아키텍처: `docs/architecture/SERVER_ARCHITECTURE.md`
 - 환경변수: `docs/configuration/ENVIRONMENT_VARIABLES.md`
 - 배포: `docs/deployment/COMPLETE_DEPLOYMENT_SUMMARY.md`

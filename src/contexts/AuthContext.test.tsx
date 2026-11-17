@@ -33,6 +33,8 @@ describe('AuthProvider initial session check', () => {
     vi.mocked(authApi.logout).mockResolvedValue(undefined);
     vi.mocked(usersApi.getOnboardingPreference).mockResolvedValue({
       hasCompletedOnboarding: true,
+      preferredTeaTypes: [],
+      preferredFlavorTags: [],
     });
   });
 

@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { AppModeProvider } from '../../contexts/AppModeContext';
 import { SessionInProgress } from '../SessionInProgress';
 import { teaSessionsApi } from '../../lib/api';
 
@@ -60,9 +61,11 @@ const makeSession = (overrides: Record<string, unknown> = {}) => ({
 function renderWithRouter(sessionId: number) {
   return render(
     <MemoryRouter initialEntries={[`/session/${sessionId}`]}>
-      <Routes>
-        <Route path="/session/:id" element={<SessionInProgress />} />
-      </Routes>
+      <AppModeProvider>
+        <Routes>
+          <Route path="/session/:id" element={<SessionInProgress />} />
+        </Routes>
+      </AppModeProvider>
     </MemoryRouter>,
   );
 }

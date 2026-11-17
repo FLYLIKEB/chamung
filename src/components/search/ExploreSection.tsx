@@ -35,7 +35,7 @@ function TeaFlatRow({ tea, label }: { tea: Tea; label?: React.ReactNode }) {
     >
       {label && <div className="shrink-0">{label}</div>}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">{tea.name}</p>
+        <p className="font-title text-sm text-foreground truncate">{tea.name}</p>
         {(tea.type || tea.seller) && (
           <p className="text-xs text-muted-foreground mt-0.5 truncate">
             {[tea.type, tea.seller].filter(Boolean).join(' · ')}
@@ -147,7 +147,7 @@ export function ExploreSection({
             )}
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">인기 향미를 불러오는 중...</p>
+          <p className="text-sm text-muted-foreground">등록된 향미가 없습니다.</p>
         )}
       </Section>
 

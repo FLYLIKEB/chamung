@@ -1,4 +1,4 @@
-import { RatingSchema, Note } from '../../types';
+import { RatingSchema, RatingAxis, Note } from '../../types';
 import { apiClient } from './client';
 import { ReportReason } from './users.api';
 
@@ -55,7 +55,7 @@ export interface CalendarData {
 
 export const notesApi = {
   getActiveSchemas: () => apiClient.get<ActiveSchemasResponse>('/notes/schemas/active'),
-  getSchemaAxes: (schemaId: number) => apiClient.get(`/notes/schemas/${schemaId}/axes`),
+  getSchemaAxes: (schemaId: number) => apiClient.get<RatingAxis[]>(`/notes/schemas/${schemaId}/axes`),
   createSchema: (data: CreateRatingSchemaRequest) =>
     apiClient.post<RatingSchema>('/notes/schemas', data),
   updateSchema: (schemaId: number, data: CreateRatingSchemaRequest) =>

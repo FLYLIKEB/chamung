@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { AppModeProvider } from '../../contexts/AppModeContext';
 import { SessionSummary } from '../SessionSummary';
 import { teaSessionsApi, notesApi } from '../../lib/api';
 
@@ -64,9 +64,11 @@ const makeSession = (overrides: Record<string, unknown> = {}) => ({
 function renderWithRouter(sessionId: number) {
   return render(
     <MemoryRouter initialEntries={[`/session/${sessionId}/summary`]}>
-      <Routes>
-        <Route path="/session/:id/summary" element={<SessionSummary />} />
-      </Routes>
+      <AppModeProvider>
+        <Routes>
+          <Route path="/session/:id/summary" element={<SessionSummary />} />
+        </Routes>
+      </AppModeProvider>
     </MemoryRouter>,
   );
 }

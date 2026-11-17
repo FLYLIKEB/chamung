@@ -236,7 +236,7 @@ describe('NewTea 페이지', () => {
     });
 
     await waitFor(() => {
-      expect(getNavigateSpy()).toHaveBeenCalledWith('/tea/3');
+      expect(getNavigateSpy()).toHaveBeenCalledWith('/tea/3', { replace: true });
     }, { timeout: 2000 });
   });
 
@@ -253,7 +253,7 @@ describe('NewTea 페이지', () => {
     await user.click(screen.getByRole('button', { name: '등록하기' }));
 
     await waitFor(() => {
-      expect(getNavigateSpy()).toHaveBeenCalledWith('/note/new?teaId=3');
+      expect(getNavigateSpy()).toHaveBeenCalledWith('/note/new?teaId=3', { replace: true });
     }, { timeout: 2000 });
   });
 
@@ -295,7 +295,7 @@ describe('NewTea 페이지', () => {
     await user.click(useExistingButton);
 
     await waitFor(() => {
-      expect(getNavigateSpy()).toHaveBeenCalledWith('/note/new?teaId=1');
+      expect(getNavigateSpy()).toHaveBeenCalledWith('/note/new?teaId=1', { replace: true });
     });
   });
 

@@ -16,8 +16,8 @@ import path from 'path';
         name: '차멍 - 차 기록 앱',
         short_name: '차멍',
         description: '나만의 차 기록과 발견을 위한 앱',
-        theme_color: '#2b2926',
-        background_color: '#f4f0e9',
+        theme_color: '#354f16',
+        background_color: '#263615',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
@@ -42,7 +42,7 @@ import path from 'path';
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,

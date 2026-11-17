@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { teasApi } from '../lib/api';
 import { Tea } from '../types';
 import { logger } from '../lib/logger';
-import { toast } from 'sonner';
 
 type TeaSort = 'popular' | 'new' | 'rating' | 'match' | 'recent';
 type NoteSort = 'latest' | 'rating';
@@ -30,6 +29,7 @@ interface UseSearchFiltersReturn {
     callbacks: {
       setTeas: (teas: Tea[]) => void;
       setIsLoading: (loading: boolean) => void;
+      setError?: (error: string | null) => void;
       setHasSearched: (searched: boolean) => void;
     },
   ) => void;
@@ -38,6 +38,7 @@ interface UseSearchFiltersReturn {
     callbacks: {
       setTeas: (teas: Tea[]) => void;
       setIsLoading: (loading: boolean) => void;
+      setError?: (error: string | null) => void;
     },
   ) => Promise<void>;
 }
@@ -99,16 +100,19 @@ export function useSearchFilters(): UseSearchFiltersReturn {
       callbacks: {
         setTeas: (teas: Tea[]) => void;
         setIsLoading: (loading: boolean) => void;
+      setError?: (error: string | null) => void;
       },
     ) => {
       try {
         callbacks.setIsLoading(true);
+        callbacks.setError?.(null);
         if (params.tags && params.tags.length > 0) {
           const tagSort = ['match', 'popular', 'recent'].includes(params.sort || '')
             ? (params.sort as 'match' | 'popular' | 'recent')
             : 'match';
           const data = await teasApi.getByTags(params.tags, tagSort, 50);
-          callbacks.setTeas(Array.isArray(data) ? data : []);
+          if (!Array.isArray(data)) throw new Error('Invalid filtered tea response');
+          callbacks.setTeas(data);
         } else {
           const data = await teasApi.getWithFilters({
             q: params.q || undefined,
@@ -116,11 +120,12 @@ export function useSearchFilters(): UseSearchFiltersReturn {
             minRating: params.minRating,
             sort: (params.sort as 'popular' | 'new' | 'rating') || 'popular',
           });
-          callbacks.setTeas(Array.isArray(data) ? data : []);
+          if (!Array.isArray(data)) throw new Error('Invalid filtered tea response');
+          callbacks.setTeas(data);
         }
       } catch (error) {
         logger.error('Filter failed:', error);
-        toast.error('필터 결과를 불러오는데 실패했습니다.');
+        callbacks.setError?.('필터 결과를 불러오지 못했습니다.');
       } finally {
         callbacks.setIsLoading(false);
       }
@@ -135,6 +140,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
       callbacks: {
         setTeas: (teas: Tea[]) => void;
         setIsLoading: (loading: boolean) => void;
+      setError?: (error: string | null) => void;
         setHasSearched: (searched: boolean) => void;
       },
     ) => {

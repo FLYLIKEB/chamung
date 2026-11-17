@@ -50,7 +50,7 @@ describe('TagDetail 스키마 표시', () => {
       isFollowing: false,
       followerCount: 2,
     });
-    vi.mocked(tagsApi.getTagNotes).mockResolvedValue({ notes: [], total: 3 });
+    vi.mocked(tagsApi.getTagNotes).mockResolvedValue({ tag: { name: '자스민', noteCount: 3, isFollowing: false, followerCount: 2 }, notes: [], total: 3, page: 1, limit: 20 });
     vi.mocked(tagsApi.getPopularTags).mockResolvedValue([]);
     vi.mocked(tagsApi.getRecentTags).mockResolvedValue([]);
   });

@@ -1,12 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 import { ModeCarousel } from '../ModeCarousel';
+
+const startSession = vi.hoisted(() => vi.fn());
 
 vi.mock('@/contexts/AppModeContext', () => ({
   useAppMode: () => ({
     sessionMode: { active: false },
     blindMode: { active: false },
-    toggleSessionMode: vi.fn(),
+    toggleSessionMode: startSession,
     toggleBlindMode: vi.fn(),
   }),
 }));
@@ -43,13 +45,10 @@ describe('ModeCarousel', () => {
     expect(allClasses).not.toContain('#1db93c');
   });
 
-  it('다회 모드 카드가 무채색 카드 스타일을 유지한다', () => {
-    const { container } = render(<ModeCarousel />);
-    const buttons = container.querySelectorAll('button');
-    const sessionCard = Array.from(buttons).find((btn) =>
-      btn.textContent?.includes('다회 모드'),
-    );
-    expect(sessionCard?.className).toContain('neutral');
-    expect(sessionCard?.className).toContain('no-underline');
+  it('다회 모드를 선택하면 해당 작업을 시작하고 상시 NEW 배지는 없다', () => {
+    render(<ModeCarousel />);
+    fireEvent.click(screen.getByRole('button', { name: /다회 모드/ }));
+    expect(startSession).toHaveBeenCalledOnce();
+    expect(screen.queryByText('NEW')).not.toBeInTheDocument();
   });
 });

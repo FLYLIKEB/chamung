@@ -1,7 +1,8 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { User } from '../users/entities/user.entity';
 
 @Controller('health')
@@ -17,7 +18,7 @@ export class HealthController {
   }
 
   @Get()
-  async check() {
+  async check(@Res({ passthrough: true }) response: Response) {
     const timestamp = new Date().toISOString();
     const uptime = Math.floor((Date.now() - this.startTime) / 1000); // 초 단위
     const memoryUsage = process.memoryUsage();
@@ -66,6 +67,10 @@ export class HealthController {
         },
       };
     } catch (error) {
+      response.status(503);
+      if (this.configService.get('NODE_ENV') === 'production') {
+        return { status: 'unhealthy', timestamp };
+      }
       return {
         status: 'unhealthy',
         service: 'ChaLog Backend API',

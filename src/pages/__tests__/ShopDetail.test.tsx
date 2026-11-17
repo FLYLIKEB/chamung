@@ -1,7 +1,15 @@
-import { screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 import { ShopDetail } from '../ShopDetail';
-import { renderWithRouter } from '../../test/renderWithRouter';
+import { MemoryRouter } from 'react-router-dom';
+
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: () => ({ user: null, isAuthenticated: false }),
+}));
+
+function renderWithRouter(ui: React.ReactElement, { route }: { route: string }) {
+  return render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>);
+}
 
 const mockUseParams = vi.fn(() => ({ name: '테스트샵' }));
 vi.mock('react-router-dom', async () => {

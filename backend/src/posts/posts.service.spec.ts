@@ -8,6 +8,7 @@ import { Post, PostCategory } from './entities/post.entity';
 import { PostLike } from './entities/post-like.entity';
 import { PostBookmark } from './entities/post-bookmark.entity';
 import { PostImage } from './entities/post-image.entity';
+import { Note } from '../notes/entities/note.entity';
 
 describe('PostsService', () => {
   let service: PostsService;
@@ -58,8 +59,18 @@ describe('PostsService', () => {
     findOne: jest.fn().mockResolvedValue({ id: 1, name: '테스터', role: 'user' }),
   };
 
+  const mockCommentQb = {
+    select: jest.fn().mockReturnThis(),
+    addSelect: jest.fn().mockReturnThis(),
+    from: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    groupBy: jest.fn().mockReturnThis(),
+    getRawMany: jest.fn().mockResolvedValue([]),
+  };
+
   const mockDataSource = {
     transaction: jest.fn(),
+    createQueryBuilder: jest.fn(() => mockCommentQb),
   };
 
   beforeEach(async () => {
@@ -70,6 +81,7 @@ describe('PostsService', () => {
         { provide: getRepositoryToken(PostLike), useValue: mockPostLikesRepository },
         { provide: getRepositoryToken(PostBookmark), useValue: mockPostBookmarksRepository },
         { provide: getRepositoryToken(PostImage), useValue: mockPostImagesRepository },
+        { provide: getRepositoryToken(Note), useValue: { find: jest.fn().mockResolvedValue([]) } },
         { provide: DataSource, useValue: mockDataSource },
         { provide: UsersService, useValue: mockUsersService },
       ],
@@ -82,6 +94,7 @@ describe('PostsService', () => {
     mockPostBookmarksRepository.find.mockResolvedValue([]);
     mockLikeQb.getRawMany.mockResolvedValue([]);
     mockPostQb.getMany.mockResolvedValue([]);
+    mockCommentQb.getRawMany.mockResolvedValue([]);
 
     // create/update use transaction; provide a manager that delegates to repository mocks
     let lastSavedPost: any = null;
@@ -232,8 +245,9 @@ describe('PostsService', () => {
       mockPostLikesRepository.find.mockResolvedValue([]);
       mockPostBookmarksRepository.find.mockResolvedValue([]);
 
+      mockCommentQb.getRawMany.mockResolvedValue([{ postId: '1', count: '3' }]);
       const result = await service.findOne(1);
-      expect(result).toBeDefined();
+      expect(result).toMatchObject({ id: 1, title: '제목', commentCount: 3, likeCount: 0 });
     });
   });
 

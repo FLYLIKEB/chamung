@@ -45,7 +45,7 @@ const notes: Note[] = [
 ];
 
 describe('tea recap utilities', () => {
-  it('차록 통계에서 공유용 요약을 만든다', () => {
+  it('전체 통계 대신 선택 월의 차록 수로 공유용 요약을 만든다', () => {
     const summary = buildTeaRecapSummary(report, notes, '2026-05', '다인');
 
     expect(summary.title).toBe('다인님의 차록 리캡');
@@ -56,7 +56,9 @@ describe('tea recap utilities', () => {
     expect(summary.topTag).toBe('풀향');
     expect(summary.photoCount).toBe(1);
     expect(summary.heroImageUrl).toBe('https://example.com/tea.jpg');
-    expect(summary.shareText).toContain('차록 5건');
+    expect(summary.totalCount).toBe(2);
+    expect(summary.shareText).toContain('2026년 5월 · 차록 2건');
+    expect(summary.shareText).not.toContain('차록 5건');
   });
 
 

@@ -4,9 +4,9 @@ NestJS 기반 백엔드 API 서버입니다.
 
 ## 요구 사항
 
-- Node.js 22 이상
+- Node.js 22.x (루트 `.nvmrc`와 동일)
 - MySQL 8.0 이상 (Docker 권장)
-- npm 9 이상
+- npm 10 이상
 
 ## 설치
 
@@ -265,3 +265,9 @@ npm run test:e2e
 
 # GitHub Actions 자동 배포 테스트
 # GitHub Actions 배포 테스트 - Wed Nov 26 23:06:23 KST 2025
+
+## 헬스 체크 계약
+
+`GET /health`는 DB `SELECT 1` 성공 시 HTTP 200과 `status: healthy`를 반환합니다.
+DB 실패 시 HTTP 503과 `status: unhealthy`를 반환합니다. 프로덕션 응답에는 DB 오류 상세를 노출하지 않습니다.
+검증자는 HTTP 상태와 JSON `status`를 함께 확인해야 합니다.

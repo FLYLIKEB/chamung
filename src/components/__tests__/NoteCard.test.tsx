@@ -1,9 +1,13 @@
-import { render, screen } from '@testing-library/react';
-import { vi, describe, it, expect } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { NoteCard } from '../NoteCard';
 import { MemoryRouter } from 'react-router-dom';
 import { Note } from '../../types';
+
+import { notesApi } from '../../lib/api';
+
+vi.mock('../../lib/api', () => ({ notesApi: { toggleBookmark: vi.fn() } }));
 
 const mockNavigate = vi.fn();
 
@@ -44,6 +48,36 @@ const mockNote: Note = {
 };
 
 describe('NoteCard - 그리드 카드', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('카드와 북마크를 중첩하지 않고 키보드로 각각 실행해야 함', async () => {
+    const user = userEvent.setup();
+    const onBookmarkToggle = vi.fn();
+    vi.mocked(notesApi.toggleBookmark).mockResolvedValue({ bookmarked: true });
+    const { container } = render(
+      <MemoryRouter><NoteCard note={mockNote} onBookmarkToggle={onBookmarkToggle} /></MemoryRouter>,
+    );
+    expect(container.querySelector('button button')).toBeNull();
+    const card = screen.getAllByRole('button')[0];
+    await user.tab();
+    expect(card).toHaveFocus();
+    await user.keyboard('{Enter}');
+    await user.keyboard(' ');
+    expect(mockNavigate).toHaveBeenCalledTimes(2);
+    expect(mockNavigate).toHaveBeenLastCalledWith('/note/1');
+    mockNavigate.mockClear();
+    await user.tab();
+    expect(screen.getByRole('button', { name: '북마크 추가' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(onBookmarkToggle).toHaveBeenCalledWith(true));
+    expect(notesApi.toggleBookmark).toHaveBeenCalledWith(1);
+    expect(screen.getByRole('button', { name: '북마크 해제' })).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: '북마크 해제' }));
+    await waitFor(() => expect(notesApi.toggleBookmark).toHaveBeenCalledTimes(2));
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it('이미지가 있을 때 사진을 아주 옅은 무채색 배경으로 표시해야 함', () => {
     render(
       <MemoryRouter>

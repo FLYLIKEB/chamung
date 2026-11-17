@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { RenderOptions, render } from '@testing-library/react';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '../contexts/AuthContext';
+import { AppModeProvider } from '../contexts/AppModeContext';
 
 interface RouterRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   route?: string;
@@ -16,7 +17,7 @@ export function renderWithRouter(
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="chalog-theme-test">
       <MemoryRouter initialEntries={[route]}>
         <AuthProvider>
-          {children}
+          <AppModeProvider>{children}</AppModeProvider>
         </AuthProvider>
       </MemoryRouter>
     </ThemeProvider>

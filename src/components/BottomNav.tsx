@@ -73,6 +73,7 @@ function NavButton({
       onClick={onClick}
       className={navItemClass(direction, isActive)}
       aria-label={item.label}
+      aria-current={isActive ? 'page' : undefined}
     >
       <div className="w-5 h-5 flex items-center justify-center">
         <Icon

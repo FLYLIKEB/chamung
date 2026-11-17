@@ -16,10 +16,11 @@ import { cn } from '@/components/ui/utils';
 type SavedTab = 'notes' | 'posts' | 'teas';
 const PAGE_SIZE = 20;
 
-export function SavedContent() {
+export function SavedContent({ showHeading = false }: { showHeading?: boolean }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<SavedTab>('notes');
+  const [errors, setErrors] = useState<Partial<Record<SavedTab, string>>>({});
   const [bookmarkedNotes, setBookmarkedNotes] = useState<Note[]>([]);
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
   const [isLoadingNotes, setIsLoadingNotes] = useState(true);
@@ -41,13 +42,14 @@ export function SavedContent() {
     if (!user) return;
     try {
       setIsLoadingNotes(true);
+      setErrors((previous) => ({ ...previous, notes: undefined }));
       const notes = await notesApi.getAll(undefined, undefined, undefined, true);
-      const notesArray = Array.isArray(notes) ? notes : [];
-      setBookmarkedNotes(notesArray as Note[]);
+      if (!Array.isArray(notes)) throw new Error('Expected bookmarked notes array');
+      setBookmarkedNotes(notes as Note[]);
       setNotesDisplayCount(PAGE_SIZE);
     } catch (error) {
       logger.error('Failed to fetch bookmarked notes:', error);
-      toast.error('저장한 차록을 불러오는데 실패했습니다.');
+      setErrors((previous) => ({ ...previous, notes: '저장한 차록을 불러오는데 실패했습니다.' }));
     } finally {
       setIsLoadingNotes(false);
     }
@@ -57,13 +59,15 @@ export function SavedContent() {
     if (!user) return;
     try {
       setIsLoadingPosts(true);
+      setErrors((previous) => ({ ...previous, posts: undefined }));
       setPostsPage(1);
       const posts = await postsApi.getAll(undefined, 1, PAGE_SIZE, undefined, true);
-      setBookmarkedPosts(Array.isArray(posts) ? posts : []);
-      setPostsHasMore(Array.isArray(posts) && posts.length === PAGE_SIZE);
+      if (!Array.isArray(posts)) throw new Error('Expected bookmarked posts array');
+      setBookmarkedPosts(posts);
+      setPostsHasMore(posts.length === PAGE_SIZE);
     } catch (error) {
       logger.error('Failed to fetch bookmarked posts:', error);
-      toast.error('저장한 게시글을 불러오는데 실패했습니다.');
+      setErrors((previous) => ({ ...previous, posts: '저장한 게시글을 불러오는데 실패했습니다.' }));
     } finally {
       setIsLoadingPosts(false);
     }
@@ -73,32 +77,35 @@ export function SavedContent() {
     if (!user) return;
     try {
       setIsLoadingTeas(true);
+      setErrors((previous) => ({ ...previous, teas: undefined }));
       const teas = await teasApi.getWishlisted();
-      setWishlistedTeas(Array.isArray(teas) ? teas : []);
+      if (!Array.isArray(teas)) throw new Error('Expected wishlisted teas array');
+      setWishlistedTeas(teas);
     } catch (error) {
       logger.error('Failed to fetch wishlisted teas:', error);
-      toast.error('찜한 차를 불러오는데 실패했습니다.');
+      setErrors((previous) => ({ ...previous, teas: '찜한 차를 불러오는데 실패했습니다.' }));
     } finally {
       setIsLoadingTeas(false);
     }
   }, [user]);
 
   const handleLoadMorePosts = useCallback(async () => {
-    if (!user) return;
+    if (!user || isLoadingMorePosts || !postsHasMore) return;
     const nextPage = postsPage + 1;
     setIsLoadingMorePosts(true);
     try {
       const morePosts = await postsApi.getAll(undefined, nextPage, PAGE_SIZE, undefined, true);
-      setBookmarkedPosts((prev) => [...prev, ...(Array.isArray(morePosts) ? morePosts : [])]);
+      if (!Array.isArray(morePosts)) throw new Error('Expected bookmarked posts array');
+      setBookmarkedPosts((prev) => [...prev, ...morePosts]);
       setPostsPage(nextPage);
-      setPostsHasMore(Array.isArray(morePosts) && morePosts.length === PAGE_SIZE);
+      setPostsHasMore(morePosts.length === PAGE_SIZE);
     } catch (error) {
       logger.error('Failed to load more bookmarked posts:', error);
       toast.error('게시글을 더 불러오는데 실패했습니다.');
     } finally {
       setIsLoadingMorePosts(false);
     }
-  }, [user, postsPage]);
+  }, [user, postsPage, isLoadingMorePosts, postsHasMore]);
 
   useEffect(() => {
     if (user) fetchBookmarkedNotes();
@@ -117,6 +124,13 @@ export function SavedContent() {
     setBookmarkedPosts(prev => prev.filter(p => p.id !== postId));
   };
 
+  const activeError = errors[activeTab];
+  const retryActiveTab = () => {
+    if (activeTab === 'notes') void fetchBookmarkedNotes();
+    else if (activeTab === 'posts') void fetchBookmarkedPosts();
+    else void fetchWishlistedTeas();
+  };
+
   return (
     <div>
       {/* Sub tabs */}
@@ -128,6 +142,8 @@ export function SavedContent() {
         ] as const).map(({ key, label }) => (
           <button
             key={key}
+            type="button"
+            aria-pressed={activeTab === key}
             onClick={() => setActiveTab(key)}
             className={cn(
               'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
@@ -142,11 +158,18 @@ export function SavedContent() {
       </div>
 
       <div className="p-4 space-y-4">
-        {activeTab === 'notes' && (
+        {showHeading && <h2 className="font-title text-lg">{activeTab === 'notes' ? '저장한 차록' : activeTab === 'posts' ? '저장한 게시글' : '찜한 차'}</h2>}
+        {activeError && (
+          <div role="alert" className="space-y-3 py-8 text-center">
+            <p>{activeError}</p>
+            <Button variant="outline" onClick={retryActiveTab}>다시 시도</Button>
+          </div>
+        )}
+        {activeTab === 'notes' && !activeError && (
           <>
             {isLoadingNotes ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                <Loader2 className="w-6 h-6 text-primary animate-spin" role="status" aria-label="로딩 중" />
               </div>
             ) : bookmarkedNotes.length > 0 ? (
               <>
@@ -184,11 +207,11 @@ export function SavedContent() {
           </>
         )}
 
-        {activeTab === 'posts' && (
+        {activeTab === 'posts' && !activeError && (
           <>
             {isLoadingPosts ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                <Loader2 className="w-6 h-6 text-primary animate-spin" role="status" aria-label="로딩 중" />
               </div>
             ) : bookmarkedPosts.length > 0 ? (
               <>
@@ -228,11 +251,11 @@ export function SavedContent() {
           </>
         )}
 
-        {activeTab === 'teas' && (
+        {activeTab === 'teas' && !activeError && (
           <>
             {isLoadingTeas ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                <Loader2 className="w-6 h-6 text-primary animate-spin" role="status" aria-label="로딩 중" />
               </div>
             ) : wishlistedTeas.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

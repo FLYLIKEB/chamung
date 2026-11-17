@@ -13,10 +13,8 @@ type MenuItem = {
   label: string;
   icon: ReactNode;
   onClick: () => void;
-  isToggle?: boolean;
   isActive?: boolean;
   isPrimary?: boolean;
-  isNew?: boolean;
 };
 
 const HIDDEN_PATH_PATTERNS = [
@@ -42,7 +40,6 @@ const HIDDEN_PATH_PATTERNS = [
 const FOCUS_PAGES = ['/note/new', '/cellar/new', '/teahouse/new', '/tags', '/tea/new'];
 
 const PANEL_CLASS = 'flex flex-col items-end gap-3 mb-3 text-white transition-all duration-200';
-const HIDDEN_PANEL_CLASS = 'pointer-events-none';
 const ROW_REVEAL_BASE = 'flex items-center transition-all duration-200';
 const ROUND_ACTION_CLASS = cn(
   LIQUID_GLASS.control,
@@ -77,23 +74,18 @@ function revealClass(isOpen: boolean, gapClass = 'gap-2') {
   );
 }
 
-function NewBadge() {
-  return <span className="absolute -top-2 right-0 text-[9px] font-medium text-muted-foreground no-underline">new</span>;
-}
-
 function ActionTile({ item, className }: { item: MenuItem; className?: string }) {
   return (
     <button
       type="button"
       aria-label={item.label}
       onClick={item.onClick}
-      className={cn(className ?? TILE_ACTION_CLASS, item.isToggle && item.isActive && 'font-semibold')}
+      className={cn(className ?? TILE_ACTION_CLASS, item.isActive && 'font-semibold')}
     >
-      {item.isNew && <NewBadge />}
       {item.icon}
       <span className="text-[10px] font-medium whitespace-nowrap">
         {item.label}
-        {item.isToggle && item.isActive && <span className="ml-0.5 font-bold">ON</span>}
+
       </span>
     </button>
   );
@@ -134,20 +126,19 @@ export function SpeedDialFAB() {
 
   const addGroup: MenuItem[] = [
     { label: '찻집 추가', icon: <Store className="w-4 h-4" />, onClick: () => navigateTo('/teahouse/new') },
-    { label: '템플릿 추가', icon: <ClipboardList className="w-4 h-4" />, onClick: () => navigateTo('/templates'), isNew: true },
+    { label: '템플릿 추가', icon: <ClipboardList className="w-4 h-4" />, onClick: () => navigateTo('/templates') },
     { label: '태그 추가', icon: <Tag className="w-4 h-4" />, onClick: () => navigateTo('/tags') },
     { label: '차 추가', icon: <Leaf className="w-5 h-5" />, onClick: () => navigateTo('/tea/new'), isPrimary: true },
   ];
 
   const writeGroup: MenuItem[] = [
-    { label: '다회 작성', icon: <RefreshCw className="w-4 h-4" />, onClick: toggleSessionMode, isToggle: true, isActive: sessionMode.active, isNew: true },
+    { label: sessionMode.active && sessionMode.sessionId ? '다회 이어하기' : '다회 시작', icon: <RefreshCw className="w-4 h-4" />, onClick: toggleSessionMode, isActive: sessionMode.active },
     {
-      label: '블라인드 작성',
+      label: blindMode.active && blindMode.sessionId ? '블라인드 이어하기' : '블라인드 시작',
       icon: blindMode.active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />,
       onClick: toggleBlindMode,
-      isToggle: true,
+
       isActive: blindMode.active,
-      isNew: true,
     },
     { label: '차록 작성', icon: <PenLine className="w-5 h-5" />, onClick: () => navigateTo('/note/new'), isPrimary: true },
   ];
@@ -171,7 +162,7 @@ export function SpeedDialFAB() {
         className={cn('fixed z-50 flex flex-col items-end md:bottom-6', LOGO_FAB_RIGHT_CLASS, !isOpen && 'pointer-events-none')}
         style={{ bottom: LOGO_FAB_ABOVE_NAV_BOTTOM }}
       >
-        <div className={cn(isOpen ? PANEL_CLASS : HIDDEN_PANEL_CLASS)}>
+        {isOpen && <div className={PANEL_CLASS}>
           {menuItems.map((item, index) => {
             const delayMs = (menuItems.length + writeGroup.length - 1 - index) * 50;
             return (
@@ -193,7 +184,7 @@ export function SpeedDialFAB() {
             {secondaryWriteItems.map((item) => <ActionTile key={item.label} item={item} />)}
             {primaryWriteItems.map((item) => <ActionTile key={item.label} item={item} className={PRIMARY_ACTION_CLASS} />)}
           </div>
-        </div>
+        </div>}
 
         <button
           type="button"

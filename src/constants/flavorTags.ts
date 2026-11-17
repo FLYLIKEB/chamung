@@ -994,7 +994,8 @@ export function groupFlavorTagLabels(labels: readonly string[]) {
     grouped.set(group, items);
   });
 
-  return [...FLAVOR_TAG_GROUP_ORDER, 'custom']
+  const displayGroups: FlavorTagDisplayGroup[] = [...FLAVOR_TAG_GROUP_ORDER, 'custom'];
+  return displayGroups
     .map((group) => ({
       group,
       meta: FLAVOR_TAG_GROUP_META[group],

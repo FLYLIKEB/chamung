@@ -109,6 +109,7 @@ export interface AxisValue {
 }
 
 export interface Note {
+  tea?: Tea;
   id: number;
   teaId: number;
   teaName: string;

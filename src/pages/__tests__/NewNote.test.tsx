@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect } from 'vitest';
 import { NewNote } from '../NewNote';
@@ -122,7 +122,7 @@ describe('NewNote 페이지', () => {
     expect(screen.getByRole('button', { name: '저장' })).toBeInTheDocument();
   });
 
-  it.skip('메모 없이 저장하면 메모 관련 오류를 노출한다 - 메모는 선택적 필드로 변경됨', async () => {
+  it('메모가 비어 있어도 선택한 차의 기록을 저장한다', async () => {
     const user = userEvent.setup();
     renderNewNote();
 
@@ -134,7 +134,10 @@ describe('NewNote 페이지', () => {
 
     await user.click(screen.getByRole('button', { name: '저장' }));
 
-    expect(toastMock.error).toHaveBeenCalledWith('메모를 작성해주세요.');
+    await waitFor(() => expect(toastMock.success).toHaveBeenCalledWith('기록이 저장되었습니다.'));
+    const { notesApi } = await import('../../lib/api');
+    expect(notesApi.create).toHaveBeenCalledWith(expect.objectContaining({ teaId: 1 }));
+    expect(toastMock.error).not.toHaveBeenCalledWith('메모를 작성해주세요.');
   });
 
   it('성공적으로 저장하면 성공 토스트 후 내 차록으로 이동한다', async () => {
@@ -149,8 +152,11 @@ describe('NewNote 페이지', () => {
     await user.click(option);
 
     // 0.5-5 평점 선택 (4점) - 평점 선택 후 아래 컴포넌트들이 로드됨
-    const star4 = screen.getByRole('button', { name: '3.5~4점' });
-    await user.click(star4);
+    const rating = screen.getByRole('slider', { name: '평점 평점' });
+    fireEvent.keyDown(rating, { key: 'End' });
+    fireEvent.keyDown(rating, { key: 'ArrowLeft' });
+    fireEvent.keyDown(rating, { key: 'ArrowLeft' });
+    expect(rating).toHaveAttribute('aria-valuenow', '4');
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: '저장' })).toBeInTheDocument();
@@ -168,10 +174,11 @@ describe('NewNote 페이지', () => {
     });
   });
 
-  it('teaId 쿼리로 진입하면 검색 입력이 자동 채워진다', async () => {
+  it('teaId 쿼리로 진입하면 해당 차가 선택된 카드로 표시된다', async () => {
     renderNewNote('/new-note?teaId=1');
 
-    expect(await screen.findByDisplayValue('백호은침')).toBeInTheDocument();
+    expect(await screen.findByText('백호은침')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '선택 해제' })).toBeInTheDocument();
   });
 
   it('검색 결과가 없을 때 새 차로 등록하기 버튼을 표시한다', async () => {
@@ -238,7 +245,7 @@ describe('NewNote 페이지', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByDisplayValue('새로 등록한 차')).toBeInTheDocument();
+      expect(screen.getByText('새로 등록한 차')).toBeInTheDocument();
     }, { timeout: 2000 });
   });
 });

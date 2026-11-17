@@ -146,46 +146,20 @@ describe('NoteDetail - 카드 사진 배경', () => {
     expect(within(table).getByText('더 좋음')).toBeInTheDocument();
   });
 
-  it('차록 향미를 플레이버휠 기준 카드와 설명으로 표시해야 함', async () => {
-    const user = userEvent.setup();
-    vi.mocked(notesApi.getById).mockResolvedValue({
-      ...mockNote,
-      tags: ['자스민', '단맛', '실키함', '청량한 여운', '나만의 표현'],
-    });
+  it('향미 태그는 감각 프로필 카드에서 각 태그 탐색 링크로 제공해야 함', async () => {
+    const tags = ['자스민', '단맛', '실키함', '청량한 여운', '나만의 표현'];
+    vi.mocked(notesApi.getById).mockResolvedValue({ ...mockNote, tags });
 
-    render(
-      <MemoryRouter>
-        <NoteDetail />
-      </MemoryRouter>,
-    );
+    render(<MemoryRouter><NoteDetail /></MemoryRouter>);
 
-    const flavorCard = await screen.findByLabelText('향미 프로필 카드');
-    const flavorPage = flavorCard.closest('.note-detail-flavor-card');
-    expect(flavorPage).toBeInTheDocument();
-    expect(document.querySelectorAll('.note-detail-photo-card')[1]).toHaveClass('note-detail-flavor-card');
-    expect(within(flavorPage as HTMLElement).getByText('향미 프로필')).toBeInTheDocument();
-    expect(within(flavorPage as HTMLElement).getByText('PROFILE')).toBeInTheDocument();
-    expect(within(flavorCard).getByLabelText('선택 향미 원형 인포그래픽')).toBeInTheDocument();
-    expect(within(flavorCard).getAllByText('자스민').length).toBeGreaterThan(0);
-    expect(within(flavorCard).getAllByText('단맛').length).toBeGreaterThan(0);
-    expect(within(flavorCard).getAllByText('실키함').length).toBeGreaterThan(0);
-    expect(within(flavorCard).getAllByText('청량한 여운').length).toBeGreaterThan(0);
-
-    const flavorGroups = within(flavorCard).getByLabelText('향미 스키마 그룹');
-    const tagListToggle = within(flavorGroups).getByRole('button', { name: /선택 태그 전체.*펼치기/ });
-    expect(tagListToggle).toHaveAttribute('aria-expanded', 'false');
-    expect(within(flavorGroups).queryByText('Aroma')).not.toBeInTheDocument();
-
-    await user.click(tagListToggle);
-
-    expect(tagListToggle).toHaveAttribute('aria-expanded', 'true');
-    expect(within(flavorGroups).getByText('Aroma')).toBeInTheDocument();
-    expect(within(flavorGroups).getByText('Taste')).toBeInTheDocument();
-    expect(within(flavorGroups).getByText('Mouthfeel')).toBeInTheDocument();
-    expect(within(flavorGroups).getByText('Finish')).toBeInTheDocument();
-    expect(within(flavorGroups).getByText('Custom')).toBeInTheDocument();
-    expect(within(flavorGroups).getByLabelText(/자스민: 자스민차에서 나는 달콤하고 관능적인 꽃향/)).toBeInTheDocument();
-    expect(within(flavorGroups).getByLabelText(/나만의 표현: 직접 입력한 향미/)).toBeInTheDocument();
+    const profileTitle = await screen.findByText('감각 프로필');
+    const profileCard = profileTitle.closest('section');
+    expect(profileCard).toHaveClass('note-detail-profile-card');
+    expect(profileCard).toHaveClass('note-detail-photo-card');
+    for (const tag of tags) {
+      expect(within(profileCard as HTMLElement).getByRole('link', { name: tag }))
+        .toHaveAttribute('href', `/tag/${encodeURIComponent(tag)}`);
+    }
   });
 
   it('작성자 이름을 클릭하면 프로필 페이지로 이동해야 함', async () => {

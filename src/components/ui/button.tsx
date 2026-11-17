@@ -5,22 +5,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "./utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-none border-0 bg-transparent text-sm font-medium underline underline-offset-[0.32em] decoration-[0.04em] decoration-current transition-colors disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:outline-none focus-visible:underline focus-visible:decoration-[0.08em] aria-invalid:text-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm border text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive",
   {
     variants: {
       variant: {
-        default: "text-foreground hover:text-foreground/65",
-        destructive: "text-destructive hover:text-destructive/70",
-        outline: "text-foreground hover:text-foreground/65",
-        secondary: "text-muted-foreground hover:text-foreground",
-        ghost: "text-foreground hover:text-foreground/65",
-        link: "text-foreground hover:text-foreground/65",
+        default: "border-primary bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "border-destructive bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border-border bg-transparent text-foreground hover:bg-accent",
+        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-accent",
+        ghost: "border-transparent bg-transparent text-foreground hover:bg-accent",
+        link: "border-transparent bg-transparent text-primary underline underline-offset-4 hover:text-primary/80",
       },
       size: {
-        default: "min-h-10 px-0 py-2 has-[>svg]:px-0",
-        sm: "min-h-8 gap-1.5 px-0 py-1 has-[>svg]:px-0",
-        lg: "min-h-11 px-0 py-2.5 has-[>svg]:px-0 text-base",
-        icon: "size-10 p-0 no-underline",
+        default: "min-h-11 px-4 py-2",
+        sm: "min-h-9 gap-1.5 px-3 py-1",
+        lg: "min-h-12 px-5 py-2.5 text-base",
+        icon: "size-11 p-0 no-underline",
       },
     },
     defaultVariants: {

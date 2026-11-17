@@ -1,12 +1,12 @@
 import React, { type FC, useRef, useState } from 'react';
-import { Info, Star } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { cn } from './ui/utils';
+import '../styles/pixel-ratings.css';
 
 const MIN = 1;
 const MAX = 5;
 const STEP = 0.5;
-const STAR_COLOR = 'var(--rating)';
 
 interface AxisStarRowProps {
   label: string;
@@ -32,8 +32,8 @@ export const AxisStarRow: FC<AxisStarRowProps> = ({
   maxValue = MAX,
   displayMultiplier = 1,
 }) => {
-  const starCount = maxValue - minValue + 1;
   const validatedValue = snapToStep(value, minValue, maxValue);
+  const filledBlocks = Math.round(Math.max(0, Math.min(1, validatedValue / maxValue)) * 10);
   const [helpOpen, setHelpOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
@@ -42,7 +42,7 @@ export const AxisStarRow: FC<AxisStarRowProps> = ({
     if (!rowRef.current) return validatedValue;
     const rect = rowRef.current.getBoundingClientRect();
     const fraction = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    return snapToStep(minValue + fraction * (maxValue - minValue), minValue, maxValue);
+    return snapToStep(fraction * maxValue, minValue, maxValue);
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -59,10 +59,10 @@ export const AxisStarRow: FC<AxisStarRowProps> = ({
   const handlePointerUp = () => setDragging(false);
 
   return (
-    <div className="flex items-center gap-3 py-2.5 px-0">
+    <div className="pixel-rating-row pixel-rating-input">
       {/* 라벨 */}
-      <div className="flex w-24 shrink-0 items-center gap-1">
-        <span className="text-sm font-medium text-foreground truncate">{label}</span>
+      <div className="pixel-rating-label">
+        <span className="text-sm font-medium text-foreground">{label}</span>
         {description?.trim() && (
           <Popover open={helpOpen} onOpenChange={setHelpOpen}>
             <PopoverTrigger asChild>
@@ -82,56 +82,45 @@ export const AxisStarRow: FC<AxisStarRowProps> = ({
       </div>
 
       {/* 점수 */}
-      <span className="w-9 shrink-0 text-right text-sm font-semibold tabular-nums text-foreground">
+      <span className="pixel-rating-value" style={{ gridColumn: 3, gridRow: 1 }}>
         {(() => {
           const d = validatedValue * displayMultiplier;
           return d % 1 === 0 ? d.toFixed(0) : d.toString();
         })()}
       </span>
 
-      {/* 드래그 가능한 별점 영역 */}
+      {/* 드래그 및 키보드로 조절하는 도트 점수 */}
       <div
         ref={rowRef}
         className={cn(
-          'flex items-center gap-1 select-none touch-none',
+          'pixel-rating-blocks select-none touch-none',
           dragging ? 'cursor-grabbing' : 'cursor-pointer',
         )}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        style={{ gridColumn: 2, gridRow: 1 }}
+        tabIndex={0}
+        onKeyDown={(event) => {
+          const nextValue = event.key === 'Home' ? minValue
+            : event.key === 'End' ? maxValue
+            : ['ArrowRight', 'ArrowUp'].includes(event.key) ? validatedValue + STEP
+            : ['ArrowLeft', 'ArrowDown'].includes(event.key) ? validatedValue - STEP
+            : null;
+          if (nextValue === null) return;
+          event.preventDefault();
+          onChange(snapToStep(nextValue, minValue, maxValue));
+        }}
         role="slider"
         aria-label={`${label} 평점`}
         aria-valuenow={validatedValue}
         aria-valuemin={minValue}
         aria-valuemax={maxValue}
       >
-        {Array.from({ length: starCount }, (_, i) => {
-          const starValue = minValue + i;
-          // 0, 0.25, 0.5, 0.75, 1.0 중 하나로 스냅
-          const rawFill = Math.max(0, Math.min(1, validatedValue - starValue + 1));
-          const fill = Math.round(rawFill / 0.25) * 0.25;
-          return (
-            <span key={starValue} className="relative w-6 h-6 shrink-0">
-              <Star
-                className="absolute inset-0 w-6 h-6 fill-none text-muted-foreground/30"
-                strokeWidth={1.5}
-              />
-              {fill > 0 && (
-                <span
-                  className="absolute inset-0 overflow-hidden"
-                  style={{ width: `${fill * 100}%` }}
-                >
-                  <Star
-                    className="w-6 h-6 shrink-0"
-                    style={{ fill: STAR_COLOR, stroke: STAR_COLOR }}
-                    strokeWidth={1.5}
-                  />
-                </span>
-              )}
-            </span>
-          );
-        })}
+        {Array.from({ length: 10 }, (_, index) => (
+          <span key={index} className="pixel-rating-block" data-filled={index < filledBlocks} aria-hidden="true" />
+        ))}
       </div>
     </div>
   );

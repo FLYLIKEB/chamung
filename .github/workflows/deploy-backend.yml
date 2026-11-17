@@ -35,7 +35,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: ${{ steps.check_lockfile.outputs.exists == 'true' && 'npm' || '' }}
           cache-dependency-path: ${{ steps.check_lockfile.outputs.exists == 'true' && 'backend/package-lock.json' || '' }}
 
@@ -84,8 +84,9 @@ jobs:
         run: |
           mkdir -p deploy-package
           cp -r dist deploy-package/
-          cp -r migrations deploy-package/  # Migration 파일 포함
-          cp src/database/data-source.ts deploy-package/dist/src/database/ 2>/dev/null || cp src/database/data-source.ts deploy-package/  # data-source.ts 포함 (Migration 실행용)
+          test -f dist/src/database/data-source.js
+          test -d dist/migrations
+          cp -r dist/migrations deploy-package/migrations
           cp package.json package-lock.json ecosystem.config.js deploy-package/
           tar -czf deploy.tar.gz -C deploy-package .
 
@@ -292,48 +293,19 @@ jobs:
               sudo apt-get install -y curl
             fi
             
-            # Node.js 설치 확인 및 설치
-            if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
-              echo "📦 Node.js/npm이 설치되지 않았습니다. 설치 중..."
-              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-              
-              # 명령어 캐시 새로고침
-              hash -r
-              
-              # PATH에 Node.js 경로 추가
-              export PATH="/usr/bin:/usr/local/bin:$PATH"
-              
-              # 설치 확인 (전체 경로로도 시도)
-              if command -v node &> /dev/null || [ -f /usr/bin/node ]; then
-                NODE_CMD=$(command -v node || echo "/usr/bin/node")
-                NPM_CMD=$(command -v npm || echo "/usr/bin/npm")
-                
-                if [ -f "$NODE_CMD" ] && [ -f "$NPM_CMD" ]; then
-                  echo "✅ Node.js 설치 완료: $($NODE_CMD --version)"
-                  echo "✅ npm 설치 완료: $($NPM_CMD --version)"
-                  # 심볼릭 링크 생성 (필요시)
-                  [ ! -f /usr/local/bin/node ] && sudo ln -sf "$NODE_CMD" /usr/local/bin/node || true
-                  [ ! -f /usr/local/bin/npm ] && sudo ln -sf "$NPM_CMD" /usr/local/bin/npm || true
-                else
-                  echo "❌ Node.js/npm 설치 실패!"
-                  echo "Node.js 경로: $NODE_CMD"
-                  echo "npm 경로: $NPM_CMD"
-                  exit 1
-                fi
-              else
-                echo "❌ Node.js/npm 설치 실패!"
-                exit 1
-              fi
-            else
-              echo "✅ Node.js 이미 설치됨: $(node --version)"
-              echo "✅ npm 이미 설치됨: $(npm --version)"
+            # ChaLog 전용 런타임: 다른 서비스의 시스템 Node는 변경하지 않는다.
+            NODE_RUNTIME="/home/ubuntu/.local/chalog-node22"
+            export PATH="$NODE_RUNTIME/bin:$PATH"
+            NODE_CMD="$NODE_RUNTIME/bin/node"
+            NPM_CMD="$NODE_RUNTIME/bin/npm"
+            if [ ! -x "$NODE_CMD" ] || [ ! -x "$NPM_CMD" ] ||
+              [ "$("$NODE_CMD" -p 'process.versions.node.split(".")[0]')" != "22" ]; then
+              echo "ChaLog Node.js 22 runtime must be installed at $NODE_RUNTIME before deployment."
+              exit 1
             fi
-            
-            # npm 경로 확인
-            echo "🔍 npm 경로: $(which npm || echo '/usr/bin/npm')"
-            echo "🔍 node 경로: $(which node || echo '/usr/bin/node')"
-            
+            echo "Node.js: $("$NODE_CMD" --version)"
+            echo "npm: $("$NPM_CMD" --version)"
+
             # 디렉토리 생성
             mkdir -p $BACKEND_DIR
             cd $BACKEND_DIR
@@ -344,15 +316,22 @@ jobs:
               BACKUP_DIR="/home/ubuntu/backups"
               mkdir -p $BACKUP_DIR
               tar -czf $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).tar.gz \
-                  dist/ package.json package-lock.json ecosystem.config.js 2>/dev/null || true
+                  dist/ package.json package-lock.json ecosystem.config.js migrations/
             fi
             
             # 배포 파일 압축 해제
             echo "📦 배포 파일 압축 해제 중..."
+            # Remove backed-up source migrations so the CLI cannot also load stale .ts files.
+            rm -rf "$BACKEND_DIR/migrations"
             tar -xzf /tmp/deploy.tar.gz -C $BACKEND_DIR
             
             # 의존성 설치
             echo "📥 의존성 설치 중..."
+            if [ "$(node -p 'process.versions.node.split(".")[0]')" != "22" ]; then
+              echo "Node.js 22 is required. Upgrade the server runtime before deploying."
+              exit 1
+            fi
+
             # npm 경로 확인 후 사용
             NPM_CMD=$(command -v npm || echo "/usr/bin/npm")
             if [ ! -f "$NPM_CMD" ]; then
@@ -414,32 +393,15 @@ jobs:
               echo "✅ PM2 이미 설치됨: $($PM2_CMD --version)"
             fi
             
-            # 데이터베이스 마이그레이션 실행
-            echo "🔄 데이터베이스 마이그레이션 실행 중..."
-            export $(cat .env | xargs)
-            # migrations 폴더와 data-source.ts가 배포 패키지에 포함되어 있으므로 실행 가능
-            # data-source.ts 경로 확인 (배포 패키지 구조에 따라)
-            if [ -f "dist/src/database/data-source.js" ]; then
-              DATA_SOURCE_PATH="dist/src/database/data-source.js"
-            elif [ -f "dist/src/database/data-source.ts" ]; then
-              DATA_SOURCE_PATH="dist/src/database/data-source.ts"
-            elif [ -f "src/database/data-source.ts" ]; then
-              DATA_SOURCE_PATH="src/database/data-source.ts"
-            else
-              echo "⚠️ data-source.ts 파일을 찾을 수 없습니다. 마이그레이션을 건너뜁니다."
-              DATA_SOURCE_PATH=""
+            # Compiled datasource loads .env and compiled migrations from cwd/migrations.
+            DATA_SOURCE_PATH="dist/src/database/data-source.js"
+            if [ ! -f "$DATA_SOURCE_PATH" ] || [ ! -d "migrations" ]; then
+              echo "Compiled migration artifacts are missing from the deployment package."
+              exit 1
             fi
-            
-            if [ -n "$DATA_SOURCE_PATH" ] && [ -d "migrations" ]; then
-              if npx typeorm-ts-node-commonjs migration:run -d "$DATA_SOURCE_PATH"; then
-                echo "✅ 마이그레이션 완료"
-              else
-                echo "⚠️ 마이그레이션 실행 중 오류 발생. 계속 진행합니다."
-              fi
-            else
-              echo "⚠️ 마이그레이션 파일이 없습니다. 건너뜁니다."
-            fi
-            
+            "$NODE_CMD" node_modules/typeorm/cli.js migration:run -d "$DATA_SOURCE_PATH"
+            echo "✅ 마이그레이션 완료"
+
             # PM2로 재시작
             echo "🔄 PM2로 앱 재시작 중..."
             $PM2_CMD delete chalog-backend 2>/dev/null || true
@@ -452,7 +414,7 @@ jobs:
             fi
             
             # PM2 시작
-            $PM2_CMD start ecosystem.config.js
+            $PM2_CMD start ecosystem.config.js --interpreter "$NODE_CMD"
             $PM2_CMD save
             
             # 시작 확인
@@ -469,7 +431,8 @@ jobs:
             HEALTH_OK=false
             for i in 1 2 3 4 5; do
               sleep 5
-              if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+              if HEALTH_RESPONSE=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 10 http://localhost:3000/health) &&
+                printf '%s' "$HEALTH_RESPONSE" | node -e 'let input=""; process.stdin.on("data", chunk => input += chunk); process.stdin.on("end", () => { try { process.exit(JSON.parse(input)?.status === "healthy" ? 0 : 1); } catch { process.exit(1); } });'; then
                 echo "✅ 배포 성공! Health check 통과"
                 HEALTH_OK=true
                 break

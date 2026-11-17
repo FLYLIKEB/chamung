@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/src/main",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.0.0 <23.0.0"
   },
   "overrides": {
     "test-exclude": {

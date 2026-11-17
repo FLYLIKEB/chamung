@@ -24,7 +24,7 @@ export function ChaLogLogo({ iconOnly = false, className, size = 'default', asBu
         <BrandMark className={isCompact ? 'w-9 h-9' : 'w-11 h-11'} />
       </div>
       {!iconOnly && (
-        <span className={cn("font-['Nanum_Myeongjo'] font-bold tracking-[-0.04em] text-foreground pt-0.5", isCompact ? 'text-xl' : 'text-2xl')}>
+        <span className={cn("font-title font-bold tracking-[-0.04em] text-foreground pt-0.5", isCompact ? 'text-xl' : 'text-2xl')}>
           {isKorean ? '차멍' : 'ChaMeong'}
         </span>
       )}

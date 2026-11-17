@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ImageUploader } from '../ImageUploader';
@@ -130,18 +130,17 @@ describe('ImageUploader 컴포넌트', () => {
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       await user.upload(fileInput, mockFile);
 
-      await waitFor(() => {
-        expect(screen.getByText(/업로드 중/i)).toBeInTheDocument();
-      });
-
-      const uploadButton = screen.getByText(/업로드 중/i).closest('button');
-      expect(uploadButton).toBeDisabled();
+      const uploadButton = screen.getByRole('button', { name: '사진 추가' });
+      await waitFor(() => expect(uploadButton).toBeDisabled());
+      expect(fileInput).toBeDisabled();
+      expect(notesApi.uploadImage).toHaveBeenCalledOnce();
 
       // 업로드 완료
-      resolveUpload!({ url: 'https://example.com/image.jpg', thumbnailUrl: 'https://example.com/thumb.jpg' });
-      await waitFor(() => {
-        expect(screen.queryByText(/업로드 중/i)).not.toBeInTheDocument();
+      await act(async () => {
+        resolveUpload!({ url: 'https://example.com/image.jpg', thumbnailUrl: 'https://example.com/thumb.jpg' });
       });
+      await waitFor(() => expect(uploadButton).toBeEnabled());
+      expect(fileInput).toBeEnabled();
     });
   });
 
@@ -154,17 +153,10 @@ describe('ImageUploader 컴포넌트', () => {
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       expect(fileInput).toBeInTheDocument();
       
-      // change 이벤트 직접 트리거
-      Object.defineProperty(fileInput, 'files', {
-        value: [mockFile],
-        writable: false,
-      });
-      
-      const changeEvent = new Event('change', { bubbles: true });
-      fileInput.dispatchEvent(changeEvent);
+      fireEvent.change(fileInput, { target: { files: [mockFile] } });
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('이미지 파일만 업로드할 수 있습니다.');
+        expect(toast.error).toHaveBeenCalledWith('지원하지 않는 파일 형식입니다.');
         expect(notesApi.uploadImage).not.toHaveBeenCalled();
         expect(mockOnChange).not.toHaveBeenCalled();
       });
@@ -181,7 +173,7 @@ describe('ImageUploader 컴포넌트', () => {
       await user.upload(fileInput, largeFile);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('파일 크기는 10MB를 초과할 수 없습니다.');
+        expect(toast.error).toHaveBeenCalledWith('파일 크기는 10MB 이하여야 합니다.');
         expect(notesApi.uploadImage).not.toHaveBeenCalled();
         expect(mockOnChange).not.toHaveBeenCalled();
       });
@@ -216,7 +208,7 @@ describe('ImageUploader 컴포넌트', () => {
 
       render(<ImageUploader images={existingImages} onChange={mockOnChange} maxImages={5} />);
 
-      expect(screen.queryByText(/사진 추가/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '사진 추가' })).not.toBeInTheDocument();
     });
   });
 
@@ -351,7 +343,7 @@ describe('ImageUploader 컴포넌트', () => {
 
       render(<ImageUploader images={images} onChange={mockOnChange} />);
 
-      const deleteButtons = screen.getAllByTitle('삭제');
+      const deleteButtons = screen.getAllByRole('button', { name: /이미지 \d+ 삭제/ });
       await user.click(deleteButtons[0]);
 
       expect(mockOnChange).toHaveBeenCalledWith([images[1]], [null]);
@@ -368,7 +360,7 @@ describe('ImageUploader 컴포넌트', () => {
 
       render(<ImageUploader images={images} onChange={mockOnChange} />);
 
-      const deleteButtons = screen.getAllByTitle('삭제');
+      const deleteButtons = screen.getAllByRole('button', { name: /이미지 \d+ 삭제/ });
       // 두 번째 이미지(다른 URL) 삭제
       await user.click(deleteButtons[1]);
 
@@ -379,8 +371,9 @@ describe('ImageUploader 컴포넌트', () => {
     it('이미지가 없을 때 빈 상태 UI를 표시해야 함', () => {
       render(<ImageUploader images={[]} onChange={mockOnChange} maxImages={5} />);
 
-      expect(screen.getByText(/사진을 추가해보세요/i)).toBeInTheDocument();
-      expect(screen.getByText(/최대 5장까지 업로드 가능/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '사진 추가' })).toBeEnabled();
+      expect(screen.getByText('0/5')).toBeInTheDocument();
+      expect(screen.queryByRole('img')).not.toBeInTheDocument();
     });
   });
 
@@ -393,12 +386,12 @@ describe('ImageUploader 컴포넌트', () => {
 
       render(<ImageUploader images={images} onChange={mockOnChange} />);
 
-      const imageElements = screen.getAllByAltText(/업로드된 이미지/);
+      const imageElements = screen.getAllByRole('img', { name: /이미지 \d+/ });
       expect(imageElements).toHaveLength(2);
       expect(imageElements[0]).toHaveAttribute('src', images[0]);
-      expect(imageElements[0]).toHaveAttribute('alt', '업로드된 이미지 1');
+      expect(imageElements[0]).toHaveAttribute('alt', '이미지 1');
       expect(imageElements[1]).toHaveAttribute('src', images[1]);
-      expect(imageElements[1]).toHaveAttribute('alt', '업로드된 이미지 2');
+      expect(imageElements[1]).toHaveAttribute('alt', '이미지 2');
     });
 
     it('이미지 개수 표시가 정확해야 함', () => {

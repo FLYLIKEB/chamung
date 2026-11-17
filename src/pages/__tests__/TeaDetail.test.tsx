@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { TeaDetail } from '../TeaDetail';
 import { MemoryRouter } from 'react-router-dom';
-import { teasApi, notesApi } from '../../lib/api';
+import { teasApi, notesApi, cellarApi } from '../../lib/api';
 import { Tea, Note, PopularTag } from '../../types';
 
 const mockNavigate = vi.fn();
@@ -13,11 +13,12 @@ vi.mock('../../lib/api', async () => {
     ...actual,
     teasApi: {
       getById: vi.fn(),
+      isWishlisted: vi.fn(),
       getPopularTags: vi.fn(),
       getTopReviews: vi.fn(),
-      getSimilarTeas: vi.fn(),
       getSimilarTeasByTags: vi.fn(),
     },
+    cellarApi: { getAll: vi.fn() },
     notesApi: {
       getAll: vi.fn(),
     },
@@ -88,13 +89,15 @@ function setupMocks() {
   vi.mocked(notesApi.getAll).mockResolvedValue([]);
   vi.mocked(teasApi.getPopularTags).mockResolvedValue({ tags: mockPopularTags });
   vi.mocked(teasApi.getTopReviews).mockResolvedValue(mockTopReviews);
-  vi.mocked(teasApi.getSimilarTeas).mockResolvedValue(mockSimilarTeas);
   vi.mocked(teasApi.getSimilarTeasByTags).mockResolvedValue(mockSimilarTeas);
 }
 
 describe('TeaDetail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(teasApi.isWishlisted).mockResolvedValue({ wishlisted: false });
+    vi.mocked(cellarApi.getAll).mockResolvedValue([]);
+    vi.mocked(teasApi.getSimilarTeasByTags).mockResolvedValue([]);
   });
 
   it('로딩 중에 스피너를 표시해야 한다', () => {
@@ -102,7 +105,7 @@ describe('TeaDetail', () => {
     vi.mocked(notesApi.getAll).mockReturnValue(new Promise(() => {}));
     vi.mocked(teasApi.getPopularTags).mockReturnValue(new Promise(() => {}));
     vi.mocked(teasApi.getTopReviews).mockReturnValue(new Promise(() => {}));
-    vi.mocked(teasApi.getSimilarTeas).mockReturnValue(new Promise(() => {}));
+    vi.mocked(teasApi.getSimilarTeasByTags).mockReturnValue(new Promise(() => {}));
 
     render(
       <MemoryRouter>
@@ -123,7 +126,7 @@ describe('TeaDetail', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('정산소종')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '정산소종', level: 1 })).toBeInTheDocument();
       expect(screen.getAllByText('홍차').length).toBeGreaterThan(0);
       expect(screen.getByText('2023년')).toBeInTheDocument();
       expect(screen.getByText('25,000원')).toBeInTheDocument();
@@ -136,7 +139,7 @@ describe('TeaDetail', () => {
     vi.mocked(notesApi.getAll).mockResolvedValue([]);
     vi.mocked(teasApi.getPopularTags).mockResolvedValue({ tags: [] });
     vi.mocked(teasApi.getTopReviews).mockResolvedValue([]);
-    vi.mocked(teasApi.getSimilarTeas).mockResolvedValue([]);
+    vi.mocked(teasApi.getSimilarTeasByTags).mockResolvedValue([]);
 
     render(
       <MemoryRouter>
@@ -145,7 +148,7 @@ describe('TeaDetail', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('정산소종')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '정산소종', level: 1 })).toBeInTheDocument();
       expect(screen.queryByText('25,000원')).not.toBeInTheDocument();
     });
   });
@@ -217,7 +220,7 @@ describe('TeaDetail', () => {
     vi.mocked(notesApi.getAll).mockResolvedValue([]);
     vi.mocked(teasApi.getPopularTags).mockResolvedValue({ tags: [] });
     vi.mocked(teasApi.getTopReviews).mockResolvedValue([]);
-    vi.mocked(teasApi.getSimilarTeas).mockResolvedValue([]);
+    vi.mocked(teasApi.getSimilarTeasByTags).mockResolvedValue([]);
 
     render(
       <MemoryRouter>
@@ -225,6 +228,7 @@ describe('TeaDetail', () => {
       </MemoryRouter>,
     );
 
+    await screen.findByRole('heading', { name: '정산소종', level: 1 });
     await waitFor(() => {
       expect(screen.queryByTestId('tag-cloud')).not.toBeInTheDocument();
     });
@@ -235,7 +239,7 @@ describe('TeaDetail', () => {
     vi.mocked(notesApi.getAll).mockResolvedValue([]);
     vi.mocked(teasApi.getPopularTags).mockResolvedValue({ tags: mockPopularTags });
     vi.mocked(teasApi.getTopReviews).mockResolvedValue([]);
-    vi.mocked(teasApi.getSimilarTeas).mockResolvedValue([]);
+    vi.mocked(teasApi.getSimilarTeasByTags).mockResolvedValue([]);
 
     render(
       <MemoryRouter>
@@ -243,6 +247,7 @@ describe('TeaDetail', () => {
       </MemoryRouter>,
     );
 
+    await screen.findByRole('heading', { name: '정산소종', level: 1 });
     await waitFor(() => {
       expect(screen.queryByTestId('similar-teas')).not.toBeInTheDocument();
     });
@@ -254,7 +259,7 @@ describe('TeaDetail', () => {
     vi.mocked(notesApi.getAll).mockResolvedValue([]);
     vi.mocked(teasApi.getPopularTags).mockResolvedValue({ tags: [] });
     vi.mocked(teasApi.getTopReviews).mockResolvedValue([]);
-    vi.mocked(teasApi.getSimilarTeas).mockResolvedValue([]);
+    vi.mocked(teasApi.getSimilarTeasByTags).mockResolvedValue([]);
 
     render(
       <MemoryRouter>
@@ -272,7 +277,7 @@ describe('TeaDetail', () => {
     vi.mocked(notesApi.getAll).mockRejectedValue(new Error('Not found'));
     vi.mocked(teasApi.getPopularTags).mockResolvedValue({ tags: [] });
     vi.mocked(teasApi.getTopReviews).mockResolvedValue([]);
-    vi.mocked(teasApi.getSimilarTeas).mockResolvedValue([]);
+    vi.mocked(teasApi.getSimilarTeasByTags).mockResolvedValue([]);
 
     render(
       <MemoryRouter>
@@ -290,7 +295,7 @@ describe('TeaDetail', () => {
     vi.mocked(notesApi.getAll).mockResolvedValue([]);
     vi.mocked(teasApi.getPopularTags).mockRejectedValue(new Error('tags failed'));
     vi.mocked(teasApi.getTopReviews).mockRejectedValue(new Error('reviews failed'));
-    vi.mocked(teasApi.getSimilarTeas).mockRejectedValue(new Error('similar failed'));
+    vi.mocked(teasApi.getSimilarTeasByTags).mockRejectedValue(new Error('similar failed'));
 
     render(
       <MemoryRouter>
@@ -299,7 +304,7 @@ describe('TeaDetail', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('정산소종')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '정산소종', level: 1 })).toBeInTheDocument();
       expect(screen.getByText('4.2')).toBeInTheDocument();
       expect(screen.queryByTestId('tag-cloud')).not.toBeInTheDocument();
       expect(screen.queryByTestId('similar-teas')).not.toBeInTheDocument();
