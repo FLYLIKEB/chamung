@@ -59,6 +59,18 @@ describe('NoteCard - 그리드 카드', () => {
     expect(screen.getAllByRole('button')[0]).toHaveClass('min-h-44');
   });
 
+  it('다회 자동 기록 표는 제외하고 작성한 글귀만 표시한다', () => {
+    const memo = '여운이 길고 화려함.\n\n---\n### 다회모드로 작성됨 🔄\n| 탕 | 시간 |\n|---|---|\n| 1 | 20초 |';
+    render(<MemoryRouter><NoteCard note={{ ...mockNote, memo }} /></MemoryRouter>);
+    expect(screen.getByText('여운이 길고 화려함.')).toBeInTheDocument();
+    expect(screen.queryByText(/다회모드로 작성됨/)).not.toBeInTheDocument();
+  });
+
+  it('다회 자동 기록만 있으면 글귀를 표시하지 않는다', () => {
+    const { container } = render(<MemoryRouter><NoteCard note={{ ...mockNote, memo: '### 다회모드로 작성됨 🔄\n| 탕 | 시간 |' }} /></MemoryRouter>);
+    expect(container.querySelector('p.whitespace-pre-line')).toBeNull();
+  });
+
   it.each([null, '', '   '])('글귀가 %s이면 빈 미리보기를 표시하지 않는다', (memo) => {
     const { container } = render(<MemoryRouter><NoteCard note={{ ...mockNote, memo }} /></MemoryRouter>);
     expect(container.querySelector('p.whitespace-pre-line')).toBeNull();

@@ -65,7 +65,9 @@ const NoteCardComponent: FC<NoteCardProps> = ({ note, showTeaName = true, onBook
   };
 
   const rating = Number(note.overallRating);
-  const memoPreview = canView ? note.memo?.trim() : null;
+  const memoPreview = canView
+    ? note.memo?.split(/###\s*다회모드로 작성됨[^\n]*/)[0].replace(/\n?---\s*$/m, '').trim()
+    : null;
 
   return (
     <div className="relative">
