@@ -301,11 +301,10 @@ export function NoteDetail() {
   const dateWeekday = ['일', '월', '화', '수', '목', '금', '토'][displayDate.getDay()];
 
   const brewColor = note.appearance ? BREW_COLORS.find((c) => c.value === note.appearance) : null;
-  const hasStoryCard = !!(note.memo || (note.images && note.images.length > 0));
+  const hasStoryContent = !!(note.memo || (note.images && note.images.length > 0));
   const hasProfileCard = !!((note.axisValues && note.axisValues.length > 0) || (note.tags && note.tags.length > 0) || weather?.teaComment);
   const cardMeta = [
     { id: 'hero' as const, show: true },
-    { id: 'story' as const, show: hasStoryCard },
     { id: 'profile' as const, show: hasProfileCard },
   ].filter((c) => c.show);
   const cardCount = cardMeta.length;
@@ -331,17 +330,6 @@ export function NoteDetail() {
 
 
 
-  // 메모 첫 줄 (72자 제한)
-  const memoQuoteSource = displayMemo
-    ?.split(/\n+/)
-    .map((line) => line.replace(/[#>*_`~\-[\]()]/g, '').replace(/\s+/g, ' ').trim())
-    .find(Boolean);
-  const memoQuote = memoQuoteSource
-    ? memoQuoteSource.length > 72
-      ? `${memoQuoteSource.slice(0, 72).trim()}…`
-      : memoQuoteSource
-    : null;
-
   return (
     <div className="note-detail-scene relative min-h-dvh overflow-hidden pb-6 bg-background text-foreground">
       <Header showBack title="차록" showProfile />
@@ -351,7 +339,7 @@ export function NoteDetail() {
         <article className="note-detail-glass-card relative overflow-hidden">
         <div ref={cardDeckRef} className="note-detail-card-deck" aria-label="차록 상세 콘텐츠">
 
-          {/* ── 카드 1: HERO ── */}
+          {/* ── 카드 1: 차 정보 + 노트 ── */}
           <section
             className="note-detail-hero note-detail-photo-card flex flex-col px-4 pb-5 pt-4"
             {...getPhotoCardProps(cardMeta.findIndex((c) => c.id === 'hero'))}
@@ -424,11 +412,6 @@ export function NoteDetail() {
               )}
             </div>
 
-            {/* 한줄 메모 */}
-            {memoQuote && (
-              <p className="mt-3 text-sm text-foreground/80 leading-snug">"{memoQuote}"</p>
-            )}
-
             {/* 칩 레일: 날씨 / 수색 / 가격 / 무게 */}
             <div className="mt-3 flex flex-wrap gap-1.5">
               {weather && (
@@ -452,6 +435,69 @@ export function NoteDetail() {
                 <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">{tea.weight}g</span>
               )}
             </div>
+
+            {hasStoryContent && (
+              <div className="note-detail-story-content mt-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">NOTE</p>
+                  {note.images && note.images.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowStoryPhotos((value) => !value)}
+                      className="note-detail-photo-toggle inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground transition-colors"
+                      aria-expanded={showStoryPhotos}
+                    >
+                      사진
+                      <ChevronDown className={`h-3 w-3 transition-transform ${showStoryPhotos ? 'rotate-180' : ''}`} />
+                    </button>
+                  )}
+                </div>
+                {displayMemo && (
+                  <div className="note-detail-prose text-[0.92rem] leading-[1.75] text-foreground
+                    [&_p]:my-1 [&_p]:whitespace-pre-wrap
+                    [&_h1]:mt-3 [&_h1]:mb-1.5 [&_h1]:text-lg [&_h1]:font-bold
+                    [&_h2]:mt-2.5 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold
+                    [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5
+                    [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5
+                    [&_li]:my-0.5
+                    [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:text-xs
+                    [&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground
+                    [&_a]:text-primary [&_a]:underline">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayMemo}</ReactMarkdown>
+                  </div>
+                )}
+                {sessionMemoTable && (
+                  <div className="note-detail-session-table-wrap">
+                    <p className="note-detail-session-table-title">다회모드 기록</p>
+                    <table className="note-detail-session-table" aria-label="다회모드 탕 기록">
+                      <thead>
+                        <tr>
+                          {SESSION_MEMO_HEADERS.map((header) => (
+                            <th key={header} scope="col">{header}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sessionMemoTable.rows.map((row, rowIndex) => (
+                          <tr key={`${row[0] || 'steep'}-${rowIndex}`}>
+                            {row.map((cell, cellIndex) => (
+                              <td key={`${rowIndex}-${SESSION_MEMO_HEADERS[cellIndex]}`} data-label={SESSION_MEMO_HEADERS[cellIndex]}>
+                                {cell && cell !== '-' ? <MarkdownPreview content={cell} /> : '-'}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {showStoryPhotos && note.images && note.images.length > 0 && (
+                  <div className="note-detail-image-stage mt-4">
+                    <ImageCarousel images={note.images} />
+                  </div>
+                )}
+              </div>
+            )}
 
             {isMyNote && !isAuthLoading && (
               <div className="note-detail-owner-actions mt-auto flex justify-end gap-2 pt-4">
@@ -478,74 +524,7 @@ export function NoteDetail() {
 
           </section>
 
-          {/* ── 카드 2: NOTE (메모 + 이미지) ── */}
-          {hasStoryCard && (
-            <section
-              className="note-detail-story-card note-detail-photo-card px-5 pt-4 pb-5"
-              {...getPhotoCardProps(cardMeta.findIndex((c) => c.id === 'story'))}
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-muted-foreground">NOTE</p>
-                {note.images && note.images.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowStoryPhotos((value) => !value)}
-                    className="note-detail-photo-toggle inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground transition-colors"
-                    aria-expanded={showStoryPhotos}
-                  >
-                    사진
-                    <ChevronDown className={`h-3 w-3 transition-transform ${showStoryPhotos ? 'rotate-180' : ''}`} />
-                  </button>
-                )}
-              </div>
-              {displayMemo && (
-                <div className="note-detail-prose text-[0.92rem] leading-[1.75] text-foreground
-                  [&_p]:my-1 [&_p]:whitespace-pre-wrap
-                  [&_h1]:mt-3 [&_h1]:mb-1.5 [&_h1]:text-lg [&_h1]:font-bold
-                  [&_h2]:mt-2.5 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold
-                  [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5
-                  [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5
-                  [&_li]:my-0.5
-                  [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:text-xs
-                  [&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground
-                  [&_a]:text-primary [&_a]:underline">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayMemo}</ReactMarkdown>
-                </div>
-              )}
-              {sessionMemoTable && (
-                <div className="note-detail-session-table-wrap">
-                  <p className="note-detail-session-table-title">다회모드 기록</p>
-                  <table className="note-detail-session-table" aria-label="다회모드 탕 기록">
-                    <thead>
-                      <tr>
-                        {SESSION_MEMO_HEADERS.map((header) => (
-                          <th key={header} scope="col">{header}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sessionMemoTable.rows.map((row, rowIndex) => (
-                        <tr key={`${row[0] || 'steep'}-${rowIndex}`}>
-                          {row.map((cell, cellIndex) => (
-                            <td key={`${rowIndex}-${SESSION_MEMO_HEADERS[cellIndex]}`} data-label={SESSION_MEMO_HEADERS[cellIndex]}>
-                              {cell && cell !== '-' ? <MarkdownPreview content={cell} /> : '-'}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              {showStoryPhotos && note.images && note.images.length > 0 && (
-                <div className="note-detail-image-stage mt-4">
-                  <ImageCarousel images={note.images} />
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* ── 카드 3: PROFILE (향미 그래프 + 태그) ── */}
+          {/* ── 카드 2: PROFILE (향미 그래프 + 태그) ── */}
           {hasProfileCard && (
             <section
               className="note-detail-profile-card note-detail-section note-detail-section-axis note-detail-photo-card space-y-3 px-5 pt-4 pb-5"
@@ -627,7 +606,7 @@ export function NoteDetail() {
 
         {/* 페이지 인디케이터 */}
         {cardCount > 1 && (
-          <div className="flex items-center justify-center gap-1.5 py-2" aria-label={`현재 ${currentCardIndex + 1}번째 카드`}>
+          <div className="flex items-center justify-center gap-1.5 py-2 md:hidden" aria-label={`현재 ${currentCardIndex + 1}번째 카드`}>
             {Array.from({ length: cardCount }).map((_, i) => (
               <span
                 key={i}
